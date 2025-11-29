@@ -9,11 +9,15 @@ public class GladiatorPanel : MonoBehaviour
 
     public void ShowInfo(GladiatorData data)
     {
+        gameObject.SetActive(true);
         infoText.text =
             data.gladiatorName + "\n" +
             "STR: " + data.strength + "\n" +
             "DEF: " + data.defense + "\n" +
             "SPD: " + data.speed + "\n" +
-            "MOR: " + data.morale;
+            "MOR: " + data.morale+"\n" +
+            "STA: " + data.stamina+"\n" +
+            "Level" + data.level+"\n" +
+            "Value" + data.GetSellValue();
     }
 }

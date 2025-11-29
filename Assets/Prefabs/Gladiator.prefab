@@ -15,6 +15,8 @@ GameObject:
   - component: {fileID: 2788436547180256909}
   - component: {fileID: 8384081870048611554}
   - component: {fileID: 8261976675823311341}
+  - component: {fileID: 1087899057499240051}
+  - component: {fileID: 5588717568499409998}
   m_Layer: 0
   m_Name: Gladiator
   m_TagString: Untagged
@@ -172,3 +174,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a44912015c40b7a47b59bf027c3d0fde, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gladiator
+  data: {fileID: 11400000, guid: c24b5dc32a5e3e5459b03e86c6679877, type: 2}
+--- !u!114 &1087899057499240051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1174153895519014436}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bacc3b171e0891449ef8beeccae1cf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GladiatorSelector
+  cam: {fileID: 0}
+  panel: {fileID: 0}
+--- !u!114 &5588717568499409998
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1174153895519014436}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92c6a032c651ce34087c2013b88be0bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GladiatorTraining
+  isTraining: 0

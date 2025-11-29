@@ -9,7 +9,7 @@ public class Gladiator : MonoBehaviour
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
-        GoTo(GameObject.Find("Target").transform.position);
+       // GoTo(GameObject.Find("Target").transform.position);
     }
 
 

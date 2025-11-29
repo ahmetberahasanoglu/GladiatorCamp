@@ -1,14 +1,17 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.AI;
 using System.Collections;
 
 public class GladiatorTraining : MonoBehaviour
 {
-    public bool isTraining = false;
+    public bool IsTraining => remainingDays > 0;
+
     private NavMeshAgent agent;
-    private Gladiator gladiator;  // referans; gladiator.data üzerinden statlara eriþ
+    private Gladiator gladiator;
 
     private TrainingSpot currentSpot;
+    private int remainingDays = 0;
+    private TrainingType currentTrainingType;
 
     void Awake()
     {
@@ -16,76 +19,90 @@ public class GladiatorTraining : MonoBehaviour
         gladiator = GetComponent<Gladiator>();
     }
 
+    // UI butonundan Ã§aÄŸrÄ±lÄ±r
     public void StartTraining(TrainingSpot spot)
     {
-        if (isTraining) return;
-        if (gladiator == null || spot == null || spot.isBusy) return;
+        if (IsTraining) return;
+        if (spot == null || spot.isBusy) return;
 
-        isTraining = true;
         currentSpot = spot;
-        spot.isBusy = true; 
+        spot.isBusy = true;
 
+        currentTrainingType = spot.trainingType;
+
+        remainingDays = GetRequiredDays(gladiator.data.level);
+
+        // EÄŸitim yerine yÃ¼rÃ¼sÃ¼n
         agent.SetDestination(spot.trainingPoint.position);
-        StartCoroutine(TrainingRoutine());
+
+        // Noktaya varÄ±ÅŸÄ±n takibi
+        StartCoroutine(WalkAndBeginTraining());
     }
 
-    IEnumerator TrainingRoutine()
+    IEnumerator WalkAndBeginTraining()
     {
-        Debug.Log("Training started for: " );
-        //while (Vector3.Distance(transform.position, currentSpot.trainingPoint.position) > 0.5f)
-          //  yield return null;
-        //þey istiyorum. Eðitim alanýna gidince progress bar baþlasýn ama yukarýdaki kod çalýþýnca direkt döngüden çýktýgýmýzdan istenildigi gibi calýstmýyor
+      
+        // Noktaya varmasÄ±nÄ± bekle
+       // while (Vector3.Distance(transform.position, currentSpot.trainingPoint.position) > 0.6f)
+        //    yield return null;
 
+        // Animasyon ileride eklenecek
 
-        float duration = GetTrainingDuration();
-        float timer = 0f;
+        // GÃœN BAZLI eÄŸitim baÅŸlÄ±yor
+        UITrainingProgress.Instance.StartProgress(remainingDays);
 
-        // UI progress baþlat
-        UITrainingProgress.Instance.StartProgress(duration);
-        Debug.Log("Progress bar acilmali: ");
-        while (timer < duration)
+        DayManager.Instance.OnNewDay += OnNewDay;
+        yield return null;
+    }
+
+    void OnNewDay()
+    {
+        if (!IsTraining) return;
+
+        remainingDays--;
+
+        UITrainingProgress.Instance.UpdateProgress(remainingDays);
+
+        if (remainingDays <= 0)
         {
-            timer += Time.deltaTime;
-            UITrainingProgress.Instance.UpdateProgress(timer / duration);
-            yield return null;
+            FinishTraining();
         }
+    }
 
-        // Stat artýþý: TrainingSpot.trainingType'a göre uygulama
-        ApplyStatGain(currentSpot.trainingType, currentSpot.statGain);
-        Debug.Log("stat artisi yasanmali: ");
-        UITrainingProgress.Instance.Hide();
+    void FinishTraining()
+    {
+        ApplyStatGain(currentTrainingType, currentSpot.statGain);
 
-        isTraining = false;
+        gladiator.data.level += 1;
+
         currentSpot.isBusy = false;
         currentSpot = null;
-        gladiator.data.level += 1;
+
+        DayManager.Instance.OnNewDay -= OnNewDay;
+
+        UITrainingProgress.Instance.Hide();
     }
 
-    public float GetTrainingDuration()
+    int GetRequiredDays(int level)
     {
-        return gladiator.data.baseTrainingTime + (gladiator.data.level * 1.5f);
+        if (level <= 5) return 1;
+        if (level <= 10) return 2;
+        return 3;
     }
 
     private void ApplyStatGain(TrainingType type, int amount)
     {
         var d = gladiator.data;
+
         switch (type)
         {
-            case TrainingType.Strength:
-                d.strength += amount;
-                break;
-            case TrainingType.Speed:
-                d.speed += amount;
-                break;
-            case TrainingType.Defense:
-                d.defense += amount;
-                break;
-            case TrainingType.Morale:
-                d.morale += amount;
-                break;
-            case TrainingType.Stamina:
-                d.stamina += amount;
-                break;
+            case TrainingType.Strength: d.strength += amount; break;
+            case TrainingType.Speed: d.speed += amount; break;
+            case TrainingType.Defense: d.defense += amount; break;
+            case TrainingType.Morale: d.morale += amount; break;
+            case TrainingType.Stamina: d.stamina += amount; break;
         }
+
+        Debug.Log($"Stat ArtÄ±ÅŸÄ± â†’ {type} +{amount}");
     }
 }

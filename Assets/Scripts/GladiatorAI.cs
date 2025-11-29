@@ -18,7 +18,7 @@ public class GladiatorAI : MonoBehaviour
 
     void Update()
     {
-        if (training.isTraining) return; 
+        if (training.IsTraining) return; 
 
         timer -= Time.deltaTime;
 

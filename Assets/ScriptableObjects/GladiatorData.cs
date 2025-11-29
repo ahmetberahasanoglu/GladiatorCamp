@@ -10,7 +10,7 @@ public class GladiatorData : ScriptableObject
     public int morale;
     public int stamina;
     public int level = 1;     
-    public int baseTrainingTime = 3;
+   // public int baseTrainingTime = 3;
 
     public int price = 100;
 

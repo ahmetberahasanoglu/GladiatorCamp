@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class UITrainingProgress : MonoBehaviour
@@ -13,16 +13,19 @@ public class UITrainingProgress : MonoBehaviour
         Hide();
     }
 
-    public void StartProgress(float duration)
+    public void StartProgress(int totalDays)
     {
-        fill.fillAmount = 0;
         gameObject.SetActive(true);
+        fill.fillAmount = 1f;
     }
 
-    public void UpdateProgress(float percent)
+    public void UpdateProgress(int remaining)
     {
+        // ör: 3 günden 2 güne düştü → %66 göster
+        float percent = remaining / 3f; // istersen totalDays'i parametre yapabilirsin
         fill.fillAmount = percent;
     }
+
 
     public void Hide()
     {

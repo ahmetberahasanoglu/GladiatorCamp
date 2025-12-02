@@ -19,6 +19,9 @@ public class GladiatorSelector : MonoBehaviour
 
                     var training = gladiator.GetComponent<GladiatorTraining>();
                     TrainingUIManager.Instance.SetCurrentGladiator(training);
+
+                    var inventory = gladiator.GetComponent<GladiatorInventory>();
+                    InventoryUIManager.Instance.OpenInventoryFor(inventory);
                 }
             }
         }

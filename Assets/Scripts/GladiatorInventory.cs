@@ -2,56 +2,71 @@ using UnityEngine;
 
 public class GladiatorInventory : MonoBehaviour
 {
+    [Header("Üzerindeki Ekipmanlar")]
     public ItemData weapon;
     public ItemData armor;
     public ItemData helmet;
     public ItemData shield;
 
-    public GladiatorData data;
+    private GladiatorData data; // Scriptable Object Referansý
+
+    // Gladyatörün "Çýplak" (Doðal) güçlerini hafýzada tutmalýyýz
+    // Yoksa her eþya taktýðýnda kalýcý olarak güçlenir.
+    private int baseStr, baseDef, baseSpd, baseSta, baseMor;
+    private bool isInitialized = false;
 
     void Start()
     {
-        data = GetComponent<Gladiator>().data;
+        // Veriyi çek ve baz statlarý kaydet
+        if (!isInitialized)
+        {
+            data = GetComponent<Gladiator>().data;
+
+            // Eðer oyun baþladýysa ve statlar bozuksa sýfýrlamak için iyi bir nokta
+            baseStr = data.strength;
+            baseDef = data.defense;
+            baseSpd = data.speed;
+            baseSta = data.stamina;
+            baseMor = data.morale;
+
+            isInitialized = true;
+        }
     }
 
     public void Equip(ItemData item)
     {
+        // 1. Eþyayý ilgili slot'a yerleþtir
         switch (item.type)
         {
-            case ItemType.Weapon:
-                weapon = item;
-                break;
-            case ItemType.Armor:
-                armor = item;
-                break;
-            case ItemType.Shield:
-                shield = item;
-                break;
-            case ItemType.Helmet:
-                helmet = item;
-                break;
+            case ItemType.Weapon: weapon = item; break;
+            case ItemType.Armor: armor = item; break;
+            case ItemType.Shield: shield = item; break;
+            case ItemType.Helmet: helmet = item; break;
         }
 
-        ApplyStats();
+        // 2. Statlarý baþtan hesapla
+        RecalculateStats();
     }
 
-    void ApplyStats()
+    void RecalculateStats()
     {
-      //  data.strength = data.baseStrength;
-        //data.defense = data.baseDefense;
-        //data.speed = data.baseSpeed;
-        //data.stamina = data.baseStamina;
+        // Önce karakteri "Çýplak" haline döndür
+        data.strength = baseStr;
+        data.defense = baseDef;
+        data.speed = baseSpd;
+        data.stamina = baseSta;
+        data.morale = baseMor;
 
-        AddItemStats(weapon);
-        AddItemStats(armor);
-        AddItemStats(helmet);
-        AddItemStats(shield);
+        // Sonra üzerindeki eþyalarýn bonuslarýný ekle
+        AddBonus(weapon);
+        AddBonus(armor);
+        AddBonus(helmet);
+        AddBonus(shield);
     }
 
-    void AddItemStats(ItemData item)
+    void AddBonus(ItemData item)
     {
         if (item == null) return;
-
         data.strength += item.bonusStrength;
         data.defense += item.bonusDefense;
         data.speed += item.bonusSpeed;

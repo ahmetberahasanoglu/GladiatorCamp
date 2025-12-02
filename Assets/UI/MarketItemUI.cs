@@ -1,19 +1,37 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
+using TMPro; // TextMeshPro kullandýðýný varsayýyorum, standart Text ise 'Text' yap.
 
 public class MarketItemUI : MonoBehaviour
 {
-    public ItemData item;
-    public TextMeshProUGUI nameText;
-    public TextMeshProUGUI priceText;
-    public Button buyButton;
+    [Header("UI Bileþenleri")]
+    public TextMeshProUGUI nameText;  // Eþya Ýsmi
+    public TextMeshProUGUI priceText; // Fiyat
+    public Image iconImage;           // Eþyanýn resmi (varsa)
+    public Button buyButton;          // Satýn al butonu
 
-    void Start()
+    private ItemData _myItemData;     // Bu kutucuk hangi eþyayý tutuyor?
+
+    // Bu fonksiyonu MarketManager çaðýracak
+    public void Setup(ItemData item)
     {
-        nameText.text = item.itemName;
-        priceText.text = item.price + " gold";
+        _myItemData = item;
 
-        buyButton.onClick.AddListener(() => MarketManager.Instance.Buy(item));
+        // Görselleri güncelle
+        nameText.text = item.itemName;
+        priceText.text = item.price.ToString() + " Altýn";
+
+        // Eðer ItemData'ya ikon eklediysen:
+        // iconImage.sprite = item.icon; 
+
+        // Butonu temizle ve yeni görevi ata
+        buyButton.onClick.RemoveAllListeners();
+        buyButton.onClick.AddListener(OnBuyClicked);
+    }
+
+    void OnBuyClicked()
+    {
+        // Patron'a (MarketManager) haber ver
+        MarketManager.Instance.Buy(_myItemData);
     }
 }

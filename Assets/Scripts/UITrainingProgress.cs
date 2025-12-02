@@ -21,7 +21,7 @@ public class UITrainingProgress : MonoBehaviour
 
     public void UpdateProgress(int remaining)
     {
-        // ör: 3 günden 2 güne düştü → %66 göster
+        
         float percent = remaining / 3f; // istersen totalDays'i parametre yapabilirsin
         fill.fillAmount = percent;
     }

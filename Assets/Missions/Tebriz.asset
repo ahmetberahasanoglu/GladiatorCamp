@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0773f154cffb1f4cb00e63ae3701dea, type: 3}
   m_Name: Tebriz
   m_EditorClassIdentifier: Assembly-CSharp::MissionData
-  missionName: 
-  description: 
-  difficulty: 0
-  durationDays: 0
-  goldReward: 0
+  missionName: Tebriz
+  description: tebriz seferi soyle boyle
+  difficulty: 10
+  durationDays: 50
+  goldReward: 400

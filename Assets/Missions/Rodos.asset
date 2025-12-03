@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0773f154cffb1f4cb00e63ae3701dea, type: 3}
   m_Name: Rodos
   m_EditorClassIdentifier: Assembly-CSharp::MissionData
-  missionName: 
-  description: 
-  difficulty: 0
-  durationDays: 0
-  goldReward: 0
+  missionName: Rodos Seferi
+  description: deniz seferi
+  difficulty: 10
+  durationDays: 20
+  goldReward: 300

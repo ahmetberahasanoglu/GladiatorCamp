@@ -7,29 +7,26 @@ public class MissionUIManager : MonoBehaviour
 {
     public static MissionUIManager Instance;
 
+    // ... Diğer değişkenlerin aynı kalsın ...
     [Header("Veriler")]
-    public List<MissionData> availableMissions; // ScriptableObject'leri buraya sürükle
-    public List<JanissaryData> availableSoldiers; // Sahnedeki askerleri buraya çekeceğiz
-
-    [Header("Sol Panel (Görev Listesi)")]
+    public List<MissionData> availableMissions;
+    
+    [Header("UI Referansları")]
     public Transform missionListParent;
     public MissionItemUI missionItemPrefab;
-
-    [Header("Sağ Panel (Detaylar)")]
-    public GameObject detailsPanel; // Başlangıçta kapalı olsun
+    public GameObject detailsPanel;
     public TextMeshProUGUI missionTitleText;
     public TextMeshProUGUI missionDescText;
     public TextMeshProUGUI rewardText;
-    public TextMeshProUGUI winChanceText; // "Kazanma Şansı: %80" gibi
+    public TextMeshProUGUI winChanceText;
     public Button startButton;
-
-    [Header("Asker Seçimi")]
-    public Transform soldierListParent; // Scroll View Content
+    public Transform soldierListParent;
     public SquadSlotUI soldierSlotPrefab;
 
-    // Şu an seçili olanlar
     private MissionData _selectedMission;
-    private List<JanissaryData> _selectedSquad = new List<JanissaryData>();
+    
+    // DEĞİŞİKLİK: Listemiz artık Component tutuyor
+    private List<Gladiator> _selectedSquad = new List<Gladiator>();
 
     void Awake()
     {
@@ -40,15 +37,11 @@ public class MissionUIManager : MonoBehaviour
     void Start()
     {
         RefreshMissionList();
-        // Normalde asker listesini GameManger'dan çekersin. 
-        // Şimdilik test için elle doldurabilir veya FindObjects ile bulabilirsin.
     }
 
-    // Sol taraftaki listeyi oluşturur
     void RefreshMissionList()
     {
         foreach (Transform child in missionListParent) Destroy(child.gameObject);
-
         foreach (var mission in availableMissions)
         {
             var ui = Instantiate(missionItemPrefab, missionListParent);
@@ -56,48 +49,44 @@ public class MissionUIManager : MonoBehaviour
         }
     }
 
-    // Göreve tıklayınca sağ tarafı doldurur
     void OnMissionSelected(MissionData mission)
     {
         _selectedMission = mission;
-        _selectedSquad.Clear(); // Yeni görev seçince takımı sıfırla
-
+        _selectedSquad.Clear();
         detailsPanel.SetActive(true);
 
         missionTitleText.text = mission.missionName;
         missionDescText.text = mission.description;
         rewardText.text = $"{mission.goldReward} Akçe";
-        
-        RefreshSoldierList(); // Asker listesini oluştur
-        UpdateWinChance();    // Şansı hesapla
+
+        RefreshSoldierList();
+        UpdateWinChance();
     }
 
-    // Sağ alttaki asker listesini oluşturur
+    // --- KRİTİK DEĞİŞİKLİK BURADA ---
     void RefreshSoldierList()
     {
         foreach (Transform child in soldierListParent) Destroy(child.gameObject);
 
-        // SAHNEDEKİ TÜM ASKERLERİ BULALIM (Geçici Yöntem)
-        // Gerçek projede: GameManager.Instance.MySoldiers listesini kullanmalısın.
-        var allGladiators = FindObjectsOfType<Gladiator>(); 
-        
+        var allGladiators = FindObjectsOfType<Gladiator>();
+
         foreach (var glad in allGladiators)
         {
-            // Sadece boşta olanları listele (Eğitimde olmayanları)
-            // if (glad.GetComponent<GladiatorTraining>().IsTraining) continue;
+            // FİLTRE: Eğer asker meşgulse (Seferde veya Eğitimde) listeye ekleme!
+            if (!glad.IsAvailable) continue;
 
             var slot = Instantiate(soldierSlotPrefab, soldierListParent);
-            slot.Setup(glad.data, OnSoldierToggled);
+            
+            // Setup'a artık Component gönderiyoruz
+            slot.Setup(glad, OnSoldierToggled);
         }
     }
+    // --------------------------------
 
-    // Asker kutucuğuna tıklanınca çalışır
-    void OnSoldierToggled(JanissaryData data, bool isSelected)
+    void OnSoldierToggled(Gladiator glad, bool isSelected)
     {
-        if (isSelected)
-            _selectedSquad.Add(data);
-        else
-            _selectedSquad.Remove(data);
+        if (isSelected) _selectedSquad.Add(glad);
+        else _selectedSquad.Remove(glad);
 
         UpdateWinChance();
     }
@@ -107,16 +96,13 @@ public class MissionUIManager : MonoBehaviour
         if (_selectedMission == null) return;
 
         int totalPower = 0;
-        foreach (var s in _selectedSquad) totalPower += s.GetTotalStats();
+        // Güç verisine ulaşmak için .data kullanıyoruz
+        foreach (var s in _selectedSquad) totalPower += s.data.GetTotalStats();
 
-        // Basit bir kazanma şansı hesabı
-        // Eğer güç == zorluk ise şans %50 olsun.
         float ratio = (float)totalPower / _selectedMission.difficulty;
-        int percentage = Mathf.Clamp(Mathf.RoundToInt(ratio * 50), 0, 100); 
+        int percentage = Mathf.Clamp(Mathf.RoundToInt(ratio * 50), 0, 100);
 
         winChanceText.text = $"Ordu Gücü: {totalPower} / {_selectedMission.difficulty}\nKazanma Şansı: %{percentage}";
-        
-        // Eğer hiç asker seçilmediyse butonu kapat
         startButton.interactable = _selectedSquad.Count > 0;
     }
 
@@ -124,11 +110,9 @@ public class MissionUIManager : MonoBehaviour
     {
         if (_selectedMission == null || _selectedSquad.Count == 0) return;
 
-        Debug.Log("Sefer Başladı! Gidilen yer: " + _selectedMission.missionName);
+        // MissionManager artık List<Gladiator> bekliyor, elimizdeki de o.
+        MissionManager.Instance.StartMission(_selectedMission, _selectedSquad);
         
-        // BURADA MISSION MANAGER'I ÇAĞIRACAKSIN (Önceki mesajdaki kod)
-        // MissionManager.Instance.SendOnMission(_selectedMission, _selectedSquad);
-        
-        detailsPanel.SetActive(false); // Pencereyi kapat
+        detailsPanel.SetActive(false);
     }
 }

@@ -8,7 +8,7 @@ public class MoneyManager : MonoBehaviour
     public int gold = 200;
 
     public int trainingCost = 30;
-    public int dailyIncome = 100;
+    public int dailyIncome = -20;//YEMEK PARASI
 
     public event Action<int> OnGoldChanged;
 

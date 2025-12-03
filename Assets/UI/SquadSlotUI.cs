@@ -1,26 +1,29 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System; // Action için
 
 public class SquadSlotUI : MonoBehaviour
 {
+    // ... Eski değişkenlerin aynı ...
     public TextMeshProUGUI nameText;
-    public TextMeshProUGUI powerText; // Askerin gücü (Seçim için önemli)
-    public Image backgroundImage;     // Seçilince rengi değişsin diye
+    public TextMeshProUGUI powerText;
+    public Image backgroundImage;
     public Button toggleButton;
 
-    public JanissaryData gladiator;   // Hangi asker?
+    // DEĞİŞİKLİK: Veri yerine Component tutuyoruz
+    public Gladiator gladiatorComponent; 
     private bool isSelected = false;
-    private System.Action<JanissaryData, bool> onToggleCallback;
+    private Action<Gladiator, bool> onToggleCallback;
 
-    public void Setup(JanissaryData data, System.Action<JanissaryData, bool> onToggle)
+    public void Setup(Gladiator glad, Action<Gladiator, bool> onToggle)
     {
-        gladiator = data;
+        gladiatorComponent = glad;
         onToggleCallback = onToggle;
 
-        nameText.text = data.gladiatorName;
-        // Askerin toplam gücünü gösterelim ki oyuncu strateji yapsın
-        powerText.text = "Güç: " + data.GetTotalStats(); 
+        // Veriye component üzerinden ulaşıyoruz
+        nameText.text = glad.data.gladiatorName;
+        powerText.text = "Güç: " + glad.data.GetTotalStats();
 
         UpdateVisuals();
 
@@ -32,13 +35,11 @@ public class SquadSlotUI : MonoBehaviour
     {
         isSelected = !isSelected;
         UpdateVisuals();
-        // Yöneticiye haber ver: "Bu asker durumu değiştirdi"
-        onToggleCallback?.Invoke(gladiator, isSelected);
+        onToggleCallback?.Invoke(gladiatorComponent, isSelected);
     }
 
     void UpdateVisuals()
     {
-        // Seçiliyse Yeşil, değilse Gri/Beyaz yap
         backgroundImage.color = isSelected ? Color.green : Color.white;
     }
 }

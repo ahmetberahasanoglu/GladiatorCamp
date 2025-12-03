@@ -1,66 +1,111 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 public class MissionManager : MonoBehaviour
 {
     public static MissionManager Instance;
-    
-    // Şu an seferde olan askerlerin listesi (Kampa geri dönemezler, eğitim yapamazlar)
-    public List<Gladiator> soldiersOnMission = new List<Gladiator>();
+
+    [Header("Ayarlar")]
+    public float secondsPerDay = 2.0f;
+    public Transform activeMissionsParent;
+    public ActiveMissionUI activeMissionPrefab;
+
+    [Header("Sonuç Ekranı")]
+    public MissionResultUI resultPopupPrefab; // Az önce yazdığımız scriptin olduğu prefab
+    public Transform canvasParent;            // Popup'ın yaratılacağı yer (Genelde Main Canvas)
+
+    private List<OngoingMission> currentMissions = new List<OngoingMission>();
 
     void Awake() { Instance = this; }
 
-    public void SendOnMission(MissionData mission, List<Gladiator> squad)
+    void Update()
     {
-        // 1. Askerleri "Meşgul" işaretle
-        foreach(var soldier in squad)
+        for (int i = currentMissions.Count - 1; i >= 0; i--)
         {
-            soldier.GetComponent<GladiatorTraining>().enabled = false; // Eğitimi kapa
-            soldiersOnMission.Add(soldier);
-            // Askerleri görsel olarak kampın kapısından çıkartabilirsin.
+            var mission = currentMissions[i];
+            mission.timer += Time.deltaTime;
+
+            if (mission.uiReference != null)
+                mission.uiReference.UpdateProgress(Time.deltaTime);
+
+            if (mission.timer >= mission.totalDuration)
+                CompleteMission(mission);
         }
-
-        // 2. Sayacı başlat
-        StartCoroutine(MissionProcess(mission, squad));
     }
 
-    IEnumerator MissionProcess(MissionData mission, List<Gladiator> squad)
+    // DİKKAT: Artık GladiatorData değil, Gladiator (Component) alıyor
+    public void StartMission(MissionData data, List<Gladiator> squad)
     {
-        Debug.Log(mission.missionName + " seferi başladı! Süre: " + mission.durationDays + " gün.");
+        OngoingMission newMission = new OngoingMission();
+        newMission.originalData = data;
+        newMission.squadComponents = new List<Gladiator>(squad); // Objeleri kaydet
+        newMission.totalDuration = data.durationDays * secondsPerDay;
+        newMission.timer = 0;
 
-        // Basitçe saniye bekleyelim (İleride DayManager ile gün bazlı yaparsın)
-        yield return new WaitForSeconds(mission.durationDays * 2); 
+        // --- ASKERLERİ KİLİTLE ---
+        foreach (var soldier in squad)
+        {
+            soldier.isOnMission = true;
+            // İstersen burada asker objesini görünmez yapabilirsin:
+            // soldier.gameObject.SetActive(false); 
+        }
+        // -------------------------
 
-        ResolveMission(mission, squad);
+        var uiObj = Instantiate(activeMissionPrefab, activeMissionsParent);
+        uiObj.Setup(data.missionName, newMission.totalDuration);
+        newMission.uiReference = uiObj;
+
+        currentMissions.Add(newMission);
+        Debug.Log($"Ordu yola çıktı! Hedef: {data.missionName}");
     }
 
-    void ResolveMission(MissionData mission, List<Gladiator> squad)
+    void CompleteMission(OngoingMission mission)
     {
+        Destroy(mission.uiReference.gameObject);
+        currentMissions.Remove(mission);
+
+        // --- ASKERLERİ SERBEST BIRAK ---
+        foreach (var soldier in mission.squadComponents)
+        {
+            if (soldier != null) // Obje silinmiş olabilir, kontrol et
+            {
+                soldier.isOnMission = false;
+                // soldier.gameObject.SetActive(true); // Görünmez yaptıysan geri aç
+            }
+        }
+        // -------------------------------
+
+        // Sonuç hesaplama (Aynı mantık, sadece veriye ulaşmak için .data diyoruz)
         int totalPower = 0;
-        foreach(var s in squad) totalPower += s.data.GetTotalStats();
+        foreach (var s in mission.squadComponents) totalPower += s.data.GetTotalStats();
 
-        // Basit Savaş Mantığı: Güç > Zorluk + Şans
-        int roll = Random.Range(0, 20); // Zar atma
-        bool success = (totalPower + roll) >= mission.difficulty;
+        // Basit Savaş Mantığı
+        int roll = Random.Range(0, 50);
+        bool success = (totalPower + roll) >= mission.originalData.difficulty;
 
+       MissionResultUI popup = Instantiate(resultPopupPrefab, canvasParent);
+        
         if (success)
         {
-            Debug.Log("ZAFER! Şanlı ordu ganimetle döndü.");
-            MoneyManager.Instance.Add(mission.goldReward);
-            // Askerlere XP ver
+            // Para ver
+            MoneyManager.Instance.Add(mission.originalData.goldReward);
+            // Popup'ı kur (Zafer)
+            popup.Setup(true, mission.originalData);
         }
         else
         {
-            Debug.Log("HEZİMET! Yaralılar var...");
-            // Askerlerin canını azalt veya öldür
+            // Popup'ı kur (Yenilgi)
+            popup.Setup(false, mission.originalData);
         }
+    }
 
-        // Askerleri serbest bırak
-        foreach(var s in squad)
-        {
-            s.GetComponent<GladiatorTraining>().enabled = true;
-            soldiersOnMission.Remove(s);
-        }
+    [System.Serializable]
+    public class OngoingMission
+    {
+        public MissionData originalData;
+        public List<Gladiator> squadComponents; // ARTIK OBJE TUTUYORUZ
+        public ActiveMissionUI uiReference;
+        public float totalDuration;
+        public float timer;
     }
 }

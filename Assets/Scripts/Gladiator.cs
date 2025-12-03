@@ -3,7 +3,7 @@ using UnityEngine.AI;
 
 public class Gladiator : MonoBehaviour
 {
-    public GladiatorData data;
+    public JanissaryData data;
     private NavMeshAgent agent;
 
     void Start()

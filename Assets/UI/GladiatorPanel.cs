@@ -7,7 +7,7 @@ public class GladiatorPanel : MonoBehaviour
     public TextMeshProUGUI infoText;
 
 
-    public void ShowInfo(GladiatorData data)
+    public void ShowInfo(JanissaryData data)
     {
         gameObject.SetActive(true);
         infoText.text =

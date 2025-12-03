@@ -2,27 +2,27 @@ using UnityEngine;
 
 public class GladiatorInventory : MonoBehaviour
 {
-    [Header("Üzerindeki Ekipmanlar")]
+    [Header("ï¿½zerindeki Ekipmanlar")]
     public ItemData weapon;
     public ItemData armor;
     public ItemData helmet;
     public ItemData shield;
 
-    private GladiatorData data; // Scriptable Object Referansý
+    private JanissaryData data; // Scriptable Object Referansï¿½
 
-    // Gladyatörün "Çýplak" (Doðal) güçlerini hafýzada tutmalýyýz
-    // Yoksa her eþya taktýðýnda kalýcý olarak güçlenir.
+    // Gladyatï¿½rï¿½n "ï¿½ï¿½plak" (Doï¿½al) gï¿½ï¿½lerini hafï¿½zada tutmalï¿½yï¿½z
+    // Yoksa her eï¿½ya taktï¿½ï¿½ï¿½nda kalï¿½cï¿½ olarak gï¿½ï¿½lenir.
     private int baseStr, baseDef, baseSpd, baseSta, baseMor;
     private bool isInitialized = false;
 
     void Start()
     {
-        // Veriyi çek ve baz statlarý kaydet
+        // Veriyi ï¿½ek ve baz statlarï¿½ kaydet
         if (!isInitialized)
         {
             data = GetComponent<Gladiator>().data;
 
-            // Eðer oyun baþladýysa ve statlar bozuksa sýfýrlamak için iyi bir nokta
+            // Eï¿½er oyun baï¿½ladï¿½ysa ve statlar bozuksa sï¿½fï¿½rlamak iï¿½in iyi bir nokta
             baseStr = data.strength;
             baseDef = data.defense;
             baseSpd = data.speed;
@@ -35,7 +35,7 @@ public class GladiatorInventory : MonoBehaviour
 
     public void Equip(ItemData item)
     {
-        // 1. Eþyayý ilgili slot'a yerleþtir
+        // 1. Eï¿½yayï¿½ ilgili slot'a yerleï¿½tir
         switch (item.type)
         {
             case ItemType.Weapon: weapon = item; break;
@@ -44,20 +44,20 @@ public class GladiatorInventory : MonoBehaviour
             case ItemType.Helmet: helmet = item; break;
         }
 
-        // 2. Statlarý baþtan hesapla
+        // 2. Statlarï¿½ baï¿½tan hesapla
         RecalculateStats();
     }
 
     void RecalculateStats()
     {
-        // Önce karakteri "Çýplak" haline döndür
+        // ï¿½nce karakteri "ï¿½ï¿½plak" haline dï¿½ndï¿½r
         data.strength = baseStr;
         data.defense = baseDef;
         data.speed = baseSpd;
         data.stamina = baseSta;
         data.morale = baseMor;
 
-        // Sonra üzerindeki eþyalarýn bonuslarýný ekle
+        // Sonra ï¿½zerindeki eï¿½yalarï¿½n bonuslarï¿½nï¿½ ekle
         AddBonus(weapon);
         AddBonus(armor);
         AddBonus(helmet);

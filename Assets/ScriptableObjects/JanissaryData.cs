@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Data/Gladiator")]
-public class GladiatorData : ScriptableObject
+public class JanissaryData : ScriptableObject
 {
     public string gladiatorName;
     public int strength;

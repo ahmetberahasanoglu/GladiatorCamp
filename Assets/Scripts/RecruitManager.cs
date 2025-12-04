@@ -28,18 +28,26 @@ public class RecruitManager : MonoBehaviour
     }
 
     // Her gün vitrini yeniler
+   // RecruitManager.cs içindeki GenerateCandidates fonksiyonunu şu şekilde değiştir:
+
     public void GenerateCandidates()
     {
         dailyCandidates.Clear();
         for (int i = 0; i < dailyCandidateCount; i++)
         {
-            dailyCandidates.Add(new RecruitCandidate());
+            // 1. Boş bir aday oluştur
+            RecruitCandidate newGuy = new RecruitCandidate();
+            
+            // 2. Rastgele özelliklerini ŞİMDİ ata (Oyun başladığı için güvenli)
+            newGuy.InitializeRandomly();
+            
+            // 3. Listeye ekle
+            dailyCandidates.Add(newGuy);
         }
         
-        // UI açıksa yenilemesi için event gönderebilirsin
-        // OnCandidatesRefreshed?.Invoke();
+        // Eğer UI açıksa anlık yenilemesi için (Opsiyonel, UI kodun hata vermez)
+        // FindObjectOfType<RecruitUIManager>()?.RefreshList();
     }
-
     public void RecruitSoldier(RecruitCandidate candidate)
     {
         // 1. KONTROL: Para var mı?

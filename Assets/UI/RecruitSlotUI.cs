@@ -1,16 +1,36 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class RecruitSlotUI : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public TextMeshProUGUI nameText;
+    public TextMeshProUGUI statsText;
+    public TextMeshProUGUI costText;
+    public Button recruitButton;
+
+    private RecruitCandidate _candidate;
+    private System.Action _onRecruitSuccess; // UI'ı yenilemek için callback
+
+    public void Setup(RecruitCandidate candidate, System.Action refreshCallback)
     {
-        
+        _candidate = candidate;
+        _onRecruitSuccess = refreshCallback;
+
+        nameText.text = candidate.candidateName;
+        statsText.text = $"Güç: {candidate.potentialStrength} | Dayanıklılık: {candidate.potentialStamina}";
+        costText.text = candidate.cost + " Akçe";
+
+        recruitButton.onClick.RemoveAllListeners();
+        recruitButton.onClick.AddListener(OnClicked);
     }
 
-    // Update is called once per frame
-    void Update()
+    void OnClicked()
     {
+        // Manager'a "Bunu al" diyoruz
+        RecruitManager.Instance.RecruitSoldier(_candidate);
         
+        // Listeyi yenile (Kartın ekrandan gitmesi için)
+        _onRecruitSuccess?.Invoke();
     }
 }

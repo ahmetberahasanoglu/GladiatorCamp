@@ -303,7 +303,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ActiveMissionUI
   missionNameText: {fileID: 2089928416587410351}
-  timerText: {fileID: 7227117122953752196}
+  timeText: {fileID: 7227117122953752196}
   progressBar: {fileID: 6799660550855220252}
 --- !u!1 &8321330902288064724
 GameObject:

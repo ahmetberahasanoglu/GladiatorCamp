@@ -62,6 +62,7 @@ public class GladiatorInventory : MonoBehaviour
         AddBonus(armor);
         AddBonus(helmet);
         AddBonus(shield);
+        GetComponent<Gladiator>().RefreshStats();
     }
 
     void AddBonus(ItemData item)

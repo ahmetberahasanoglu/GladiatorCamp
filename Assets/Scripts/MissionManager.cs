@@ -5,58 +5,87 @@ public class MissionManager : MonoBehaviour
 {
     public static MissionManager Instance;
 
-    [Header("Ayarlar")]
-    public float secondsPerDay = 2.0f;
+    [Header("UI Referansları")]
     public Transform activeMissionsParent;
     public ActiveMissionUI activeMissionPrefab;
-
+    
     [Header("Sonuç Ekranı")]
-    public MissionResultUI resultPopupPrefab; // Az önce yazdığımız scriptin olduğu prefab
-    public Transform canvasParent;            // Popup'ın yaratılacağı yer (Genelde Main Canvas)
+    public MissionResultUI resultPopupPrefab;
+    public Transform canvasParent;
 
     private List<OngoingMission> currentMissions = new List<OngoingMission>();
 
-    void Awake() { Instance = this; }
-
-    void Update()
+    void Awake()
     {
-        for (int i = currentMissions.Count - 1; i >= 0; i--)
+        Instance = this;
+    }
+
+    // Event Aboneliği: Oyun açılınca abone ol, kapanınca çık
+    void Start()
+    {
+        // DayManager'ın var olduğundan emin olalım
+        if (DayManager.Instance != null)
         {
-            var mission = currentMissions[i];
-            mission.timer += Time.deltaTime;
-
-            if (mission.uiReference != null)
-                mission.uiReference.UpdateProgress(Time.deltaTime);
-
-            if (mission.timer >= mission.totalDuration)
-                CompleteMission(mission);
+            DayManager.Instance.OnNewDay += OnNewDayArrived;
         }
     }
 
-    // DİKKAT: Artık GladiatorData değil, Gladiator (Component) alıyor
+    void OnDestroy()
+    {
+        if (DayManager.Instance != null)
+        {
+            DayManager.Instance.OnNewDay -= OnNewDayArrived;
+        }
+    }
+
+    // --- KRİTİK DEĞİŞİKLİK: ARTIK UPDATE YOK ---
+    // Bu fonksiyon sadece DayManager "NextDay" dediğinde çalışacak
+    void OnNewDayArrived()
+    {
+        // Tersten döngü kuruyoruz ki listeden eleman silersek hata vermesin
+        for (int i = currentMissions.Count - 1; i >= 0; i--)
+        {
+            var mission = currentMissions[i];
+            
+            // 1. Günü azalt
+            mission.daysRemaining--;
+
+            // 2. UI'ı güncelle
+            if (mission.uiReference != null)
+            {
+                mission.uiReference.UpdateVisuals(mission.daysRemaining, mission.totalDuration);
+            }
+
+            // 3. Gün bitti mi?
+            if (mission.daysRemaining <= 0)
+            {
+                CompleteMission(mission);
+            }
+        }
+    }
+
     public void StartMission(MissionData data, List<Gladiator> squad)
     {
         OngoingMission newMission = new OngoingMission();
         newMission.originalData = data;
-        newMission.squadComponents = new List<Gladiator>(squad); // Objeleri kaydet
-        newMission.totalDuration = data.durationDays * secondsPerDay;
-        newMission.timer = 0;
+        newMission.squadComponents = new List<Gladiator>(squad);
+        
+        // Saniye hesabı yerine direkt gün sayısını alıyoruz
+        newMission.totalDuration = data.durationDays; 
+        newMission.daysRemaining = data.durationDays;
 
-        // --- ASKERLERİ KİLİTLE ---
-        foreach (var soldier in squad)
-        {
-            soldier.isOnMission = true;
-            // İstersen burada asker objesini görünmez yapabilirsin:
-            // soldier.gameObject.SetActive(false); 
-        }
-        // -------------------------
+        // Askerleri Kilitle
+        foreach (var soldier in squad) soldier.isOnMission = true;
 
+        // UI Oluştur
         var uiObj = Instantiate(activeMissionPrefab, activeMissionsParent);
+        // İlk kurulumda (Kalan Gün, Toplam Gün) gönderiyoruz
         uiObj.Setup(data.missionName, newMission.totalDuration);
+        
         newMission.uiReference = uiObj;
-
         currentMissions.Add(newMission);
-        Debug.Log($"Ordu yola çıktı! Hedef: {data.missionName}");
+
+        Debug.Log($"{data.missionName} başladı. Süre: {data.durationDays} Gün.");
     }
 
     void CompleteMission(OngoingMission mission)
@@ -64,48 +93,34 @@ public class MissionManager : MonoBehaviour
         Destroy(mission.uiReference.gameObject);
         currentMissions.Remove(mission);
 
-        // --- ASKERLERİ SERBEST BIRAK ---
+        // Asker kilidini aç
         foreach (var soldier in mission.squadComponents)
         {
-            if (soldier != null) // Obje silinmiş olabilir, kontrol et
-            {
-                soldier.isOnMission = false;
-                // soldier.gameObject.SetActive(true); // Görünmez yaptıysan geri aç
-            }
+            if (soldier != null) soldier.isOnMission = false;
         }
-        // -------------------------------
 
-        // Sonuç hesaplama (Aynı mantık, sadece veriye ulaşmak için .data diyoruz)
+        // --- SAVAŞ SONUCU (Aynı mantık) ---
         int totalPower = 0;
         foreach (var s in mission.squadComponents) totalPower += s.data.GetTotalStats();
 
-        // Basit Savaş Mantığı
         int roll = Random.Range(0, 50);
         bool success = (totalPower + roll) >= mission.originalData.difficulty;
 
-       MissionResultUI popup = Instantiate(resultPopupPrefab, canvasParent);
-        
-        if (success)
-        {
-            // Para ver
-            MoneyManager.Instance.Add(mission.originalData.goldReward);
-            // Popup'ı kur (Zafer)
-            popup.Setup(true, mission.originalData);
-        }
-        else
-        {
-            // Popup'ı kur (Yenilgi)
-            popup.Setup(false, mission.originalData);
-        }
+        MissionResultUI popup = Instantiate(resultPopupPrefab, canvasParent);
+        popup.Setup(success, mission.originalData);
+
+        if (success) MoneyManager.Instance.Add(mission.originalData.goldReward);
     }
 
     [System.Serializable]
     public class OngoingMission
     {
         public MissionData originalData;
-        public List<Gladiator> squadComponents; // ARTIK OBJE TUTUYORUZ
+        public List<Gladiator> squadComponents;
         public ActiveMissionUI uiReference;
-        public float totalDuration;
-        public float timer;
+        
+        // Değişkenler int (Tamsayı) oldu
+        public int totalDuration; 
+        public int daysRemaining;
     }
 }

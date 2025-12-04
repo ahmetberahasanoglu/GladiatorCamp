@@ -2,30 +2,32 @@ using UnityEngine;
 
 public class CampUIManager : MonoBehaviour
 {
-    public Transform contentParent;
-    public BuildingUI buildingPrefab;
-    public GameObject campPanel; // Paneli açıp kapamak için
+    public GameObject campPanel;      // Açılıp kapanan panel
+    public Transform contentParent;   // Scroll View -> Content
+    public BuildingUI buildingPrefab; // Az önce yazdığımız kartın prefabı
 
-    void Start()
-    {
-        RefreshList();
-        campPanel.SetActive(false); // Başta kapalı olsun
-    }
-
+    // Butona basınca bu çalışacak
     public void TogglePanel()
     {
-        campPanel.SetActive(!campPanel.activeSelf);
-        if(campPanel.activeSelf) RefreshList(); // Açılınca verileri tazele
+        bool isOpen = !campPanel.activeSelf;
+        campPanel.SetActive(isOpen);
+
+        if (isOpen)
+        {
+            RefreshList();
+        }
     }
 
     void RefreshList()
     {
+        // Eskileri temizle
         foreach (Transform child in contentParent) Destroy(child.gameObject);
 
-        foreach (var b in CampManager.Instance.buildings)
+        // Manager'daki binaları listele
+        foreach (var building in CampManager.Instance.buildings)
         {
             var ui = Instantiate(buildingPrefab, contentParent);
-            ui.Setup(b);
+            ui.Setup(building);
         }
     }
 }

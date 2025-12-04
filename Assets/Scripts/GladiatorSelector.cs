@@ -15,7 +15,7 @@ public class GladiatorSelector : MonoBehaviour
             {
                 if (hit.collider.TryGetComponent(out Gladiator gladiator))
                 {
-                    panel.ShowInfo(gladiator.data);
+                    panel.ShowInfo(gladiator);
 
                     var training = gladiator.GetComponent<GladiatorTraining>();
                     TrainingUIManager.Instance.SetCurrentGladiator(training);

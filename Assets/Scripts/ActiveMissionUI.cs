@@ -5,36 +5,30 @@ using TMPro;
 public class ActiveMissionUI : MonoBehaviour
 {
     public TextMeshProUGUI missionNameText;
-    public TextMeshProUGUI timerText;
+    public TextMeshProUGUI timeText; // "3 Gün Kaldı"
     public Image progressBar;
 
-    private float totalDuration;
-    private float timeElapsed;
-    
-    // Bu scripti MissionManager yönetecek, o yüzden Update kullanmıyoruz.
-    // Manager her frame'de buraya "Güncelle" emri verecek.
-    
-    public void Setup(string name, float duration)
+    public void Setup(string name, int totalDays)
     {
         missionNameText.text = name;
-        totalDuration = duration;
-        timeElapsed = 0;
-        UpdateVisuals(0);
+        UpdateVisuals(totalDays, totalDays); // İlk başta full veya boş başlar
     }
 
-    public void UpdateProgress(float deltaTime)
+    public void UpdateVisuals(int remaining, int total)
     {
-        timeElapsed += deltaTime;
-        UpdateVisuals(timeElapsed);
-    }
-
-    void UpdateVisuals(float current)
-    {
-        float ratio = current / totalDuration;
-        progressBar.fillAmount = ratio;
-        
-        float remaining = totalDuration - current;
-        timerText.text = remaining.ToString("F1") + " sn"; 
-        // İstersen burayı "Gün" olarak da gösterebilirsin.
+        // Kalan gün 0 ise (bugün dönüyorlar demektir), "Son Gün" yazabiliriz
+        if (remaining <= 0)
+        {
+            timeText.text = "Dönüyorlar...";
+            progressBar.fillAmount = 1f;
+        }
+        else
+        {
+            timeText.text = remaining + " Gün Kaldı";
+            
+            // Geçen süreyi hesapla: (Toplam - Kalan) / Toplam
+            float progress = (float)(total - remaining) / total;
+            progressBar.fillAmount = progress;
+        }
     }
 }

@@ -79,7 +79,7 @@ public class GladiatorTraining : MonoBehaviour
         currentSpot = null;
 
         DayManager.Instance.OnNewDay -= OnNewDay;
-
+        gladiator.RefreshStats();
         UITrainingProgress.Instance.Hide();
     }
 

@@ -15,5 +15,5 @@ MonoBehaviour:
   missionName: Viyana
   description: Viyana herkesin hayali
   difficulty: 200
-  durationDays: 400
+  durationDays: 1
   goldReward: 5000

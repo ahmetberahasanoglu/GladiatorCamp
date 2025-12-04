@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: Gladiator_Spartacus
   m_EditorClassIdentifier: Assembly-CSharp::GladiatorData
   gladiatorName: Spartacus
-  strength: 14
-  defense: 12
-  speed: 23
-  morale: 2
+  strength: 26
+  defense: 13
+  speed: 24
+  morale: 10
   stamina: 14
+  level: 6
+  price: 100

@@ -31,6 +31,21 @@ public class Gladiator : MonoBehaviour
     }
 
 
+    public void DecreaseMorale(int amount)
+    {
+        data.morale -= amount;
+        
+        // Moral 0'ın altına düşmesin
+        if (data.morale < 0) data.morale = 0;
+
+        // UI'ı uyar (Eğer panel açıksa anlık güncellensin)
+        RefreshStats(); 
+
+        Debug.Log($"{data.gladiatorName} moral kaybetti. Yeni Moral: {data.morale}");
+        
+        // İLERİDE BURAYA: if (morale == 0) IsyanEt(); eklenecek.
+    }
+
     public void GoTo(Vector3 target)
     {
         agent.SetDestination(target);

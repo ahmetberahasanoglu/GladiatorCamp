@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6f1bfd1eaa87c44ab0d82f1d6663106, type: 3}
   m_Name: Gladiator_Spartacus
   m_EditorClassIdentifier: Assembly-CSharp::GladiatorData
-  gladiatorName: Spartacus
+  gladiatorName: Mustafa
   strength: 26
-  defense: 13
+  defense: 15
   speed: 24
-  morale: 10
+  morale: 0
   stamina: 14
-  level: 6
+  level: 8
   price: 100

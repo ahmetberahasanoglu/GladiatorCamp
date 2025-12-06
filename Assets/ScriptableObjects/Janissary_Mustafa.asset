@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: Janissary_Mustafa
   m_EditorClassIdentifier: Assembly-CSharp::GladiatorData
   gladiatorName: Mustafa
-  strength: 26
-  defense: 15
-  speed: 24
-  morale: 0
-  stamina: 14
-  level: 8
+  strength: 10
+  defense: 10
+  speed: 10
+  morale: 10
+  stamina: 10
+  level: 1
   price: 100

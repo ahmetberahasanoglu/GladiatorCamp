@@ -1,5 +1,6 @@
 using UnityEngine;
-using System.IO; // Dosya işlemleri için şart
+using System.IO;
+using UnityEngine.SceneManagement; // Dosya işlemleri için şart
 
 public class SaveManager : MonoBehaviour
 {
@@ -107,5 +108,9 @@ public class SaveManager : MonoBehaviour
         }
 
         Debug.Log("Oyun Yüklendi!");
+    }
+    public void StartGame()
+    {
+        SceneManager.LoadScene("CampScene");
     }
 }

@@ -48,6 +48,27 @@ public class RecruitManager : MonoBehaviour
         // Eğer UI açıksa anlık yenilemesi için (Opsiyonel, UI kodun hata vermez)
         // FindObjectOfType<RecruitUIManager>()?.RefreshList();
     }
+   
+    public void LoadSoldierFromSave(SoldierSaveData savedData)
+    {
+        GameObject newObj = Instantiate(soldierPrefab, soldierSpawnPoint.position, Quaternion.identity);
+        Gladiator glad = newObj.GetComponent<Gladiator>();
+
+        // Yeni veri oluştur
+        JanissaryData newData = ScriptableObject.CreateInstance<JanissaryData>();
+        
+        // Kaydedilmiş verileri aktar
+        newData.gladiatorName = savedData.name;
+        newData.strength = savedData.strength;
+        newData.stamina = savedData.stamina;
+        newData.defense = savedData.defense;
+        newData.speed = savedData.speed;
+        newData.morale = savedData.morale;
+        newData.level = savedData.level;
+
+        // Askerin verisini ata
+        glad.data = newData;
+    }
     public void RecruitSoldier(RecruitCandidate candidate)
     {
         // 1. KONTROL: Para var mı?

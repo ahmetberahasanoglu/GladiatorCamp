@@ -2,16 +2,13 @@ using UnityEngine;
 
 public class GladiatorInventory : MonoBehaviour
 {
-    [Header("�zerindeki Ekipmanlar")]
+    [Header("Üzerindeki Ekipmanlar")]
     public ItemData weapon;
     public ItemData armor;
     public ItemData helmet;
     public ItemData shield;
 
-    private JanissaryData data; // Scriptable Object Referans�
-
-    // Gladyat�r�n "��plak" (Do�al) g��lerini haf�zada tutmal�y�z
-    // Yoksa her e�ya takt���nda kal�c� olarak g��lenir.
+    private JanissaryData data; 
     private int baseStr, baseDef, baseSpd, baseSta, baseMor;
     private bool isInitialized = false;
 

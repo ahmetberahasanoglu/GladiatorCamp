@@ -67,28 +67,22 @@ public class RecruitManager : MonoBehaviour
             Debug.Log($"<color=red>KIŞLA DOLU! ({currentCount}/{maxCap})</color> Önce koğuşu genişlet!");
             return;
         }
-
-        // --- İŞLEM BAŞLIYOR ---
-
-        // A. Parayı düş
+ 
         MoneyManager.Instance.Spend(candidate.cost);
 
-        // B. Askeri Sahnede Yarat
         GameObject newObj = Instantiate(soldierPrefab, soldierSpawnPoint.position, Quaternion.identity);
-        
-        // C. Askerin verilerini (Stats) adaya göre ayarla
         Gladiator glad = newObj.GetComponent<Gladiator>();
-        
-        // DİKKAT: ScriptableObject'i kopyalamazsak hepsi aynı veriyi kullanır!
-        // Bu yüzden yeni bir instance (kopya) oluşturuyoruz.
-        glad.data = Instantiate(glad.data); 
-        
-        glad.data.gladiatorName = candidate.candidateName;
-        glad.data.strength = candidate.potentialStrength;
-        glad.data.stamina = candidate.potentialStamina;
-        glad.data.level = 1; // Herkes acemi başlar
+        JanissaryData newData = ScriptableObject.CreateInstance<JanissaryData>();
+        newData.gladiatorName = candidate.candidateName;
+        newData.strength = candidate.potentialStrength;
+        newData.stamina = candidate.potentialStamina;
+        newData.defense = 1; 
+        newData.speed = 1;
+        newData.morale = 100;
+        newData.level = 1;
 
-        // D. Listeden çıkar (Artık alındı)
+    
+        glad.data = newData;
         dailyCandidates.Remove(candidate);
 
         Debug.Log("Yeni bir Acemi Oğlanı ocağa katıldı: " + candidate.candidateName);

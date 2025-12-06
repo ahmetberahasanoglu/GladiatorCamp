@@ -3,12 +3,22 @@ using UnityEngine.AI;
 using System;
 public class Gladiator : MonoBehaviour
 {
-    public JanissaryData data;
+    [SerializeField] private JanissaryData _templateData;
+    public JanissaryData data {get;set;}
     private NavMeshAgent agent;
     public event Action OnStatsChanged;
-    public bool isOnMission = false; 
-
-    // Asker müsait mi? (Hem eğitimde değil, hem seferde değilse)
+    public bool isOnMission = false;
+    void Awake()
+    {
+        if (_templateData != null)
+        {
+            data = Instantiate(_templateData);
+        }
+    }
+    public void InitializeData(JanissaryData sourceData)
+    {
+        data = Instantiate(sourceData);
+    }
     public bool IsAvailable 
     {
         get 
@@ -21,7 +31,6 @@ public class Gladiator : MonoBehaviour
     }   
     public void RefreshStats()
     {
-        // Abone olan (Dinleyen) biri varsa (?.), haberi ilet (Invoke)
         OnStatsChanged?.Invoke();
     }
     void Start()

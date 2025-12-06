@@ -1,2 +1,2 @@
-# GladiatorCamp
-gladiator game inspired by domina
+# JanissaryCamp
+at first it'a gladiator camp game inspired by domina but it's changing slowly...

@@ -27,7 +27,10 @@ public class SoldierSaveData
     public int speed;
     public int morale;
     public int level;
-    // İleride buraya: public string weaponID; gibi şeyler eklenecek
+    public string weaponID;
+    public string armorID;
+    public string helmetID;
+    public string shieldID;
 }
 
 // Bina verisi

@@ -51,13 +51,39 @@ public class RecruitManager : MonoBehaviour
    
     public void LoadSoldierFromSave(SoldierSaveData savedData)
     {
-        GameObject newObj = Instantiate(soldierPrefab, soldierSpawnPoint.position, Quaternion.identity);
-        Gladiator glad = newObj.GetComponent<Gladiator>();
+       GameObject newObj = Instantiate(soldierPrefab, soldierSpawnPoint.position, Quaternion.identity);
 
-        // Yeni veri oluştur
-        JanissaryData newData = ScriptableObject.CreateInstance<JanissaryData>();
+        newObj.name = savedData.name;
+
+        // 3. ZORLA AKTİF ET (Eğer prefab kapalıysa bile açılsın)
+        newObj.SetActive(true);
+
+        // 4. BİLEŞENLERİ KONTROL ET VE AÇ
+        var gladComponent = newObj.GetComponent<Gladiator>();
+        var aiComponent = newObj.GetComponent<GladiatorAI>();
+        var animatorComponent = newObj.GetComponent<Animator>();
+        var selectorComponent = newObj.GetComponent<GladiatorSelector>();
+        var inventoryComponent = newObj.GetComponent<GladiatorInventory>();
+        var trainingComponent = newObj.GetComponent<GladiatorTraining>();
+        var agentComponent = newObj.GetComponent<UnityEngine.AI.NavMeshAgent>();
+
+        if (gladComponent != null) gladComponent.enabled = true;
+        if (aiComponent != null) aiComponent.enabled = true;
+        if (animatorComponent != null) animatorComponent.enabled = true;
+        if (selectorComponent != null) selectorComponent.enabled = true;
+        if (inventoryComponent != null) inventoryComponent.enabled = true;
+        if (trainingComponent != null) trainingComponent.enabled = true;
         
-        // Kaydedilmiş verileri aktar
+        
+        // Güvenli yerleştirme için Warp 
+        if (agentComponent != null)
+        {
+            agentComponent.enabled = true;
+            agentComponent.Warp(soldierSpawnPoint.position);
+        }
+
+
+        JanissaryData newData = ScriptableObject.CreateInstance<JanissaryData>();
         newData.gladiatorName = savedData.name;
         newData.strength = savedData.strength;
         newData.stamina = savedData.stamina;
@@ -66,8 +92,7 @@ public class RecruitManager : MonoBehaviour
         newData.morale = savedData.morale;
         newData.level = savedData.level;
 
-        // Askerin verisini ata
-        glad.data = newData;
+        gladComponent.data = newData;
     }
     public void RecruitSoldier(RecruitCandidate candidate)
     {

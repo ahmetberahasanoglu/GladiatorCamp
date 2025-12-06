@@ -11,7 +11,7 @@ public enum ItemType
 [CreateAssetMenu(menuName = "Data/Item")]
 public class ItemData : ScriptableObject
 {
-    public string itemName;
+    public string itemID;
     public ItemType type;
     public int price;
    // [TextArea(3, 10)] public string description;

@@ -1897,34 +1897,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c6a032c651ce34087c2013b88be0bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GladiatorTraining
---- !u!114 &220892557
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 220892540}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3d917012af73fce4f9cc7b038675e414, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GladiatorAI
---- !u!114 &220892558
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 220892540}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 81437219b4e75db4ba898aa5f6c3d840, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GladiatorInventory
-  weapon: {fileID: 0}
-  armor: {fileID: 0}
-  helmet: {fileID: 0}
-  shield: {fileID: 0}
 --- !u!1 &249827019
 GameObject:
   m_ObjectHideFlags: 0
@@ -4377,39 +4349,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 516690240}
   m_CullTransparentMesh: 1
---- !u!1 &551509400 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1174153895519014436, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
-  m_PrefabInstance: {fileID: 801913729}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &551509410
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 551509400}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3d917012af73fce4f9cc7b038675e414, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GladiatorAI
---- !u!114 &551509411
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 551509400}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 81437219b4e75db4ba898aa5f6c3d840, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GladiatorInventory
-  weapon: {fileID: 0}
-  armor: {fileID: 0}
-  helmet: {fileID: 0}
-  shield: {fileID: 0}
 --- !u!1 &584830266
 GameObject:
   m_ObjectHideFlags: 0
@@ -6233,13 +6172,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1174153895519014436, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 551509410}
-    - targetCorrespondingSourceObject: {fileID: 1174153895519014436, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 551509411}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
 --- !u!1 &804648614
 GameObject:
@@ -16671,20 +16604,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Gladiator
       objectReference: {fileID: 0}
-    - target: {fileID: 8261976675823311341, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
-      propertyPath: _templateData
-      value: 
-      objectReference: {fileID: 11400000, guid: c24b5dc32a5e3e5459b03e86c6679877, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1174153895519014436, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 220892557}
-    - targetCorrespondingSourceObject: {fileID: 1174153895519014436, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 220892558}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

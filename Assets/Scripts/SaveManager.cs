@@ -20,16 +20,26 @@ public class SaveManager : MonoBehaviour
     {
         GameSaveData data = new GameSaveData();
 
-        // 1. GLOBAL VERİLERİ TOPLA
+        // Global veriler...
         data.savedGold = MoneyManager.Instance.gold;
         data.savedFood = SupplyManager.Instance.currentFood;
         if (DayManager.Instance != null) data.savedDay = DayManager.Instance.currentDay;
 
-        // 2. ASKERLERİ TOPLA
+        // --- DÜZELTİLMESİ GEREKEN KISIM ---
+        
+        // 1. Sahnedeki TÜM askerleri bul
         Gladiator[] allSoldiers = FindObjectsOfType<Gladiator>();
+
         foreach (var soldier in allSoldiers)
         {
+            // ÖNEMLİ: Eğer asker "RecruitCandidate" yani vitrindeki askerdeyse onu kaydetme!
+            // Sadece bizim askerimiz olanları (Clone) kaydet.
+            // Bunun için basit bir kontrol: Eğer JanissaryData'sı yoksa atla.
+            if (soldier.data == null) continue;
+
             SoldierSaveData sData = new SoldierSaveData();
+            
+            // DİKKAT: Burada 'soldier' değişkenini kullandığından emin ol!
             sData.name = soldier.data.gladiatorName;
             sData.strength = soldier.data.strength;
             sData.stamina = soldier.data.stamina;
@@ -40,24 +50,13 @@ public class SaveManager : MonoBehaviour
             
             data.soldiers.Add(sData);
         }
+        // ----------------------------------
 
-        // 3. BİNALARI TOPLA
-        if (CampManager.Instance != null)
-        {
-            foreach (var b in CampManager.Instance.buildings)
-            {
-                BuildingSaveData bData = new BuildingSaveData();
-                bData.buildingID = b.id;
-                bData.level = b.level;
-                data.buildings.Add(bData);
-            }
-        }
-
-        // 4. JSON'A ÇEVİR VE YAZ
-        string json = JsonUtility.ToJson(data, true); // true = okunaklı format
-        File.WriteAllText(savePath, json);
-
-        Debug.Log("Oyun Kaydedildi! Yol: " + savePath);
+        // Bina kaydı vs...
+        
+        string json = JsonUtility.ToJson(data, true);
+        System.IO.File.WriteAllText(savePath, json);
+        Debug.Log("Kaydedildi.");
     }
 
     public void LoadGame()

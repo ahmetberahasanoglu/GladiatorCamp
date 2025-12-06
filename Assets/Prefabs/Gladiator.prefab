@@ -17,6 +17,8 @@ GameObject:
   - component: {fileID: 8261976675823311341}
   - component: {fileID: 1087899057499240051}
   - component: {fileID: 5588717568499409998}
+  - component: {fileID: 3917729198740615885}
+  - component: {fileID: 8161922304838044321}
   m_Layer: 0
   m_Name: Gladiator
   m_TagString: Untagged
@@ -174,7 +176,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a44912015c40b7a47b59bf027c3d0fde, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gladiator
-  data: {fileID: 11400000, guid: c24b5dc32a5e3e5459b03e86c6679877, type: 2}
+  _templateData: {fileID: 11400000, guid: c24b5dc32a5e3e5459b03e86c6679877, type: 2}
+  isOnMission: 0
 --- !u!114 &1087899057499240051
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -201,4 +204,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c6a032c651ce34087c2013b88be0bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GladiatorTraining
-  isTraining: 0
+--- !u!114 &3917729198740615885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1174153895519014436}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d917012af73fce4f9cc7b038675e414, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GladiatorAI
+--- !u!114 &8161922304838044321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1174153895519014436}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81437219b4e75db4ba898aa5f6c3d840, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GladiatorInventory
+  weapon: {fileID: 0}
+  armor: {fileID: 0}
+  helmet: {fileID: 0}
+  shield: {fileID: 0}

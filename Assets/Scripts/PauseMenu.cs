@@ -32,8 +32,9 @@ public class PauseMenu : MonoBehaviour
 
     public void OnLoadClicked()
     {
+        Time.timeScale=1;
         SaveManager.Instance.LoadGame();
-        ToggleMenu(); // Menüyü kapat
+        ToggleMenu(); 
     }
     
     public void OnQuitClicked()

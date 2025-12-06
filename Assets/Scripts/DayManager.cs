@@ -38,7 +38,8 @@ public class DayManager : MonoBehaviour
         Debug.Log($"Gün bitti. Yeni Gün: {currentDay}");
         CheckForRandomEvent();
         CheckForUlufe();
-        SaveManager.Instance.SaveGame();//Autosave ekledik
+      //  SaveManager.Instance.SaveGame();//Autosave ekledik
+        MoneyManager.Instance.EndOfDay();
     }
 
     void CheckForRandomEvent()

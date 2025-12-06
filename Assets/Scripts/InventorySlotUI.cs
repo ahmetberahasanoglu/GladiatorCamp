@@ -1,20 +1,20 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System; // Action kullanmak için gerekli
+using System; // Action kullanmak iï¿½in gerekli
 
 public class InventorySlotUI : MonoBehaviour
 {
-    [Header("UI Bileþenleri")]
+    [Header("UI Bileï¿½enleri")]
     public TextMeshProUGUI nameText;
     public Button equipButton;
 
-    // Bu fonksiyonu Manager çaðýracak ve "Týklanýnca ne yapacaðýný" söyleyecek
+    // Bu fonksiyonu Manager ï¿½aï¿½ï¿½racak ve "Tï¿½klanï¿½nca ne yapacaï¿½ï¿½nï¿½" sï¿½yleyecek
     public void Setup(ItemData item, Action onEquipClicked)
     {
-        nameText.text = item.itemName;
+        nameText.text = item.itemID;
 
-        // Butona týklanýnca Manager'dan gelen emri uygula
+        // Butona tï¿½klanï¿½nca Manager'dan gelen emri uygula
         equipButton.onClick.RemoveAllListeners();
         equipButton.onClick.AddListener(() => onEquipClicked());
     }

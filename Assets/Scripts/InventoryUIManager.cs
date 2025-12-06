@@ -5,20 +5,20 @@ public class InventoryUIManager : MonoBehaviour
 {
     public static InventoryUIManager Instance;
 
-    [Header("UI Referanslarý")]
-    public GameObject inventoryPanel; // Açýlýp kapanacak ana pencere
-    public Transform contentParent;   // Sýralanacak yer (Grid)
-    public InventorySlotUI slotPrefab; // Az önce yazdýðýmýz kutucuk
+    [Header("UI Referanslarï¿½")]
+    public GameObject inventoryPanel; // Aï¿½ï¿½lï¿½p kapanacak ana pencere
+    public Transform contentParent;   // Sï¿½ralanacak yer (Grid)
+    public InventorySlotUI slotPrefab; // Az ï¿½nce yazdï¿½ï¿½ï¿½mï¿½z kutucuk
 
-    private GladiatorInventory _targetGladiator; // O an giydirdiðimiz gladyatör
+    private GladiatorInventory _targetGladiator; // O an giydirdiï¿½imiz gladyatï¿½r
 
     void Awake()
     {
         Instance = this;
-        inventoryPanel.SetActive(false); // Oyun baþlarken kapalý olsun
+        inventoryPanel.SetActive(false); // Oyun baï¿½larken kapalï¿½ olsun
     }
 
-    // 1. ADIM: Gladyatöre týklayýnca bu çalýþacak
+    // 1. ADIM: Gladyatï¿½re tï¿½klayï¿½nca bu ï¿½alï¿½ï¿½acak
     public void OpenInventoryFor(GladiatorInventory gladiator)
     {
         _targetGladiator = gladiator;
@@ -32,37 +32,37 @@ public class InventoryUIManager : MonoBehaviour
         _targetGladiator = null;
     }
 
-    // 2. ADIM: Depodaki eþyalarý listele
+    // 2. ADIM: Depodaki eï¿½yalarï¿½ listele
     void RefreshList()
     {
         // Temizlik
         foreach (Transform child in contentParent) Destroy(child.gameObject);
 
-        // Depodaki her eþya için kutucuk üret
+        // Depodaki her eï¿½ya iï¿½in kutucuk ï¿½ret
         foreach (var item in InventoryStorage.Instance.storedItems)
         {
             var slot = Instantiate(slotPrefab, contentParent);
 
-            // Kutucuða görev ver: "Bana týklanýrsa EquipItem fonksiyonunu çalýþtýr"
+            // Kutucuï¿½a gï¿½rev ver: "Bana tï¿½klanï¿½rsa EquipItem fonksiyonunu ï¿½alï¿½ï¿½tï¿½r"
             slot.Setup(item, () => EquipItem(item));
         }
     }
 
-    // 3. ADIM: Eþyayý Giydir
+    // 3. ADIM: Eï¿½yayï¿½ Giydir
     void EquipItem(ItemData item)
     {
         if (_targetGladiator != null)
         {
-            // Gladyatöre eþyayý ver
+            // Gladyatï¿½re eï¿½yayï¿½ ver
             _targetGladiator.Equip(item);
 
-            // Eþyayý depodan sil (Tek kullanýmlýk mantýðý)
+            // Eï¿½yayï¿½ depodan sil (Tek kullanï¿½mlï¿½k mantï¿½ï¿½ï¿½)
             InventoryStorage.Instance.RemoveItem(item);
 
-            // Listeyi yenile (Eþya listeden gitsin)
+            // Listeyi yenile (Eï¿½ya listeden gitsin)
             RefreshList();
 
-            Debug.Log($"{item.itemName} kuþandý!");
+            Debug.Log($"{item.itemID} kuï¿½andï¿½!");
         }
     }
 }

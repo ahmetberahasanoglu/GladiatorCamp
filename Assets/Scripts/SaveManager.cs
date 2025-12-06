@@ -38,8 +38,15 @@ public class SaveManager : MonoBehaviour
             if (soldier.data == null) continue;
 
             SoldierSaveData sData = new SoldierSaveData();
-            
-            // DİKKAT: Burada 'soldier' değişkenini kullandığından emin ol!
+            var inventory = soldier.GetComponent<GladiatorInventory>();
+        
+        if (inventory != null)
+        {
+            sData.weaponID = inventory.weapon != null ? inventory.weapon.itemID : "";
+            sData.armorID  = inventory.armor != null  ? inventory.armor.itemID  : "";
+            sData.helmetID = inventory.helmet != null ? inventory.helmet.itemID : "";
+            sData.shieldID = inventory.shield != null ? inventory.shield.itemID : "";
+        }
             sData.name = soldier.data.gladiatorName;
             sData.strength = soldier.data.strength;
             sData.stamina = soldier.data.stamina;

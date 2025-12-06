@@ -6161,6 +6161,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Gladiator (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 1174153895519014436, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8261976675823311341, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
       propertyPath: data
       value: 

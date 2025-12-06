@@ -5,16 +5,16 @@ public class MarketManager : MonoBehaviour
 {
     public static MarketManager Instance;
 
-    [Header("Satýlacak Ürünler")]
-    public List<ItemData> itemsForSale; // ScriptableObject'leri buraya sürükleyeceksin
+    [Header("Satï¿½lacak ï¿½rï¿½nler")]
+    public List<ItemData> itemsForSale; // ScriptableObject'leri buraya sï¿½rï¿½kleyeceksin
 
-    [Header("UI Ayarlarý")]
-    public MarketItemUI itemUIPrefab;   // Hazýrladýðýmýz Prefab
+    [Header("UI Ayarlarï¿½")]
+    public MarketItemUI itemUIPrefab;   // Hazï¿½rladï¿½ï¿½ï¿½mï¿½z Prefab
     public Transform contentParent;     // Scroll View'in 'Content' objesi
 
     void Awake()
     {
-        // Singleton yapýsý
+        // Singleton yapï¿½sï¿½
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
     }
@@ -26,38 +26,38 @@ public class MarketManager : MonoBehaviour
 
     public void RefreshMarket()
     {
-        // 1. Önce eski listeyi temizle (Çöp kalmasýn)
+        // 1. ï¿½nce eski listeyi temizle (ï¿½ï¿½p kalmasï¿½n)
         foreach (Transform child in contentParent)
         {
             Destroy(child.gameObject);
         }
 
-        // 2. Listendeki her eþya için bir kutucuk yarat
+        // 2. Listendeki her eï¿½ya iï¿½in bir kutucuk yarat
         foreach (var item in itemsForSale)
         {
-            // Prefab'ý Content'in içine yarat
+            // Prefab'ï¿½ Content'in iï¿½ine yarat
             MarketItemUI uiScript = Instantiate(itemUIPrefab, contentParent);
 
-            // Kutucuða verisini teslim et
+            // Kutucuï¿½a verisini teslim et
             uiScript.Setup(item);
         }
     }
 
     public void Buy(ItemData item)
     {
-        // Para kontrolü
+        // Para kontrolï¿½
         if (MoneyManager.Instance.gold < item.price)
         {
             Debug.Log($"<color=red>Yetersiz Bakiye!</color> Gereken: {item.price}, Olan: {MoneyManager.Instance.gold}");
             return;
         }
 
-        // 1. Parayý düþ
+        // 1. Parayï¿½ dï¿½ï¿½
         MoneyManager.Instance.Spend(item.price);
 
-        // 2. Envantere ekle (Depoya gönder)
+        // 2. Envantere ekle (Depoya gï¿½nder)
         InventoryStorage.Instance.AddItem(item);
 
-        Debug.Log($"<color=green>SATIN ALINDI:</color> {item.itemName}");
+        Debug.Log($"<color=green>SATIN ALINDI:</color> {item.itemID}");
     }
 }

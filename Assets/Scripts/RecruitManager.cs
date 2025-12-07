@@ -51,11 +51,8 @@ public class RecruitManager : MonoBehaviour
    
     public void LoadSoldierFromSave(SoldierSaveData savedData)
     {
-       GameObject newObj = Instantiate(soldierPrefab, soldierSpawnPoint.position, Quaternion.identity);
-
+      GameObject newObj = Instantiate(soldierPrefab, soldierSpawnPoint.position, Quaternion.identity);
         newObj.name = savedData.name;
-
-        // 3. ZORLA AKTİF ET (Eğer prefab kapalıysa bile açılsın)
         newObj.SetActive(true);
 
         // 4. BİLEŞENLERİ KONTROL ET VE AÇ
@@ -74,8 +71,6 @@ public class RecruitManager : MonoBehaviour
         if (inventoryComponent != null) inventoryComponent.enabled = true;
         if (trainingComponent != null) trainingComponent.enabled = true;
         
-        
-        // Güvenli yerleştirme için Warp 
         if (agentComponent != null)
         {
             agentComponent.enabled = true;
@@ -93,6 +88,51 @@ public class RecruitManager : MonoBehaviour
         newData.level = savedData.level;
 
         gladComponent.data = newData;
+
+      //  var inventory = newObj.GetComponent<GladiatorInventory>();
+        
+       if (inventoryComponent != null)
+        {
+            // KRİTİK ADIM 1: Önce veriyi envantere teslim et!
+            // Start() çalışmadan önce bunu yapmalıyız.
+            inventoryComponent.data = newData; 
+
+            // Veritabanı kontrolü
+            if (ItemDatabase.Instance == null)
+            {
+                inventoryComponent.InitializeBaseStats(); 
+                return;
+            }
+
+            // Eşyaları Bul
+            ItemData w = ItemDatabase.Instance.GetItemByID(savedData.weaponID);
+            ItemData a = ItemDatabase.Instance.GetItemByID(savedData.armorID);
+            ItemData h = ItemDatabase.Instance.GetItemByID(savedData.helmetID);
+            ItemData s = ItemDatabase.Instance.GetItemByID(savedData.shieldID);
+
+            // KRİTİK ADIM 2: Bonusları veriden düş (Ters Mühendislik)
+            int strBonus = (w ? w.bonusStrength : 0) + (a ? a.bonusStrength : 0) + (h ? h.bonusStrength : 0) + (s ? s.bonusStrength : 0);
+            int defBonus = (w ? w.bonusDefense : 0) + (a ? a.bonusDefense : 0) + (h ? h.bonusDefense : 0) + (s ? s.bonusDefense : 0);
+            int spdBonus = (w ? w.bonusSpeed : 0) + (a ? a.bonusSpeed : 0) + (h ? h.bonusSpeed : 0) + (s ? s.bonusSpeed : 0);
+            int staBonus = (w ? w.bonusStamina : 0) + (a ? a.bonusStamina : 0) + (h ? h.bonusStamina : 0) + (s ? s.bonusStamina : 0);
+
+            // Statları çıplak hale getir
+            newData.strength -= strBonus;
+            newData.defense -= defBonus;
+            newData.speed -= spdBonus;
+            newData.stamina -= staBonus;
+
+            // KRİTİK ADIM 3: Çıplak hali hafızaya al
+            // (inventoryComponent.data atandığı için artık null hatası vermez)
+            inventoryComponent.InitializeBaseStats();
+
+            // KRİTİK ADIM 4: Eşyaları tak (Statları geri ekle)
+            // item != null kontrolünü inventory içinde yaptık ama burada da yapabiliriz
+            if (w != null) inventoryComponent.Equip(w);
+            if (a != null) inventoryComponent.Equip(a);
+            if (h != null) inventoryComponent.Equip(h);
+            if (s != null) inventoryComponent.Equip(s);
+        }
     }
     public void RecruitSoldier(RecruitCandidate candidate)
     {

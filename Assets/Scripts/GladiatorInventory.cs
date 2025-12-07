@@ -8,7 +8,7 @@ public class GladiatorInventory : MonoBehaviour
     public ItemData helmet;
     public ItemData shield;
 
-    private JanissaryData data; 
+    public JanissaryData data; 
     private int baseStr, baseDef, baseSpd, baseSta, baseMor;
     private bool isInitialized = false;
 
@@ -46,9 +46,19 @@ public void InitializeBaseStats()
         
       
     }
-    public void Equip(ItemData item)
+   public void Equip(ItemData item)
     {
-        // 1. E�yay� ilgili slot'a yerle�tir
+        if (item == null) return; 
+        if (data == null)
+        {
+            data = GetComponent<Gladiator>().data;
+            if (data == null)
+            {
+                Debug.LogError("HATA: Envantere veri atanmamış! Equip çalışmıyor.");
+                return;
+            }
+        }
+
         switch (item.type)
         {
             case ItemType.Weapon: weapon = item; break;
@@ -57,20 +67,16 @@ public void InitializeBaseStats()
             case ItemType.Helmet: helmet = item; break;
         }
 
-        // 2. Statlar� ba�tan hesapla
         RecalculateStats();
     }
-
     void RecalculateStats()
     {
-        // �nce karakteri "��plak" haline d�nd�r
         data.strength = baseStr;
         data.defense = baseDef;
         data.speed = baseSpd;
         data.stamina = baseSta;
         data.morale = baseMor;
 
-        // Sonra �zerindeki e�yalar�n bonuslar�n� ekle
         AddBonus(weapon);
         AddBonus(armor);
         AddBonus(helmet);

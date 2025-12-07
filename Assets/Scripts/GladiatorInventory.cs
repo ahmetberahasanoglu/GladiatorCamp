@@ -46,27 +46,48 @@ public void InitializeBaseStats()
         
       
     }
-   public void Equip(ItemData item)
+   // GladiatorInventory.cs içindeki Equip fonksiyonunu bununla değiştir:
+
+    public void Equip(ItemData newItem)
     {
-        if (item == null) return; 
+        if (newItem == null) return;
         if (data == null)
         {
             data = GetComponent<Gladiator>().data;
-            if (data == null)
-            {
-                Debug.LogError("HATA: Envantere veri atanmamış! Equip çalışmıyor.");
-                return;
-            }
+            if (data == null) return;
         }
 
-        switch (item.type)
+        ItemData oldItem = null; 
+
+    
+        switch (newItem.type)
         {
-            case ItemType.Weapon: weapon = item; break;
-            case ItemType.Armor: armor = item; break;
-            case ItemType.Shield: shield = item; break;
-            case ItemType.Helmet: helmet = item; break;
+            case ItemType.Weapon:
+                oldItem = weapon; 
+                weapon = newItem; 
+                break;
+
+            case ItemType.Armor:
+                oldItem = armor;
+                armor = newItem;
+                break;
+
+            case ItemType.Shield:
+                oldItem = shield;
+                shield = newItem;
+                break;
+
+            case ItemType.Helmet:
+                oldItem = helmet;
+                helmet = newItem;
+                break;
         }
 
+        if (oldItem != null)
+        {
+            InventoryStorage.Instance.AddItem(oldItem);
+            Debug.Log($"{oldItem.itemID} depoya geri gönderildi.");
+        }
         RecalculateStats();
     }
     void RecalculateStats()

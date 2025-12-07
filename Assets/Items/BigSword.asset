@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 872777d28f1ec70429103b9364761e4f, type: 3}
-  m_Name: Shield
+  m_Name: BigSword
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemID: tahta_kalkan
-  type: 2
-  price: 100
-  bonusStrength: 0
-  bonusDefense: 10
+  itemID: "z\xFClfikar"
+  type: 0
+  price: 150
+  bonusStrength: 20
+  bonusDefense: 0
   bonusSpeed: 0
-  bonusStamina: -2
+  bonusStamina: 0

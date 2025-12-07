@@ -14,22 +14,38 @@ public class GladiatorInventory : MonoBehaviour
 
     void Start()
     {
-        // Veriyi �ek ve baz statlar� kaydet
-        if (!isInitialized)
-        {
-            data = GetComponent<Gladiator>().data;
-
-            // E�er oyun ba�lad�ysa ve statlar bozuksa s�f�rlamak i�in iyi bir nokta
-            baseStr = data.strength;
-            baseDef = data.defense;
-            baseSpd = data.speed;
-            baseSta = data.stamina;
-            baseMor = data.morale;
-
-            isInitialized = true;
-        }
+       InitializeBaseStats();
     }
+public void InitializeBaseStats()
+    {
+        if (isInitialized) return; 
 
+        if (data == null) data = GetComponent<Gladiator>().data;
+        if (data == null) return;
+
+    
+        baseStr = data.strength;
+        baseDef = data.defense;
+        baseSpd = data.speed;
+        baseSta = data.stamina;
+        baseMor = data.morale;
+
+        isInitialized = true;
+    }
+    public void EquipWithoutCalc(ItemData item)
+    {
+        if (item == null) return;
+        
+        switch (item.type)
+        {
+            case ItemType.Weapon: weapon = item; break;
+            case ItemType.Armor: armor = item; break;
+            case ItemType.Shield: shield = item; break;
+            case ItemType.Helmet: helmet = item; break;
+        }
+        
+      
+    }
     public void Equip(ItemData item)
     {
         // 1. E�yay� ilgili slot'a yerle�tir

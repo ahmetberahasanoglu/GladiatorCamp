@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 872777d28f1ec70429103b9364761e4f, type: 3}
   m_Name: LeatherArmor
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemID: "zincir z\u0131rh"
+  itemID: "zincir_z\u0131rh"
   type: 1
   price: 100
   bonusStrength: 0

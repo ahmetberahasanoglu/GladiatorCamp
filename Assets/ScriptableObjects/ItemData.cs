@@ -13,6 +13,7 @@ public class ItemData : ScriptableObject
 {
     public string itemID;
     public ItemType type;
+    public Sprite icon;
     public int price;
    // [TextArea(3, 10)] public string description;
 

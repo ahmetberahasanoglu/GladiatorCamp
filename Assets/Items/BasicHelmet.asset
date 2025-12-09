@@ -19,4 +19,4 @@ MonoBehaviour:
   bonusStrength: 2
   bonusDefense: 6
   bonusSpeed: -1
-  bonusStamina: 0
+  bonusStamina: 3

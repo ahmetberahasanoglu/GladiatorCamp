@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using TMPro;
 
 public class InventoryUIManager : MonoBehaviour
 {
@@ -10,6 +11,11 @@ public class InventoryUIManager : MonoBehaviour
     public Transform contentParent; // Liste
     public InventorySlotUI slotPrefab;
     
+    [Header("Toplam Stat Textleri")]
+    public TextMeshProUGUI totalArmorText;
+    public TextMeshProUGUI totalStrengthText;
+    public TextMeshProUGUI totalSpeedText;
+    public TextMeshProUGUI totalStaminaText;
     [Header("Yeni Eklenenler")]
     public ItemDetailPanel detailPanel; // Sağdaki detay penceresi
     
@@ -19,7 +25,7 @@ public class InventoryUIManager : MonoBehaviour
     public EquippedSlotUI helmetSlot;
     public EquippedSlotUI shieldSlot;
 
-    private GladiatorInventory _currentGladiator;
+    public GladiatorInventory _currentGladiator;
 
     void Awake()
     {
@@ -27,7 +33,39 @@ public class InventoryUIManager : MonoBehaviour
         inventoryPanel.SetActive(false);
         detailPanel.gameObject.SetActive(false); // Başta kapalı
     }
+public void RefreshEquipped()
+    {
+   
+         if (_currentGladiator == null) return;
+        
+        weaponSlot.Setup(_currentGladiator.weapon);
+        armorSlot.Setup(_currentGladiator.armor);
+        helmetSlot.Setup(_currentGladiator.helmet);
+        shieldSlot.Setup(_currentGladiator.shield);
 
+        
+        int totalDef = 0;
+        if (_currentGladiator.helmet) totalDef += _currentGladiator.helmet.bonusDefense;
+        if (_currentGladiator.armor) totalDef += _currentGladiator.armor.bonusDefense;
+        if (_currentGladiator.shield) totalDef += _currentGladiator.shield.bonusDefense;
+        int totalStr=0;
+        if (_currentGladiator.weapon) totalStr += _currentGladiator.weapon.bonusStrength;
+        int totalSpeed=0;
+        if(_currentGladiator.armor) totalSpeed += _currentGladiator.armor.bonusSpeed;
+        if(_currentGladiator.helmet) totalSpeed += _currentGladiator.helmet.bonusSpeed;
+        if(_currentGladiator.shield) totalSpeed += _currentGladiator.shield.bonusSpeed;
+        int totalStamina=0;
+        if(_currentGladiator.armor) totalStamina += _currentGladiator.armor.bonusStamina;
+        if(_currentGladiator.shield) totalStamina += _currentGladiator.shield.bonusStamina;
+        if(_currentGladiator.helmet) totalStamina += _currentGladiator.helmet.bonusStamina;
+    
+
+        totalArmorText.text = "Toplam Zırh: " + totalDef;
+        totalStrengthText.text = "Toplam Zırh: " + totalStr;
+        totalSpeedText.text = "Toplam Zırh: " + totalSpeed;
+        totalStaminaText.text = "Toplam Zırh: " + totalStamina;
+   
+    }
     public void OpenInventoryFor(GladiatorInventory gladiator)
     {
         _currentGladiator = gladiator;
@@ -60,16 +98,7 @@ public class InventoryUIManager : MonoBehaviour
         }
     }
 
-    // Üstündeki eşyaları güncelle
-    public void RefreshEquipped()
-    {
-        if (_currentGladiator == null) return;
-        
-        weaponSlot.Setup(_currentGladiator.weapon);
-        armorSlot.Setup(_currentGladiator.armor);
-        helmetSlot.Setup(_currentGladiator.helmet);
-        shieldSlot.Setup(_currentGladiator.shield);
-    }
+   
 
     // Listeden bir şeye tıklanınca
     void OnItemSelected(ItemData item)

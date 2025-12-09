@@ -29,28 +29,10 @@ public class MarketItemUI : MonoBehaviour
         // 2. STATLARI HESAPLA (Sadece 0'dan büyük olanları göster)
         StringBuilder statsBuilder = new StringBuilder();
 
-        if (item.bonusStrength >= 0)
-        {
-             statsBuilder.AppendLine($"Güç: <color=green>+{item.bonusStrength}</color>");
-        }
-        else if (item.bonusStrength<0){
-             statsBuilder.AppendLine($"Güç: <color=red>{item.bonusStrength}</color>");
-        }
-
-        if (item.bonusDefense >= 0)  {statsBuilder.AppendLine($"Def: <color=green>+{item.bonusDefense}</color>");
-        }
-        else if (item.bonusDefense<0){
-             statsBuilder.AppendLine($"Güç: <color=red>{item.bonusDefense}</color>");
-        }
-        if (item.bonusSpeed >= 0)   { statsBuilder.AppendLine($"Hız: <color=green>+{item.bonusSpeed}</color>");}
-        else if (item.bonusSpeed<0){
-             statsBuilder.AppendLine($"Güç: <color=red>{item.bonusSpeed}</color>");
-        }
-
-        if (item.bonusStamina >= 0)  {statsBuilder.AppendLine($"Day: <color=green>+{item.bonusStamina}</color>");}
-        else if (item.bonusStamina<0){
-             statsBuilder.AppendLine($"Güç: <color=red>{item.bonusStamina}</color>");
-        }
+        if (item.bonusStrength != 0) statsBuilder.Append($"STR: {Colorize(item.bonusStrength)}  ");
+        if (item.bonusDefense != 0)  statsBuilder.Append($"DEF: {Colorize(item.bonusDefense)}  ");
+        if (item.bonusSpeed != 0)    statsBuilder.Append($"SPD: {Colorize(item.bonusSpeed)}  ");
+        if (item.bonusStamina != 0)  statsBuilder.Append($"STA: {Colorize(item.bonusStamina)}  ");
         // if (item.bonusMorale != 0)   statsBuilder.AppendLine($"Moral: <color=green>+{item.bonusMorale}</color>");
 
         // Eğer hiçbir stat yoksa (mesela sadece süs eşyasıysa)
@@ -62,7 +44,12 @@ public class MarketItemUI : MonoBehaviour
         buyButton.onClick.RemoveAllListeners();
         buyButton.onClick.AddListener(OnBuyClicked);
     }
-
+ string Colorize(int val)
+    {
+        if (val > 0) return $"<color=green>+{val}</color>"; // Yeşil +5
+        if (val < 0) return $"<color=red>{val}</color>";    // Kırmızı -2
+        return val.ToString();
+    }
     void OnBuyClicked()
     {
         MarketManager.Instance.Buy(_myItemData);

@@ -3,18 +3,19 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 using System.Text;
+using UnityEngine.EventSystems;
 
-public class InventorySlotUI : MonoBehaviour
+public class InventorySlotUI : MonoBehaviour//,IPointerEnterHandler, IPointerExitHandler
 {
     [Header("UI Bileşenleri")]
     public TextMeshProUGUI nameText;
     public Button equipButton;
-    public Image iconImage; // YENİ EKLENEN: İkon resmi için referans
+    public Image iconImage; 
     public TextMeshProUGUI statsText;
-
-    // Manager'ın çağırdığı Setup fonksiyonu
+    private ItemData _myItem;
     public void Setup(ItemData item, Action onEquipClicked)
     {
+        _myItem = item;
         nameText.text = item.itemID;
 
         if (item.icon != null)
@@ -26,10 +27,7 @@ public class InventorySlotUI : MonoBehaviour
         {
             iconImage.enabled = false; 
         }
-
-        // 2. STATLARI HAZIRLA (StringBuilder ile)
-        // Eğer slotların darsa yan yana yazması için Append(" ") kullanabilirsin.
-        // Alt alta olması için AppendLine() kullan.
+        // Alt alta olması için AppendLine() kullanılabilr
       
         StringBuilder sb = new StringBuilder();
 
@@ -41,11 +39,7 @@ public class InventorySlotUI : MonoBehaviour
 
         // Eğer özellik yoksa
         if (sb.Length == 0) sb.Append("-");
-
-        // Text'e ata (Null kontrolü yapıyoruz ki Unity'de atamayı unutursan oyun çökmesin)
         if (statsText != null) statsText.text = sb.ToString();
-
-        // 3. Buton
         equipButton.onClick.RemoveAllListeners();
         equipButton.onClick.AddListener(() => onEquipClicked());
     }
@@ -55,4 +49,17 @@ public class InventorySlotUI : MonoBehaviour
         if (val < 0) return $"<color=red>{val}</color>";    // Kırmızı -2
         return val.ToString();
     }
+     /*
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        // Hangi askere baktığımızı bulmamız lazım (InventoryUI'dan çekebilirsin)
+        var currentGlad = InventoryUIManager.Instance._currentGladiator; 
+        TooltipManager.Instance.ShowTooltip(_myItem, currentGlad);
+    }
+
+   
+    public void OnPointerExit(PointerEventData eventData)
+    {
+       // TooltipManager.Instance.HideTooltip();
+    }*/
 }

@@ -1,20 +1,35 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System; // Action kullanmak i�in gerekli
+using System; 
 
 public class InventorySlotUI : MonoBehaviour
 {
-    [Header("UI Bile�enleri")]
+    [Header("UI Bileşenleri")]
     public TextMeshProUGUI nameText;
     public Button equipButton;
+    public Image iconImage; // YENİ EKLENEN: İkon resmi için referans
 
-    // Bu fonksiyonu Manager �a��racak ve "T�klan�nca ne yapaca��n�" s�yleyecek
+    // Manager'ın çağırdığı Setup fonksiyonu
     public void Setup(ItemData item, Action onEquipClicked)
     {
-        nameText.text = item.itemID;
+        // Eşyanın ID'sini veya İsmini yaz
+        nameText.text = item.itemID; // itemID yerine itemName daha güzel görünür
 
-        // Butona t�klan�nca Manager'dan gelen emri uygula
+        // YENİ EKLENEN: İkonu güncelle
+        if (item.icon != null)
+        {
+            iconImage.sprite = item.icon;
+            iconImage.enabled = true; // Resim varsa göster
+        }
+        else
+        {
+            // Resim yoksa boş beyaz kare görünmesin diye kapatabiliriz
+            // veya varsayılan bir resim atayabiliriz.
+            iconImage.enabled = false; 
+        }
+
+        // Buton ayarları
         equipButton.onClick.RemoveAllListeners();
         equipButton.onClick.AddListener(() => onEquipClicked());
     }

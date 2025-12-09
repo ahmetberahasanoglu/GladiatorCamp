@@ -22,7 +22,7 @@ public class MarketItemUI : MonoBehaviour
         priceText.text = item.price.ToString() + " Altin";
 
         // E�er ItemData'ya ikon eklediysen:
-        // iconImage.sprite = item.icon; 
+        iconImage.sprite = item.icon; 
 
         // Butonu temizle ve yeni g�revi ata
         buyButton.onClick.RemoveAllListeners();

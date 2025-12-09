@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   itemID: "b\xF6rk"
   type: 3
+  icon: {fileID: 21300000, guid: 61df717573554504a96432b870b1954b, type: 3}
   price: 80
   bonusStrength: 2
   bonusDefense: 6

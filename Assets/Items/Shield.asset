@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   itemID: tahta_kalkan
   type: 2
+  icon: {fileID: 21300000, guid: 4b4f5c7b8c361064e850c2eac89ecada, type: 3}
   price: 100
   bonusStrength: 0
   bonusDefense: 10

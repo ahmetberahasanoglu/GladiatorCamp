@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 872777d28f1ec70429103b9364761e4f, type: 3}
   m_Name: BasicSword
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemID: "yata\u011Fan"
+  itemID: "Yata\u011Fan"
   type: 0
   icon: {fileID: 21300000, guid: 32663a39899419242ade936239c7ce24, type: 3}
   price: 100

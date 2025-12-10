@@ -80,4 +80,9 @@ public class DayManager : MonoBehaviour
             // Buraya özel bir Ulufe Eventi tetiklyicez
         }
     }
+    public void RefreshUI()
+    {
+        // Mevcut günü UI'a zorla gönder
+        OnDayChanged?.Invoke(currentDay);
+    }
 }

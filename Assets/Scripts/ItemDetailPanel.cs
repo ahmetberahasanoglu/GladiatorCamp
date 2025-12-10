@@ -7,7 +7,7 @@ public class ItemDetailPanel : MonoBehaviour
     [Header("Görseller")]
     public Image itemIcon;
     public TextMeshProUGUI itemNameText;
-    public TextMeshProUGUI descriptionText; // Fiyatı buraya yazabiliriz
+   // public TextMeshProUGUI descriptionText; // Fiyatı buraya yazabiliriz
     public Button equipButton;
 
     [Header("Statlar")]
@@ -30,7 +30,7 @@ public class ItemDetailPanel : MonoBehaviour
         // 1. Temel Bilgiler
         itemIcon.sprite = item.icon;
         itemNameText.text = item.itemID;
-        descriptionText.text = $"Fiyat: {item.price} Akçe"; // Veya "Satış: {item.price / 2}"
+      //  descriptionText.text = $"Fiyat: {item.price} Akçe"; // Veya "Satış: {item.price / 2}"
 
         // 2. Karşılaştırma Mantığı
         // Bu eşyanın tipi ne? (Örn: Silah)

@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
-
+using System;
 
 [System.Serializable]
 public class Building
@@ -37,6 +37,7 @@ public class Building
 public class CampManager : MonoBehaviour
 {
     public static CampManager Instance;
+    public event Action OnCampUpdated;
     
     // Binaları burada tutuyoruz
     public List<Building> buildings = new List<Building>();
@@ -84,11 +85,16 @@ public class CampManager : MonoBehaviour
         {
             MoneyManager.Instance.Spend(cost);
             b.level++;
+            OnCampUpdated?.Invoke();
             Debug.Log($"{b.displayName} seviye atladı! Yeni Seviye: {b.level}, Kapasite: {b.GetValue()}");
         }
         else
         {
             Debug.Log("Yetersiz Bakiye!");
         }
+    }
+    public void RefreshUI()
+    {
+        OnCampUpdated?.Invoke();
     }
 }

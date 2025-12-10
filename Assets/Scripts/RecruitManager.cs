@@ -1,9 +1,10 @@
 using UnityEngine;
 using System.Collections.Generic;
-
+using System;
 public class RecruitManager : MonoBehaviour
 {
     public static RecruitManager Instance;
+    public event Action OnSoldierCountChanged;
 
     [Header("Ayarlar")]
     public GameObject soldierPrefab; // Sahneye yaratılacak asker (Gladiator scriptli)
@@ -170,7 +171,11 @@ public class RecruitManager : MonoBehaviour
     
         glad.data = newData;
         dailyCandidates.Remove(candidate);
-
+        OnSoldierCountChanged?.Invoke();
         Debug.Log("Yeni bir Acemi Oğlanı ocağa katıldı: " + candidate.candidateName);
+    }
+    public void RefreshUI()
+    {
+        OnSoldierCountChanged?.Invoke();
     }
 }

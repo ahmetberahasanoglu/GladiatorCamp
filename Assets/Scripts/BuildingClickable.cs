@@ -1,13 +1,13 @@
 using UnityEngine;
 using UnityEngine.Events; // Unity Eventlerini kullanacağız
+using UnityEngine.EventSystems;
 
 public class BuildingClickable : MonoBehaviour
 {
     [Header("Ayarlar")]
-    public string buildingName; // Örn: "Silahhane"
-    public Color highlightColor = Color.yellow; // Üzerine gelince parlasın
+    public string buildingName; 
+    public Color highlightColor = Color.yellow;
     
-    // Tıklanınca ne olsun? (Inspector'dan seçeceğiz)
     public UnityEvent OnClick; 
 
     private Renderer _renderer;
@@ -18,8 +18,6 @@ public class BuildingClickable : MonoBehaviour
         _renderer = GetComponent<Renderer>();
         if (_renderer != null) _originalColor = _renderer.material.color;
     }
-
-    // Mouse üzerine gelince (İsteğe bağlı, PC için güzel detay)
     void OnMouseEnter()
     {
         if (_renderer != null) _renderer.material.color = highlightColor;
@@ -30,10 +28,11 @@ public class BuildingClickable : MonoBehaviour
         if (_renderer != null) _renderer.material.color = _originalColor;
     }
 
-    // Tıklanınca
+
     public void OnMouseDown()
     {
+        if (EventSystem.current.IsPointerOverGameObject()) return;
         Debug.Log(buildingName + " binasına tıklandı.");
-        OnClick?.Invoke(); // Tanımladığımız fonksiyonu çalıştır
+        OnClick?.Invoke(); 
     }
 }

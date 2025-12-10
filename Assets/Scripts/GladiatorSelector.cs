@@ -1,5 +1,5 @@
 using UnityEngine;
-
+using UnityEngine.EventSystems;
 public class GladiatorSelector : MonoBehaviour
 {
     public Camera cam;
@@ -29,6 +29,7 @@ void Start()
     {
         if (Input.GetMouseButtonDown(0))
         {
+            if (EventSystem.current.IsPointerOverGameObject()) return;
             Ray ray = cam.ScreenPointToRay(Input.mousePosition);
 
             if (Physics.Raycast(ray, out RaycastHit hit))

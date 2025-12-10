@@ -37,4 +37,8 @@ public class MoneyManager : MonoBehaviour
         gold += dailyIncome;
         OnGoldChanged?.Invoke(gold);
     }
+    public void RefreshUI()
+    {
+        OnGoldChanged?.Invoke(gold);
+    }
 }

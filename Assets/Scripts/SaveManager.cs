@@ -87,9 +87,10 @@ public class SaveManager : MonoBehaviour
         
         if (DayManager.Instance != null) DayManager.Instance.currentDay = data.savedDay;
 
-        // 3. ASKERLERİ YÜKLE (En Zor Kısım)
-        // Önce sahnedeki mevcut askerleri temizlemeliyiz (Duplicate olmasın)
-        foreach(var g in FindObjectsOfType<Gladiator>()) Destroy(g.gameObject);
+        foreach(var g in FindObjectsOfType<Gladiator>()) 
+        {
+            DestroyImmediate(g.gameObject);
+        }
 
         // Kayıttaki her asker için yeni bir obje yarat
         foreach (var sData in data.soldiers)
@@ -114,6 +115,11 @@ public class SaveManager : MonoBehaviour
         }
 
         Debug.Log("Oyun Yüklendi!");
+        var topBar = FindObjectOfType<TopInfoBarUI>();
+        if (topBar != null)
+        {
+            topBar.ForceUpdateAll();
+        }
     }
     public void StartGame()
     {

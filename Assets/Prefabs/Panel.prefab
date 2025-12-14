@@ -67,8 +67,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: 36ba18c69e93aec47b3986cf9f22da3b, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -352,6 +352,7 @@ MonoBehaviour:
   priceText: {fileID: 8865565498342661225}
   iconImage: {fileID: 7817752927792144376}
   buyButton: {fileID: 4799033176710236815}
+  statsText: {fileID: 0}
 --- !u!1 &2644762149931705240
 GameObject:
   m_ObjectHideFlags: 0

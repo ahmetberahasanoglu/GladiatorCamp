@@ -50,7 +50,7 @@ public class AseviUI : MonoBehaviour
         if(food < dailyCost)
             infoText.text = $"<color=red>DİKKAT: Yarına yetecek yemek yok!\nGünlük Tüketim: {dailyCost}</color>";
         else
-            infoText.text = $"Günlük Tüketim: {dailyCost} birim";
+            infoText.text = $"Günlük Tüketim: {dailyCost}";
     }
 
     // Butonlara bağlamak için yardımcı fonksiyonlar

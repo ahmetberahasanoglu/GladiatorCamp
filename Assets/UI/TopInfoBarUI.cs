@@ -45,7 +45,7 @@ public class TopInfoBarUI : MonoBehaviour
 
     void UpdateDay(int day)
     {
-        dayText.text = $"Gün: {day}";
+        dayText.text = $"{day}";//Gün:
     }
 
     void UpdateGold(int gold)
@@ -57,7 +57,7 @@ public class TopInfoBarUI : MonoBehaviour
     {
         // SupplyManager'ın event'i parametre almıyorsa direkt instance'tan çekiyoruz
         if(SupplyManager.Instance != null)
-            foodText.text = $"{SupplyManager.Instance.currentFood} Erzak";
+            foodText.text = $"{SupplyManager.Instance.currentFood}";
     }
 
     void UpdateCapacity()
@@ -72,7 +72,7 @@ public class TopInfoBarUI : MonoBehaviour
         // Renklendirme: Doluysa Kırmızı, Boş yer varsa Beyaz
         string color = (currentCount >= maxCap) ? "red" : "white";
 
-        capacityText.text = $"Asker: <color={color}>{currentCount} / {maxCap}</color>";
+        capacityText.text = $"<color={color}>{currentCount} / {maxCap}</color>";
     }
 
     public void ForceUpdateAll()

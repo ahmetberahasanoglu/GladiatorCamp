@@ -9,6 +9,7 @@ public class BuildingClickable : MonoBehaviour
 {
     [Header("Temel Ayarlar")]
     public string buildingName;
+    [TextArea] public string description;
     public BuildingState currentState = BuildingState.Built; // Varsayılan: Yapılı
     public int repairCost = 1000; // Tamir ücreti
 
@@ -61,12 +62,16 @@ public class BuildingClickable : MonoBehaviour
             case BuildingState.Ruined:
                 // Bina yıkıksa "Beni Tamir Et" panelini açması için Manager'a haber ver
                 // Kendisini (this) parametre olarak gönderiyor ki hangi bina olduğunu bilelim
-                OnRepairClick?.Invoke(this); 
-                break;
+                if (RepairPanelManager.Instance != null)
+               {
+                RepairPanelManager.Instance.OpenPanel(this);
+               }
+            break;
 
             case BuildingState.Built:
                 // Bina sağlamsa senin eski OnClick eventini çalıştır
                 OnBuiltClick?.Invoke();
+                Debug.Log("asdasdas");
                 break;
             
             case BuildingState.Locked:

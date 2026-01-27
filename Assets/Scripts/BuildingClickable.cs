@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
-// Binanın hangi durumda olduğunu belirleyen seçenekler
 public enum BuildingState { Locked, Ruined, Built }
 
 public class BuildingClickable : MonoBehaviour
@@ -10,68 +9,60 @@ public class BuildingClickable : MonoBehaviour
     [Header("Temel Ayarlar")]
     public string buildingName;
     [TextArea] public string description;
-    public BuildingState currentState = BuildingState.Built; // Varsayılan: Yapılı
-    public int repairCost = 1000; // Tamir ücreti
+    public BuildingState currentState = BuildingState.Built;
+    public int repairCost = 1000;
 
     [Header("Görseller (Modeller)")]
-    public GameObject ruinedModel; // Yıkık halinin 3D objesi
-    public GameObject builtModel;  // Sağlam halinin 3D objesi
-    // public GameObject lockedIcon; // İstersen kilit ikonu da ekleyebilirsin
+    public GameObject ruinedModel; 
+    public GameObject builtModel;  
 
-    [Header("Renk Değişimi (Eski Kodun)")]
+    [Header("Renk Değişimi")]
     public Color highlightColor = Color.yellow;
-    private Renderer _renderer;
+    private Renderer _renderer; // O an aktif olan renderer
     private Color _originalColor;
 
     [Header("Olaylar")]
-    public UnityEvent OnBuiltClick;   // Bina sağlamsa çalışacak (Örn: Asker panelini aç)
-    public UnityEvent<BuildingClickable> OnRepairClick; // Yıkıksa çalışacak (Tamir panelini aç)
+    public UnityEvent OnBuiltClick;   
+    public UnityEvent<BuildingClickable> OnRepairClick; 
 
     void Start()
     {
-        // 1. Senin eski renk kodların
-        _renderer = GetComponentInChildren<Renderer>(); // Children yaptık ki model değişince renderer kaybolmasın
-        if (_renderer != null) _originalColor = _renderer.material.color;
-
-        // 2. Başlangıçta binanın şeklini ayarla
+        // Start içinde renderer aramaya gerek yok, UpdateVisuals zaten bunu yapacak.
         UpdateVisuals();
     }
 
-    // --- SENİN ESKİ MOUSE KODLARIN (Aynen duruyor) ---
+    // --- MOUSE ETKİLEŞİMLERİ ---
     void OnMouseEnter()
     {
         if (EventSystem.current.IsPointerOverGameObject()) return;
+        
+        // Renderer null değilse rengi değiştir
         if (_renderer != null) _renderer.material.color = highlightColor;
     }
 
     void OnMouseExit()
     {
+        // Renderer null değilse eski rengine döndür
         if (_renderer != null) _renderer.material.color = _originalColor;
     }
 
     public void OnMouseDown()
     {
-        // UI'a tıklıyorsak işlemi iptal et (Senin kodun)
         if (EventSystem.current.IsPointerOverGameObject()) return;
 
-        Debug.Log($"{buildingName} binasına tıklandı. Durum: {currentState}");
+        Debug.Log($"{buildingName} tıklandı. Durum: {currentState}");
 
-        // --- YENİ MANTIK ---
         switch (currentState)
         {
             case BuildingState.Ruined:
-                // Bina yıkıksa "Beni Tamir Et" panelini açması için Manager'a haber ver
-                // Kendisini (this) parametre olarak gönderiyor ki hangi bina olduğunu bilelim
                 if (RepairPanelManager.Instance != null)
-               {
-                RepairPanelManager.Instance.OpenPanel(this);
-               }
-            break;
+                {
+                    RepairPanelManager.Instance.OpenPanel(this);
+                }
+                break;
 
             case BuildingState.Built:
-                // Bina sağlamsa senin eski OnClick eventini çalıştır
                 OnBuiltClick?.Invoke();
-                Debug.Log("asdasdas");
                 break;
             
             case BuildingState.Locked:
@@ -80,37 +71,47 @@ public class BuildingClickable : MonoBehaviour
         }
     }
 
-    // --- YENİ EKLENEN FONKSİYONLAR ---
-
-    // Duruma göre 3D modelleri açıp kapatan fonksiyon
+    // --- KRİTİK DÜZELTME BURADA ---
     public void UpdateVisuals()
     {
+        // 1. Önce modelleri aç/kapat
         if (ruinedModel != null) ruinedModel.SetActive(currentState == BuildingState.Ruined);
         if (builtModel != null) builtModel.SetActive(currentState == BuildingState.Built);
         
-        // Model değiştiği için renderer'ı yeniden bulmamız gerekebilir
-        // (Renk değişimi doğru çalışsın diye)
-        var activeModel = (currentState == BuildingState.Built) ? builtModel : ruinedModel;
+        // 2. Şu an hangi modelin aktif olduğunu bul
+        GameObject activeModel = null;
+        if (currentState == BuildingState.Built) activeModel = builtModel;
+        else if (currentState == BuildingState.Ruined) activeModel = ruinedModel;
+
+        // 3. Aktif modelin Renderer'ını bul (Highlight için şart)
         if (activeModel != null)
         {
-            _renderer = activeModel.GetComponent<Renderer>();
-            if (_renderer != null) _originalColor = _renderer.material.color;
+            // DÜZELTME: GetComponent yerine GetComponentInChildren kullanıyoruz.
+            // Çünkü modelin MeshRenderer'ı genelde ana objede değil, alt objelerindedir.
+            _renderer = activeModel.GetComponentInChildren<Renderer>();
+
+            if (_renderer != null)
+            {
+                // Yeni modelin orijinal rengini hafızaya al
+                _originalColor = _renderer.material.color;
+                Debug.Log("bulundu"+_originalColor);
+            }
+            else
+            {
+                Debug.LogWarning($"{buildingName} objesinin aktif modelinde Renderer bulunamadı!");
+            }
         }
     }
 
-    // Dışarıdan (UI butonundan) çağrılacak tamir fonksiyonu
     public void RepairBuilding()
     {
-        // Parayı kontrol et (MoneyManager örneği)
+        // NOT: Senin projende fonksiyon adı 'SpendGold' ise onu kullan, kodda 'Spend' yazmışsın.
         if (MoneyManager.Instance != null && MoneyManager.Instance.gold >= repairCost)
         {
-            MoneyManager.Instance.Spend(repairCost);
+            MoneyManager.Instance.Spend(repairCost); // Fonksiyon adını kontrol et
             
-            // Durumu değiştir
             currentState = BuildingState.Built;
-            
-            // Görseli güncelle
-            UpdateVisuals();
+            UpdateVisuals(); // Bu çağrılınca renderer Built modele geçecek
             
             Debug.Log("Bina tamir edildi!");
         }

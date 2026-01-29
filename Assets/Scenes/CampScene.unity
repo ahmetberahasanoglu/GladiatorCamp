@@ -3070,7 +3070,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &216140549
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5140,14 +5140,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.64705884}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: e466149cec0e66f4f9de87fc54dadd5d, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -9525,8 +9525,9 @@ GameObject:
   - component: {fileID: 797687031}
   - component: {fileID: 797687033}
   - component: {fileID: 797687032}
+  - component: {fileID: 797687034}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: itibar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9573,8 +9574,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u0130tibar: 100"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: fbe5565e4dd7a1148b1541ab8fd85882, type: 2}
+  m_sharedMaterial: {fileID: -6674717547585697400, guid: fbe5565e4dd7a1148b1541ab8fd85882, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -9650,6 +9651,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 797687030}
   m_CullTransparentMesh: 1
+--- !u!114 &797687034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 797687030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30aaef198e04bf248b086718277531cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ReputationDisplay
 --- !u!1001 &801913729
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9761,7 +9774,7 @@ MonoBehaviour:
   possibleEvents:
   - {fileID: 11400000, guid: e412a51135533fa4f970972e50875150, type: 2}
   - {fileID: 11400000, guid: 2167faedacaa0ab46ade57939f6ea5ef, type: 2}
-  eventChance: 10
+  eventChance: 20
 --- !u!4 &804648616
 Transform:
   m_ObjectHideFlags: 0

@@ -64,22 +64,32 @@ public class StateLoanManager : MonoBehaviour
         OnLoanStateChanged?.Invoke(); 
     }
 
+    // StateLoanManager.cs içindeki RepayLoan fonksiyonu:
+
     public void RepayLoan()
     {
         if (!hasActiveLoan) return;
 
-        // DİKKAT: MoneyManager'daki fonksiyonun adı gold mu, currentGold mu kontrol et
         if (MoneyManager.Instance.gold >= loanAmount)
         {
             MoneyManager.Instance.Spend(loanAmount);
             
+      
+            // Eğer borcu gününden önce veya gününde ödediysek ödül verelim
+            int currentDay = DayManager.Instance.currentDay;
+            
+            if (currentDay <= loanDueDay) 
+            {
+                // Örnek: Borç ödenince +10 İtibar kazanılsın
+                ReputationManager.Instance.ChangeReputation(10);
+                Debug.Log("Borç zamanında ödendi! Padişah memnun oldu (+10 İtibar).");
+            }
+            // ----------------------------------------------
+
             hasActiveLoan = false;
             loanAmount = 0;
             loanDueDay = 0;
 
-            Debug.Log("Borç ödendi! İtibarın güvende.");
-            
-            // HATA ÇÖZÜLDÜ: UI'a haber ver
             OnLoanStateChanged?.Invoke();
         }
         else

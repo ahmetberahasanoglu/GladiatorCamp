@@ -92,9 +92,7 @@ public class BuildingClickable : MonoBehaviour
 
             if (_renderer != null)
             {
-                // Yeni modelin orijinal rengini hafızaya al
                 _originalColor = _renderer.material.color;
-                Debug.Log("bulundu"+_originalColor);
             }
             else
             {

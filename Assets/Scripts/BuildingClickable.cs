@@ -49,8 +49,8 @@ public class BuildingClickable : MonoBehaviour
     public void OnMouseDown()
     {
         if (EventSystem.current.IsPointerOverGameObject()) return;
-
-        Debug.Log($"{buildingName} tıklandı. Durum: {currentState}");
+         NotificationManager.Instance.Show($"{buildingName} tıklandı. Durum: {currentState}", NotificationType.Info);
+  
 
         switch (currentState)
         {
@@ -66,7 +66,7 @@ public class BuildingClickable : MonoBehaviour
                 break;
             
             case BuildingState.Locked:
-                Debug.Log("Bu bina henüz kilitli!");
+             NotificationManager.Instance.Show("Bu bina henüz kilitli!", NotificationType.Info);
                 break;
         }
     }
@@ -110,12 +110,11 @@ public class BuildingClickable : MonoBehaviour
             
             currentState = BuildingState.Built;
             UpdateVisuals(); // Bu çağrılınca renderer Built modele geçecek
-            
-            Debug.Log("Bina tamir edildi!");
+            NotificationManager.Instance.Show("Bina tamir edildi!", NotificationType.Info);
         }
         else
         {
-            Debug.Log("Para yetersiz!");
+           NotificationManager.Instance.Show("Hazine tam takır! Yeterli akçe yok.", NotificationType.Error);
         }
     }
 }

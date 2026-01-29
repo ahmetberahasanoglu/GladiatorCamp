@@ -140,7 +140,7 @@ public class RecruitManager : MonoBehaviour
         // 1. KONTROL: Para var mı?
         if (MoneyManager.Instance.gold < candidate.cost)
         {
-            Debug.Log("<color=red>Para yetersiz!</color>");
+             NotificationManager.Instance.Show("<color=red>Para yetersiz!</color>", NotificationType.Error);
             return;
         }
 
@@ -151,7 +151,7 @@ public class RecruitManager : MonoBehaviour
 
         if (currentCount >= maxCap)
         {
-            Debug.Log($"<color=red>KIŞLA DOLU! ({currentCount}/{maxCap})</color> Önce koğuşu genişlet!");
+            NotificationManager.Instance.Show($"<color=red>KIŞLA DOLU! ({currentCount}/{maxCap})</color> Önce koğuşu genişlet!", NotificationType.Error);
             return;
         }
  
@@ -172,7 +172,8 @@ public class RecruitManager : MonoBehaviour
         glad.data = newData;
         dailyCandidates.Remove(candidate);
         OnSoldierCountChanged?.Invoke();
-        Debug.Log("Yeni bir Acemi Oğlanı ocağa katıldı: " + candidate.candidateName);
+        NotificationManager.Instance.Show($"{candidate.candidateName} ocağa katıldı!", NotificationType.Success);
+       // Debug.Log("Yeni bir Acemi Oğlanı ocağa katıldı: " + candidate.candidateName);
     }
     public void RefreshUI()
     {

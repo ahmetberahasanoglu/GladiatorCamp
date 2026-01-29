@@ -31,7 +31,7 @@ public class ReputationManager : MonoBehaviour
 
         if (currentReputation <= 0)
         {
-            Debug.Log("İtibar bitti! Ocak kapatılıyor...");
+            NotificationManager.Instance.Show("İtibarın sıfırlandı isyan çıkabilir!", NotificationType.Warning);
             OnGameOver?.Invoke();
             // Burada oyun bitirme panelini açacağız
         }
@@ -47,7 +47,7 @@ public class ReputationManager : MonoBehaviour
             // İtibar zaten 100 ise boşuna para harcatma
             if (currentReputation >= maxReputation)
             {
-                Debug.Log("Padişah senden zaten çok memnun! (İtibar dolu)");
+                NotificationManager.Instance.Show("Padişah senden zaten çok memnun! (İtibar dolu)", NotificationType.Info);
                 return;
             }
 
@@ -56,12 +56,11 @@ public class ReputationManager : MonoBehaviour
 
             // İtibarı artır
             ChangeReputation(reputationGain);
-
-            Debug.Log($"{goldCost} Akçe bağışlandı, {reputationGain} itibar kazanıldı.");
+ NotificationManager.Instance.Show($"{goldCost} Akçe bağışlandı, {reputationGain} itibar kazanıldı.", NotificationType.Success);
         }
         else
         {
-            Debug.Log("Bağış yapacak paran yok!");
+             NotificationManager.Instance.Show("Bağış yapacak paran yok!", NotificationType.Error);
         }
     }
     public int GetReputation()

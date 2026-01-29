@@ -48,7 +48,7 @@ public class MarketManager : MonoBehaviour
         // Para kontrol�
         if (MoneyManager.Instance.gold < item.price)
         {
-            Debug.Log($"<color=red>Yetersiz Bakiye!</color> Gereken: {item.price}, Olan: {MoneyManager.Instance.gold}");
+            NotificationManager.Instance.Show($"<color=red>Yetersiz Bakiye!</color> Gereken: {item.price}, Olan: {MoneyManager.Instance.gold}", NotificationType.Warning);
             return;
         }
 
@@ -57,7 +57,6 @@ public class MarketManager : MonoBehaviour
 
         // 2. Envantere ekle (Depoya g�nder)
         InventoryStorage.Instance.AddItem(item);
-
-        Debug.Log($"<color=green>SATIN ALINDI:</color> {item.itemID}");
+         NotificationManager.Instance.Show($"<color=green>SATIN ALINDI:</color> {item.itemID}", NotificationType.Info);
     }
 }

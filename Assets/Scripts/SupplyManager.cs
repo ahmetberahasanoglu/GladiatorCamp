@@ -49,13 +49,14 @@ public class SupplyManager : MonoBehaviour
         {
             // Durum İYİ: Herkes doydu
             currentFood -= neededFood;
-            Debug.Log($"Bugün {neededFood} birim erzak tüketildi.");
+            NotificationManager.Instance.Show($"Bugün {neededFood} birim erzak tüketildi.", NotificationType.Info);
         }
         else
         {
             // Durum KÖTÜ: Yemek yetmedi!
             currentFood = 0; // Kalan kırıntıları da yerler
-            Debug.Log("<color=red>ERZAK BİTTİ! Askerler huzursuz!</color>");
+             NotificationManager.Instance.Show("<color=red>ERZAK BİTTİ! Askerler huzursuz!</color>", NotificationType.Warning);
+
 
             // CEZA: Herkesin morali düşer
             foreach (var soldier in soldiers)
@@ -76,13 +77,12 @@ public class SupplyManager : MonoBehaviour
         {
             MoneyManager.Instance.Spend(totalCost);
             currentFood += amount;
-            
-            Debug.Log($"{amount} birim erzak alındı.");
+            NotificationManager.Instance.Show($"{amount} birim erzak alındı.", NotificationType.Info);
             UpdateUI();
         }
         else
         {
-            Debug.Log("Yemek için yeterli akçe yok!");
+            NotificationManager.Instance.Show("Yemek için yeterli akçe yok!", NotificationType.Error);
         }
     }
 

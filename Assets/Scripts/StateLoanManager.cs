@@ -41,13 +41,13 @@ public class StateLoanManager : MonoBehaviour
     {
         if (hasActiveLoan)
         {
-            Debug.Log("Zaten ödenmemiş bir borcun var!");
+            NotificationManager.Instance.Show("Zaten ödenmemiş bir borcun var!", NotificationType.Error);
             return;
         }
 
         if (ReputationManager.Instance.GetReputation() < minRepToBorrow)
         {
-            Debug.Log("Devlet sana güvenmiyor! (İtibar < 50)");
+            NotificationManager.Instance.Show("Devlet sana güvenmiyor! (İtibar < 50)", NotificationType.Warning);
             return;
         }
 
@@ -57,8 +57,7 @@ public class StateLoanManager : MonoBehaviour
         hasActiveLoan = true;
         loanAmount = defaultLoanAmount;
         loanDueDay = DayManager.Instance.currentDay + paymentPeriod;
-
-        Debug.Log($"Devletten {loanAmount} Akçe borç alındı. Son ödeme: Gün {loanDueDay}");
+        NotificationManager.Instance.Show($"Devletten {loanAmount} Akçe borç alındı. Son ödeme: Gün {loanDueDay}", NotificationType.Info);
         
         // HATA ÇÖZÜLDÜ: UIManager yerine kendi eventimizi tetikliyoruz
         OnLoanStateChanged?.Invoke(); 
@@ -82,7 +81,7 @@ public class StateLoanManager : MonoBehaviour
             {
                 // Örnek: Borç ödenince +10 İtibar kazanılsın
                 ReputationManager.Instance.ChangeReputation(10);
-                Debug.Log("Borç zamanında ödendi! Padişah memnun oldu (+10 İtibar).");
+                NotificationManager.Instance.Show("Borç zamanında ödendi! Padişah memnun oldu (+10 İtibar).", NotificationType.Success);
             }
             // ----------------------------------------------
 
@@ -94,7 +93,7 @@ public class StateLoanManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("Borcu ödeyecek paran yok!");
+            NotificationManager.Instance.Show("Borcu ödeyecek paran yok!", NotificationType.Warning);
         }
     }
 
@@ -104,8 +103,7 @@ public class StateLoanManager : MonoBehaviour
 
         if (currentDay > loanDueDay)
         {
-            Debug.Log("BORÇ GÜNÜ GEÇTİ! İtibar düşürülüyor.");
-
+            NotificationManager.Instance.Show("BORÇ GÜNÜ GEÇTİ! İtibar düşürülüyor.", NotificationType.Warning);
             ReputationManager.Instance.ChangeReputation(-latePenaltyRep);
 
             loanDueDay += 3; // 3 gün ek süre

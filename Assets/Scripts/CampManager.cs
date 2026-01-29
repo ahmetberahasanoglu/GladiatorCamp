@@ -86,11 +86,11 @@ public class CampManager : MonoBehaviour
             MoneyManager.Instance.Spend(cost);
             b.level++;
             OnCampUpdated?.Invoke();
-            Debug.Log($"{b.displayName} seviye atladı! Yeni Seviye: {b.level}, Kapasite: {b.GetValue()}");
+            NotificationManager.Instance.Show($"{b.displayName} seviye atladı! Yeni Seviye: {b.level}, Kapasite: {b.GetValue()}", NotificationType.Success);
         }
         else
         {
-            Debug.Log("Yetersiz Bakiye!");
+            NotificationManager.Instance.Show("Yetersiz Bakiye!", NotificationType.Error);
         }
     }
     public void RefreshUI()

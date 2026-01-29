@@ -49,7 +49,7 @@ public class BuildingClickable : MonoBehaviour
     public void OnMouseDown()
     {
         if (EventSystem.current.IsPointerOverGameObject()) return;
-         NotificationManager.Instance.Show($"{buildingName} tıklandı. Durum: {currentState}", NotificationType.Info);
+         NotificationManager.Instance.Show($"{buildingName} tıklandı. ", NotificationType.Info);
   
 
         switch (currentState)

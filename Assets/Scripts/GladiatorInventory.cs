@@ -86,7 +86,7 @@ public void InitializeBaseStats()
         if (oldItem != null)
         {
             InventoryStorage.Instance.AddItem(oldItem);
-            Debug.Log($"{oldItem.itemID} depoya geri gönderildi.");
+            NotificationManager.Instance.Show($"{oldItem.itemID} depoya geri gönderildi.", NotificationType.Info);
         }
         RecalculateStats();
     }

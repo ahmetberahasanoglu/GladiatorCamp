@@ -84,8 +84,7 @@ public class MissionManager : MonoBehaviour
         
         newMission.uiReference = uiObj;
         currentMissions.Add(newMission);
-
-        Debug.Log($"{data.missionName} başladı. Süre: {data.durationDays} Gün.");
+        NotificationManager.Instance.Show($"{data.missionName} başladı. Süre: {data.durationDays} Gün.", NotificationType.Info);
     }
 
     void CompleteMission(OngoingMission mission)

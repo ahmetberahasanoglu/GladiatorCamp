@@ -50,6 +50,7 @@ public class ItemDetailPanel : MonoBehaviour
             InventoryUIManager.Instance.EquipItem(_selectedItem);
             // Kuşandıktan sonra detayları güncelle (Farklar 0'a dönsün)
             ShowDetails(_selectedItem, _currentGladiator);
+          NotificationManager.Instance.Show($"{item.name} kuşanıldı!", NotificationType.Info);
         });
     }
 

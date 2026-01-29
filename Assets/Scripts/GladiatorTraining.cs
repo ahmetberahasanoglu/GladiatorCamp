@@ -102,7 +102,6 @@ public class GladiatorTraining : MonoBehaviour
             case TrainingType.Morale: d.morale += amount; break;
             case TrainingType.Stamina: d.stamina += amount; break;
         }
-
-        Debug.Log($"Stat Artışı → {type} +{amount}");
+        NotificationManager.Instance.Show($"Stat Artışı → {type} +{amount}", NotificationType.Success);
     }
 }

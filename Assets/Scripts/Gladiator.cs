@@ -49,8 +49,7 @@ public class Gladiator : MonoBehaviour
 
         // UI'ı uyar (Eğer panel açıksa anlık güncellensin)
         RefreshStats(); 
-
-        Debug.Log($"{data.gladiatorName} moral kaybetti. Yeni Moral: {data.morale}");
+         NotificationManager.Instance.Show($"{data.gladiatorName} moral kaybetti. Yeni Moral: {data.morale}", NotificationType.Error);
         
         // İLERİDE BURAYA: if (morale == 0) IsyanEt(); eklenecek.
     }

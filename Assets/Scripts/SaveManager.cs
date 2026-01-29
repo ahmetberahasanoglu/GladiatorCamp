@@ -63,7 +63,7 @@ public class SaveManager : MonoBehaviour
         
         string json = JsonUtility.ToJson(data, true);
         System.IO.File.WriteAllText(savePath, json);
-        Debug.Log("Kaydedildi.");
+        NotificationManager.Instance.Show("Oyun kaydedildi.", NotificationType.Info);
     }
 
     public void LoadGame()

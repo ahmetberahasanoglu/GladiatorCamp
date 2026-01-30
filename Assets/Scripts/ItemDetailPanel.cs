@@ -9,6 +9,7 @@ public class ItemDetailPanel : MonoBehaviour
     public TextMeshProUGUI itemNameText;
    // public TextMeshProUGUI descriptionText; // Fiyatı buraya yazabiliriz
     public Button equipButton;
+   public GameObject equipmentDetail;
 
     [Header("Statlar")]
     // Yanına parantez içinde farkı yazacağımız textler
@@ -51,6 +52,8 @@ public class ItemDetailPanel : MonoBehaviour
             // Kuşandıktan sonra detayları güncelle (Farklar 0'a dönsün)
             ShowDetails(_selectedItem, _currentGladiator);
           NotificationManager.Instance.Show($"{item.name} kuşanıldı!", NotificationType.Info);
+       //   equipmentDetail.SetActive(false); 
+       Debug.Log("equip yapıldıgında kapatılması gerekiyor bu panelin");
         });
     }
 

@@ -22,6 +22,7 @@ public class DayUI : MonoBehaviour
         {
             //DayManager.Instance.OnDayChanged += UpdateDayText;
             DayManager.Instance.OnEventTriggered += ShowEventPopup;
+            Debug.Log("suan pop up gozukmeli");
         }
        // UpdateDayText(DayManager.Instance.currentDay);
     }

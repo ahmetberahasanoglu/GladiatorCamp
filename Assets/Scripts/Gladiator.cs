@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System;
+public enum SoldierActivity { Training, Working, Idling }
 public class Gladiator : MonoBehaviour
 {
     [SerializeField] private JanissaryData _templateData;
@@ -8,12 +9,19 @@ public class Gladiator : MonoBehaviour
     private NavMeshAgent agent;
     public event Action OnStatsChanged;
     public bool isOnMission = false;
+    [Header("Çalışma Durumu")]
+    public SoldierActivity currentActivity = SoldierActivity.Idling; // Varsayılan: Talim
+    public int dailyWage = 50; // Bu askerin günlük kazandırdığı para (Seviyesine göre artırılabilir
     void Awake()
     {
         if (_templateData != null)
         {
             data = Instantiate(_templateData);
         }
+    }
+    public void SetActivity(SoldierActivity newActivity)
+    {
+        currentActivity = newActivity;
     }
     public void InitializeData(JanissaryData sourceData)
     {
@@ -29,6 +37,13 @@ public class Gladiator : MonoBehaviour
             return !isOnMission && !isTraining;
         }
     }   
+    public bool IsAvailableForWork()
+    {
+        // başka bir görevdeyse false dönmeli
+    
+        
+        return true; 
+    }
     public void RefreshStats()
     {
         OnStatsChanged?.Invoke();

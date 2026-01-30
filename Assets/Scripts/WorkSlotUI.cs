@@ -5,58 +5,54 @@ using UnityEngine.UI;
 public class WorkSlotUI : MonoBehaviour
 {
     [Header("UI Elemanları")]
-    public TextMeshProUGUI nameText;     // "Kara Murat"
-    public TextMeshProUGUI wageText;     // "Günlük: 50 Akçe"
-    public Button toggleButton;          // Tıklanacak buton
-    public TextMeshProUGUI statusText;   // Butonun içindeki yazı ("TALİMDE" / "ÇALIŞIYOR")
-    public Image statusImage;            // Butonun rengi (Yeşil / Turuncu)
+    public TextMeshProUGUI nameText;     // "Ahmet"
+    public TextMeshProUGUI wageText;     // "Gelir: 50"
+    public Toggle workToggle;            // Checkbox (Tik kutusu)
+    public Image statusIcon;             // Opsiyonel: Askerin sınıf ikonu vs.
 
     private Gladiator _soldier;
-
-    // Renkler
-    private Color trainingColor = new Color(0.2f, 0.6f, 0.2f); // Koyu Yeşil
-    private Color workingColor = new Color(0.8f, 0.5f, 0f);    // Turuncu
 
     public void Setup(Gladiator soldier)
     {
         _soldier = soldier;
+        
 
-        nameText.text = soldier.name; // Senin değişkene göre düzenle
-        wageText.text = $"Getiri: {_soldier.dailyWage} Akçe";
+        // İsim ve Ücreti Yaz
+        nameText.text = soldier.data.gladiatorName;
+        wageText.text = $"+{soldier.dailyWage} Akçe";
 
-        // Butonu temizle ve dinle
-        toggleButton.onClick.RemoveAllListeners();
-        toggleButton.onClick.AddListener(OnToggleClick);
+        // 1. Önce Toggle'ın dinleyicisini temizle (Eski eventler kalmasın)
+        workToggle.onValueChanged.RemoveAllListeners();
 
-        UpdateVisuals();
+        // 2. Askerin şu anki durumuna göre kutuyu dolu veya boş yap
+        // Eğer Working ise kutu tikli (isOn = true) olsun
+        workToggle.isOn = (_soldier.currentActivity == SoldierActivity.Working);
+
+        // 3. Kullanıcı kutuya tıkladığında ne olacağını belirle
+        workToggle.onValueChanged.AddListener(OnToggleChanged);
     }
 
-    void OnToggleClick()
+    // Kutucuğa her tıklandığında bu çalışır
+    void OnToggleChanged(bool isChecked)
     {
-        // Durumu tam tersine çevir
-        if (_soldier.currentActivity == SoldierActivity.Training)
+        if (isChecked)
         {
+            // Tik atıldı -> Çalışmaya gönder
             _soldier.SetActivity(SoldierActivity.Working);
+             NotificationManager.Instance.Show(
+                    $"{_soldier.data.gladiatorName} bugün çalışacak .", 
+                    NotificationType.Info
+                );
         }
         else
         {
+            // Tik kaldırıldı -> Talime dönsün
             _soldier.SetActivity(SoldierActivity.Training);
-        }
-
-        UpdateVisuals();
-    }
-
-    void UpdateVisuals()
-    {
-        if (_soldier.currentActivity == SoldierActivity.Training)
-        {
-            statusText.text = "TALİM YAPIYOR";
-            statusImage.color = trainingColor; // Yeşil
-        }
-        else
-        {
-            statusText.text = "ÇALIŞIYOR";
-            statusImage.color = workingColor; // Turuncu
+            NotificationManager.Instance.Show(
+                    $"{_soldier.data.gladiatorName} talime döndü.", 
+                    NotificationType.Info
+                );
+    
         }
     }
 }

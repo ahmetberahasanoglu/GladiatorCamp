@@ -35,11 +35,11 @@ public class DayManager : MonoBehaviour
         // Bir şeyler eklenebilir (Yemek yensin, askerler iyileşsin vs.)
         OnNewDay?.Invoke();
         OnDayChanged?.Invoke(currentDay);
-        Debug.Log($"Gün bitti. Yeni Gün: {currentDay}");
+         NotificationManager.Instance.Show($"Gün bitti. Yeni Gün: {currentDay}", NotificationType.Success);
         CheckForRandomEvent();
         CheckForUlufe();
       //  SaveManager.Instance.SaveGame();//Autosave ekledik
-        MoneyManager.Instance.EndOfDay();
+        MoneyManager.Instance.EndOfDay();   
     }
 
     void CheckForRandomEvent()

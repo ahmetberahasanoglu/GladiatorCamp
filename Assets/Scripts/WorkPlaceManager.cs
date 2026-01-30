@@ -2,20 +2,15 @@ using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
 
-public class WorkPlaceManager : MonoBehaviour
+public class WorkplaceManager : MonoBehaviour
 {
-    public static WorkPlaceManager Instance;
+    public static WorkplaceManager Instance;
 
-    [Header("Ayarlar")]
-    public bool resetAtNight = false; // TRUE yaparsan her sabah herkes talime döner (Bugünlük çalışırlar)
-
-    [Header("UI Bağlantıları")]
-    public GameObject workPanel;
-    public Transform contentArea;
-    public GameObject slotPrefab;
-    
-    // Toplam kazancı anlık görmek istersen panele bir text koyabilirsin
-    public TextMeshProUGUI totalIncomeText; 
+    [Header("UI Ayarları")]
+    public GameObject workPanel;       
+    public Transform contentArea;      
+    public GameObject slotPrefab;      
+    public TextMeshProUGUI summaryText;
 
     void Awake()
     {
@@ -26,20 +21,19 @@ public class WorkPlaceManager : MonoBehaviour
     void Start()
     {
         if (DayManager.Instance != null)
-            DayManager.Instance.OnDayChanged += EndOfDayRoutine;
+            DayManager.Instance.OnDayChanged += EndOfDayPayment;
     }
 
     void OnDestroy()
     {
         if (DayManager.Instance != null)
-            DayManager.Instance.OnDayChanged -= EndOfDayRoutine;
+            DayManager.Instance.OnDayChanged -= EndOfDayPayment;
     }
 
     public void OpenPanel()
     {
         workPanel.SetActive(true);
         RefreshList();
-        UpdateTotalIncomeText();
     }
 
     public void ClosePanel()
@@ -47,35 +41,46 @@ public class WorkPlaceManager : MonoBehaviour
         workPanel.SetActive(false);
     }
 
+    // Listeyi oluşturma
     public void RefreshList()
     {
-        // Önce temizle
+        // Temizlik
         foreach (Transform child in contentArea) Destroy(child.gameObject);
 
-        // Tüm askerleri bul (veya RecruitManager listesinden çek)
+        // Tüm askerleri bul
         var allSoldiers = FindObjectsOfType<Gladiator>();
 
         foreach (var soldier in allSoldiers)
         {
-            // Sadece MÜSAİT olanları listele (Ölüler veya savaştakiler gelmesin)
-            if (soldier.IsAvailableForWork())
+            // Sadece yaşıyorsa ve müsaitse listele       AAAAAAAAAAAAAAAAAAAA
+            if (soldier.IsAvailable)
             {
                 GameObject newSlot = Instantiate(slotPrefab, contentArea);
                 newSlot.GetComponent<WorkSlotUI>().Setup(soldier);
             }
         }
+        
+        UpdateSummary();
     }
 
-    // Her butona basıldığında UI'daki toplam kazanç yazısını güncellemek için
-    // Bunu WorkSlotUI'dan çağırmak gerekebilir ama şimdilik panel açılışında hesaplıyoruz
-    void UpdateTotalIncomeText()
+    // (Opsiyonel) Altta özet bilgi göstermek için
+    public void UpdateSummary()
     {
-        if (totalIncomeText == null) return;
-        // Basit bir döngü ile hesaplanabilir...
+        int count = 0;
+        int gold = 0;
+        foreach (var s in FindObjectsOfType<Gladiator>())
+        {
+            if (s.currentActivity == SoldierActivity.Working)
+            {
+                count++;
+                gold += s.dailyWage;
+            }
+        }
+        if(summaryText) summaryText.text = $"Çalışan: {count} Kişi | Beklenen Gelir: {gold} Akçe";
     }
 
-    // --- GÜN SONU HESAPLAMASI ---
-    void EndOfDayRoutine(int day)
+    // --- GÜN SONU MANTIĞI ---
+    void EndOfDayPayment(int day)
     {
         int totalIncome = 0;
         int workerCount = 0;
@@ -84,17 +89,15 @@ public class WorkPlaceManager : MonoBehaviour
 
         foreach (var soldier in allSoldiers)
         {
-            // Sadece "Working" modunda olanlar para getirir
+            // Eğer kutucuğu işaretliyse (Working modundaysa)
             if (soldier.currentActivity == SoldierActivity.Working)
             {
                 totalIncome += soldier.dailyWage;
                 workerCount++;
 
-                // Eğer "Bugünlük" çalışsın istiyorsan, parayı aldıktan sonra resetle:
-                if (resetAtNight)
-                {
-                    soldier.SetActivity(SoldierActivity.Training);
-                }
+                // KRİTİK NOKTA: "Bugünlük" dediğin için, parayı aldıktan sonra
+                // askeri tekrar talime döndürüyoruz (Kutucuğu sıfırlıyoruz)
+                soldier.SetActivity(SoldierActivity.Training);
             }
         }
 
@@ -102,11 +105,10 @@ public class WorkPlaceManager : MonoBehaviour
         {
             MoneyManager.Instance.Add(totalIncome);
             
-            // Notification gönder
             if(NotificationManager.Instance != null)
             {
                 NotificationManager.Instance.Show(
-                    $"Lonca Geliri: {workerCount} asker çalıştı, {totalIncome} Akçe kazanıldı.", 
+                    $"{workerCount} asker çalışmayı tamamladı ve {totalIncome} Akçe kazandırdı.", 
                     NotificationType.Success
                 );
             }

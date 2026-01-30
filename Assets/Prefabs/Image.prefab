@@ -17,7 +17,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &790187845886705998
 RectTransform:
   m_ObjectHideFlags: 0
@@ -678,4 +678,3 @@ MonoBehaviour:
   nameText: {fileID: 3013024280371995521}
   wageText: {fileID: 3716419029763401663}
   workToggle: {fileID: 6629303199823085197}
-  statusIcon: {fileID: 7597402775983123200}

@@ -76,7 +76,7 @@ public class WorkplaceManager : MonoBehaviour
                 gold += s.dailyWage;
             }
         }
-        if(summaryText) summaryText.text = $"Çalışan: {count} Kişi | Beklenen Gelir: {gold} Akçe";
+        if(summaryText) summaryText.text = $"Çalışan: {count} Kişi \nBeklenen Gelir: {gold} Akçe";
     }
 
     // --- GÜN SONU MANTIĞI ---
@@ -112,6 +112,10 @@ public class WorkplaceManager : MonoBehaviour
                     NotificationType.Success
                 );
             }
+        }
+        if (workPanel.activeSelf)
+        {
+            RefreshList(); 
         }
     }
 }

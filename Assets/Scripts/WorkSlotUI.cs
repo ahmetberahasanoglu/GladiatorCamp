@@ -8,7 +8,7 @@ public class WorkSlotUI : MonoBehaviour
     public TextMeshProUGUI nameText;     // "Ahmet"
     public TextMeshProUGUI wageText;     // "Gelir: 50"
     public Toggle workToggle;            // Checkbox (Tik kutusu)
-    public Image statusIcon;             // Opsiyonel: Askerin sınıf ikonu vs.
+   // public Image statusIcon;             // Opsiyonel: Askerin sınıf ikonu vs.
 
     private Gladiator _soldier;
 
@@ -53,6 +53,10 @@ public class WorkSlotUI : MonoBehaviour
                     NotificationType.Info
                 );
     
+        }
+        if (WorkplaceManager.Instance != null)
+        {
+            WorkplaceManager.Instance.UpdateSummary();
         }
     }
 }

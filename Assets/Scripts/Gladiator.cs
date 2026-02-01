@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System;
+using TMPro;
 public enum SoldierActivity { Training, Working, Idling }
 public class Gladiator : MonoBehaviour
 {
@@ -12,6 +13,10 @@ public class Gladiator : MonoBehaviour
     [Header("Çalışma Durumu")]
     public SoldierActivity currentActivity = SoldierActivity.Idling; // Varsayılan: Talim
     public int dailyWage = 50; // Bu askerin günlük kazandırdığı para (Seviyesine göre artırılabilir
+
+
+    [Header("Görsel Ayarlar")]
+    public TextMeshProUGUI nameLabel;
     void Awake()
     {
         if (_templateData != null)
@@ -32,16 +37,13 @@ public class Gladiator : MonoBehaviour
         get 
         {
             var training = GetComponent<GladiatorTraining>();
-            bool isTraining = training != null && training.IsTraining;
-            
+            bool isTraining = training != null && training.IsTraining;// && currentActivity.Training
+
             return !isOnMission && !isTraining;
         }
     }   
     public bool IsAvailableForWork()
-    {
-        // başka bir görevdeyse false dönmeli
-    
-        
+    {    
         return true; 
     }
     public void RefreshStats()
@@ -51,6 +53,7 @@ public class Gladiator : MonoBehaviour
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        UpdateNameLabel();
        // GoTo(GameObject.Find("Target").transform.position);
     }
 
@@ -68,7 +71,16 @@ public class Gladiator : MonoBehaviour
         
         // İLERİDE BURAYA: if (morale == 0) IsyanEt(); eklenecek.
     }
-
+public void UpdateNameLabel()
+    {
+        if (nameLabel != null)
+        {
+            nameLabel.text = data.gladiatorName; // Veya soldierName
+            
+            // İstersen altına rütbesini veya mesleğini de yazdırabilirsin
+            // nameLabel.text = $"{candidateName}\n<size=70%>{soldierClass}</size>";
+        }
+    }
     public void GoTo(Vector3 target)
     {
         agent.SetDestination(target);

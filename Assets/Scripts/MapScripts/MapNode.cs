@@ -13,7 +13,19 @@ public class MapNode : MonoBehaviour
     [Header("Görsel")]
     public Button nodeButton;
     public Image iconImage;
+public Image contentImage; // Butonun içindeki İKON resmi (Çerçeve değil)
 
+    public void Setup(NodeType type, int layer, MapConfig config) // Config parametresi ekledik
+    {
+        nodeType = type;
+        
+        // Config dosyasından doğru resmi çek
+        if (config != null && contentImage != null)
+        {
+            contentImage.sprite = config.GetIcon(type);
+            contentImage.preserveAspect = true; // Resim sünmesin diye
+        }
+    }
     void Start()
     {
         // Buton tıklamasını dinle

@@ -1,68 +1,122 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 
 public class MapManager : MonoBehaviour
 {
     public static MapManager Instance;
 
-    [Header("UI Bağlantıları")]
-    public GameObject mapPanel;       // Haritanın tamamını açıp kapatmak için
-    public RectTransform playerIcon;  // Haritada bizi temsil eden "Atlı" veya "Otağ" ikonu
+    [Header("UI")]
+    public GameObject mapPanel;
+    public RectTransform playerIcon;
 
-    [Header("Oyun Durumu")]
-    public MapNode currentNode;       // Şu an üzerinde olduğumuz nokta (Null ise henüz başlamadık)
-    public bool isMapOpen = true;     // Harita şu an açık mı?
+    [Header("Ayarlar")]
+    // Oyunun en başında gidilebilecek ilk noktalar (Sen elle seçeceksin)
+    public List<MapNode> startingNodes; 
+
+    public MapNode currentNode; // Şu an neredeyiz?
+
+    // MapManager.cs içine ekle:
+[Header("Çizgi Ayarları")]
+public GameObject linePrefab; // İnce uzun bir Image (UI Line)
+public Transform lineContainer; // Çizgilerin toplanacağı yer (MapContainer ile aynı olsun)
+
+void Start()
+{
+    DrawAllConnections();
+}
+
+void DrawAllConnections()
+{
+    // Tüm MapNode'ları bul
+    var allNodes = FindObjectsOfType<MapNode>();
+
+    foreach (var node in allNodes)
+    {
+        foreach (var target in node.outgoingPaths)
+        {
+            if (target != null)
+            {
+                CreateVisualLine(node.GetComponent<RectTransform>(), target.GetComponent<RectTransform>());
+            }
+        }
+    }
+}
+
+// MapManager.cs içindeki CreateVisualLine fonksiyonunu güncelle:
+
+void CreateVisualLine(RectTransform start, RectTransform end)
+{
+    GameObject lineObj = Instantiate(linePrefab, lineContainer);
+    lineObj.transform.SetAsFirstSibling(); 
+
+    RectTransform rect = lineObj.GetComponent<RectTransform>();
+    
+    // İki nokta arası mesafe ve orta nokta
+    Vector3 diff = end.localPosition - start.localPosition;
+    Vector3 midpoint = (start.localPosition + end.localPosition) / 2;
+    
+    rect.localPosition = midpoint;
+    
+    // Çizgi uzunluğunu ayarla
+    // Yükseklik (5) çizginin kalınlığıdır. DashLine görselin çok büyükse bunu artır/azalt.
+    rect.sizeDelta = new Vector2(diff.magnitude, 5); 
+    
+    // Dönme açısını hesapla
+    float angle = Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg;
+    rect.rotation = Quaternion.Euler(0, 0, angle);
+
+    // --- YENİ EKLENEN KISIM: Image Tiled Ayarı ---
+    Image img = lineObj.GetComponent<Image>();
+    if (img != null)
+    {
+        img.type = Image.Type.Tiled; // Kodla da garantiye alalım
+        
+        // Bu değerle oynayarak kesiklerin sıklığını değiştirebilirsin
+        // 1 = Normal, 2 = Daha sık çizgiler, 0.5 = Daha seyrek
+        img.pixelsPerUnitMultiplier = 2f; 
+    }
+}
 
     void Awake()
     {
         Instance = this;
     }
 
-    // --- HARİTA HAREKET MANTIĞI ---
-
-    // Bu fonksiyonu MapNode.cs içindeki OnNodeClicked çağırıyor
     public void SelectNode(MapNode targetNode)
     {
-        // 1. Oraya gitmeye iznimiz var mı?
+        // KONTROL: Oraya gitmeye iznimiz var mı?
         if (!IsMoveValid(targetNode))
         {
-            Debug.Log("Oraya gidemezsin! Sadece bağlı olduğun ileri noktalara gidebilirsin.");
-            // Buraya "Hata Sesi" ekleyebilirsin
+            Debug.Log("Oraya gidemezsin! Bağlantı yok.");
             return;
         }
 
-        // 2. Hareket Onaylandı: Verileri Güncelle
+        // HAREKET ONAYLANDI
         currentNode = targetNode;
-
-        // 3. Görsel: Oyuncu ikonunu o noktaya taşı
         StartCoroutine(MovePlayerIconRoutine(targetNode.GetComponent<RectTransform>().anchoredPosition));
 
-        // 4. Olayı Başlat (Köy, Savaş vb.)
-        TriggerEvent(targetNode);
+        // OLAYI BAŞLAT (Burası aynı)
+        Debug.Log($"Gidilen yer: {targetNode.nodeType}");
+        // TriggerEvent(targetNode); ... (Eski kodundaki gibi)
     }
 
-    // Hareketin geçerli olup olmadığını kontrol eder
     bool IsMoveValid(MapNode target)
     {
-        // Durum A: Oyun yeni başladı, henüz hiçbir yerde değiliz.
-        // Sadece ilk katmandaki (Layer 0) noktalara gidebiliriz.
+        // 1. Hiçbir yerde değilsek, sadece başlangıç noktalarına gidebiliriz
         if (currentNode == null)
         {
-            return target.layerIndex == 0;
+            return startingNodes.Contains(target);
         }
 
-        // Durum B: Zaten bir noktadayız.
-        // Sadece şu anki noktanın "Gidilebilirler (accessibleNodes)" listesindekilere gidebiliriz.
-        return currentNode.accessibleNodes.Contains(target);
+        // 2. Bir yerdeysen, sadece oradan çıkan yollara (outgoing) gidebilirsin
+        return currentNode.outgoingPaths.Contains(target);
     }
 
-    // --- GÖRSEL EFEKTLER ---
-
-    // İkonun kayarak gitmesi için ufak bir animasyon
     IEnumerator MovePlayerIconRoutine(Vector2 targetPos)
     {
-        float duration = 0.5f; // Yarım saniyede gitsin
+        float duration = 0.5f;
         float timer = 0;
         Vector2 startPos = playerIcon.anchoredPosition;
 
@@ -73,59 +127,5 @@ public class MapManager : MonoBehaviour
             yield return null;
         }
         playerIcon.anchoredPosition = targetPos;
-    }
-
-    // --- OLAY YÖNETİMİ ---
-
-    void TriggerEvent(MapNode node)
-    {
-        Debug.Log($"Gidilen Yer: {node.nodeType}. Gün İlerliyor...");
-
-        // ÖNCE: Zamanı ilerlet (Yolculuk maliyeti)
-        if(DayManager.Instance != null)
-        {
-            // Basitlik için her yolculuk 1 gün sürsün
-            // İleride "Dağ yolu 3 gün" gibi detaylandırabiliriz
-            DayManager.Instance.NextDay();//kac gün fln 
-        }
-
-        // SONRA: Noktanın türüne göre paneli aç
-        switch (node.nodeType)
-        {
-            case NodeType.Village:
-                Debug.Log("Köy Paneli Açılıyor...");
-                // UIManager.Instance.ShowVillagePanel();
-                break;
-
-            case NodeType.Battle:
-                Debug.Log("Savaş Hazırlığı Başlıyor...");
-                // SceneManager.LoadScene("BattleScene"); veya BattleManager.Instance.SetupBattle();
-                break;
-
-            case NodeType.Boss:
-                Debug.Log("KIZIL KALE! FİNAL SAVAŞI!");
-                break;
-                
-            case NodeType.RestArea:
-                Debug.Log("Dinlenme alanı. Askerler iyileşti.");
-                // HealSoldiers();
-                break;
-        }
-        
-        // Not: Olay tetiklendikten sonra genelde harita kapanır ve olay ekranı gelir.
-        // HideMap(); 
-    }
-
-    // --- UI KONTROLÜ ---
-    public void ShowMap() 
-    {
-        mapPanel.SetActive(true);
-        isMapOpen = true;
-    }
-
-    public void HideMap() 
-    {
-        mapPanel.SetActive(false);
-        isMapOpen = false;
     }
 }

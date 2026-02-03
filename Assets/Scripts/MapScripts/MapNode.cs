@@ -4,36 +4,55 @@ using System.Collections.Generic;
 
 public class MapNode : MonoBehaviour
 {
-    [Header("Veri")]
+    [Header("Ayarlar")]
     public NodeType nodeType;
-    public int layerIndex; // Kaçıncı menzilde? (0, 1, 2...)
-    public List<MapNode> accessibleNodes = new List<MapNode>(); // Buradan nerelere gidilebilir?
+    
+    // NERELERE GİDİLEBİLİR? (Bunu elle dolduracaksın)
+    public List<MapNode> outgoingPaths = new List<MapNode>(); 
 
     [Header("Görsel")]
     public Button nodeButton;
     public Image iconImage;
-    
-    // Çizgileri çizmek için referans (Sonra ekleyeceğiz)
-    
-    public void Setup(NodeType type, int layer)
-    {
-        nodeType = type;
-        layerIndex = layer;
-        
-        // Tipine göre ikon değiştir (İleride Sprite listesinden çekeriz)
-        // iconImage.sprite = MapManager.Instance.GetIcon(type);
-    }
-    void Start()
-{
 
-    if (nodeButton != null)
+    void Start()
     {
-        nodeButton.onClick.AddListener(OnNodeClicked);
+        // Buton tıklamasını dinle
+        if (nodeButton != null)
+        {
+            // Önce temizle sonra ekle (Hata önlemek için)
+            nodeButton.onClick.RemoveAllListeners();
+            nodeButton.onClick.AddListener(OnNodeClicked);
+        }
     }
-}
-    // Tıklanınca çalışacak
+
     public void OnNodeClicked()
     {
-        MapManager.Instance.SelectNode(this);
+        // Tıklanınca Manager'a haber ver
+        if (MapManager.Instance != null)
+        {
+            MapManager.Instance.SelectNode(this);
+        }
+    }
+
+    // --- EDİTÖRDE ÇİZGİLERİ GÖRMEK İÇİN SİHİRLİ KOD ---
+    // Bu kod oyun çalışırken değil, sen editörde tasarım yaparken çalışır.
+    void OnDrawGizmos()
+    {
+        if (outgoingPaths == null || outgoingPaths.Count == 0) return;
+
+        Gizmos.color = Color.yellow; // Çizgi rengi
+
+        foreach (var node in outgoingPaths)
+        {
+            if (node != null)
+            {
+                // Mevcut noktadan, hedef noktaya sarı bir çizgi çek
+                Gizmos.DrawLine(transform.position, node.transform.position);
+                
+                // Ok ucu gibi bir küre koy (Yönü belli olsun)
+                Vector3 direction = (node.transform.position - transform.position).normalized;
+                Gizmos.DrawSphere(Vector3.Lerp(transform.position, node.transform.position, 0.2f), 10f);
+            }
+        }
     }
 }

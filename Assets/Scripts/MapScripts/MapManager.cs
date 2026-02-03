@@ -99,9 +99,16 @@ void CreateVisualLine(RectTransform start, RectTransform end)
 
         // OLAYI BAŞLAT (Burası aynı)
         Debug.Log($"Gidilen yer: {targetNode.nodeType}");
-        // TriggerEvent(targetNode); ... (Eski kodundaki gibi)
+         TriggerEvent(targetNode); 
     }
 
+void TriggerEvent(MapNode node)
+{
+    // ... Gün ilerletme kodları ...
+
+    // Olay Panelini Aç
+    MapEventManager.Instance.TriggerEvent(node.nodeType);
+}
     bool IsMoveValid(MapNode target)
     {
         // 1. Hiçbir yerde değilsek, sadece başlangıç noktalarına gidebiliriz

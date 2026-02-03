@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05b4e429ec7bbb144bb209a32365d43c, type: 3}
   m_Name: MapIconsConfig
   m_EditorClassIdentifier: Assembly-CSharp::MapConfig
-  villageIcon: {fileID: 0}
-  battleIcon: {fileID: 0}
-  bossIcon: {fileID: 0}
-  restIcon: {fileID: 0}
-  startIcon: {fileID: 0}
+  villageIcon: {fileID: 21300000, guid: b3c9beecd6581f34a99f0f010d09b429, type: 3}
+  battleIcon: {fileID: 21300000, guid: 6a76fdd7ede0dde47bc7c7fa4ad29ccc, type: 3}
+  bossIcon: {fileID: 21300000, guid: 7605bc226ef65974ea158757d2af9d03, type: 3}
+  restIcon: {fileID: 21300000, guid: b3c9beecd6581f34a99f0f010d09b429, type: 3}
+  startIcon: {fileID: 21300000, guid: 18e6d77bf104405408cbede2f3312bfc, type: 3}

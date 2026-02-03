@@ -11,7 +11,11 @@ public class MapGenerator : MonoBehaviour
     // Basitlik için katmanların Y koordinatları ve X aralıkları
     public float layerDistanceX = 200f; // Yatay mesafe
     public float nodeDistanceY = 150f;  // Dikey mesafe
-
+void Start()
+    {
+        // Oyun başladığında haritayı üret!
+        GenerateMap(); 
+    }
     public void GenerateMap()
     {
         // Önce temizle

@@ -23,7 +23,14 @@ public class MapNode : MonoBehaviour
         // Tipine göre ikon değiştir (İleride Sprite listesinden çekeriz)
         // iconImage.sprite = MapManager.Instance.GetIcon(type);
     }
+    void Start()
+{
 
+    if (nodeButton != null)
+    {
+        nodeButton.onClick.AddListener(OnNodeClicked);
+    }
+}
     // Tıklanınca çalışacak
     public void OnNodeClicked()
     {

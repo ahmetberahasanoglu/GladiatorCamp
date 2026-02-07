@@ -12,6 +12,7 @@ public class MapEventManager : MonoBehaviour
     public Image eventImage;            // Olay resmi
     public TextMeshProUGUI titleText;   // Başlık
     public TextMeshProUGUI descText;    // Açıklama
+    
     public Transform buttonContainer;   // Butonların dizileceği yer
     public GameObject buttonPrefab;     // Seçim butonu kalıbı
 
@@ -66,6 +67,7 @@ public class MapEventManager : MonoBehaviour
             ClosePanel();
         });
     }
+    
 
     void SetupBattleEvent()
     {
@@ -73,12 +75,15 @@ public class MapEventManager : MonoBehaviour
         descText.text = "Yolun üzerinde küçük bir Bizans birliği kamp kurmuş. Sayıları az ama zırhları sağlam görünüyor.";
         eventImage.sprite = battleSprite;
 
-        CreateButton("Hücum Et! (Savaş Başlat)", () => {
-            // SceneManager.LoadScene("BattleScene");
-            // Veya mevcut sahnedeki savaş sistemini başlat
-            Debug.Log("Savaş Başlıyor...");
+       CreateButton("HÜCUM! (Savaşı Başlat)", () => {
+            
+            // Paneli Kapat
             ClosePanel();
-            // MapManager.Instance.HideMap(); // Haritayı kapat
+            
+            // Savaşa Git!
+            // Örnek: 5 düşman, Zorluk seviyesi 1
+            BattleManager.Instance.StartBattle(5, 1); 
+            
         });
     }
 

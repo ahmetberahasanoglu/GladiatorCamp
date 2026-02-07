@@ -78,7 +78,14 @@ void CreateVisualLine(RectTransform start, RectTransform end)
         img.pixelsPerUnitMultiplier = 2f; 
     }
 }
-
+    public void HideMap()
+    {
+        mapPanel.SetActive(false);
+    }
+    public void ShowMap()
+    {
+        mapPanel.SetActive(true);
+    }
     void Awake()
     {
         Instance = this;

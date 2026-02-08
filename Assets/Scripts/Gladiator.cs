@@ -7,6 +7,9 @@ public class Gladiator : MonoBehaviour
 {
     [SerializeField] private JanissaryData _templateData;
     public JanissaryData data {get;set;}
+    [HideInInspector] public float currentHealth;
+    [HideInInspector] public float maxHealth;
+    public string candidateName;
     private NavMeshAgent agent;
     public event Action OnStatsChanged;
     public bool isOnMission = false;
@@ -52,6 +55,17 @@ public class Gladiator : MonoBehaviour
     }
     void Start()
     {
+        if (data != null)
+        {
+            // İsim ataması (Data'dan veya özel)
+            if (string.IsNullOrEmpty(candidateName)) candidateName = data.gladiatorName;
+
+            // --- CAN HESABI ---
+            // Formül: Stamina * 10 + (Level * 5)
+            // Örn: 10 Stamina, 1 Level = 105 Can
+            maxHealth = (data.stamina * 10) + (data.level * 5);
+            currentHealth = maxHealth;
+        }
         agent = GetComponent<NavMeshAgent>();
         UpdateNameLabel();
        // GoTo(GameObject.Find("Target").transform.position);

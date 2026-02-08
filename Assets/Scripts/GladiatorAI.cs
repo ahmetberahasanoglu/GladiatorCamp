@@ -33,9 +33,8 @@ public class GladiatorAI : MonoBehaviour
 
     void Start()
     {
-        agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
-        agent.speed += Random.Range(-0.5f, 0.5f);
+        agent.speed = 3.5f + (gladiator.data.speed * 0.05f);//değişebilirim.
         // Başlangıçta hemen bir iş bulmasın, biraz beklesin
         StartCoroutine(LifeCycleRoutine());
     }
@@ -43,93 +42,103 @@ public class GladiatorAI : MonoBehaviour
     {
         if (isDead || BattleManager.Instance.state != BattleState.Fighting) return;
 
-        // 1. Hedefin yoksa veya öldüyse yeni hedef bul
         if (target == null)
         {
             FindNearestTarget();
-            if(target == null) return; // Hala hedef yoksa (Savaş bitmiş olabilir) bekle
+            if (target == null) return;
         }
 
-        // 2. Mesafe Ölçümü
+        // Mesafe Kontrolü (NavMeshAgent kapalı olsa bile çalışır)
         float distance = Vector3.Distance(transform.position, target.position);
 
         if (distance <= attackRange)
         {
-            // --- SALDIRI MODU ---
-            agent.isStopped = true; // Dur
-            if (animator) animator.SetBool("isRunning", false); // Koşma animasyonunu durdur
+            // --- SALDIRI ---
+            if (agent.isActiveAndEnabled) agent.isStopped = true;
+            if (animator) animator.SetBool("isRunning", false);
 
-            // Vurma zamanı geldi mi?
+            // Vuruş yönüne dön
+            Vector3 direction = (target.position - transform.position).normalized;
+            direction.y = 0;
+            if(direction != Vector3.zero) transform.rotation = Quaternion.LookRotation(direction);
+
             if (Time.time > lastAttackTime + attackCooldown)
             {
                 Attack();
                 lastAttackTime = Time.time;
             }
-            
-            // Hedefe dön
-            Vector3 lookPos = target.position - transform.position;
-            lookPos.y = 0;
-            if(lookPos != Vector3.zero) transform.rotation = Quaternion.LookRotation(lookPos);
         }
         else
         {
-            // --- KOVALAMA MODU ---
-            agent.isStopped = false;
-            agent.SetDestination(target.position);
+            // --- KOVALAMA ---
+            if (agent.isActiveAndEnabled)
+            {
+                agent.isStopped = false;
+                agent.SetDestination(target.position);
+            }
             if (animator) animator.SetBool("isRunning", true);
         }
     }
 
-    void FindNearestTarget()
-    {
-        // Sahnedeki o etikete sahip tüm objeleri bul
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag(enemyTag);
-        float minDistance = Mathf.Infinity;
-        GameObject nearest = null;
-
-        foreach (GameObject enemy in enemies)
-        {
-            // Kendisiyle aynı etikettekilere saldırmasın ve ölü olanları pas geçsin
-            GladiatorAI enemyAI = enemy.GetComponent<GladiatorAI>();
-            if (enemyAI != null && !enemyAI.isDead) 
-            {
-                float dist = Vector3.Distance(transform.position, enemy.transform.position);
-                if (dist < minDistance)
-                {
-                    minDistance = dist;
-                    nearest = enemy;
-                }
-            }
-        }
-        target = nearest != null ? nearest.transform : null;
-    }
-
     void Attack()
     {
-        if (animator) animator.SetTrigger("Attack"); // "Attack" triggerını tetikle
-        
-        // Karşı tarafa hasar ver
-        GladiatorAI enemyScript = target.GetComponent<GladiatorAI>();
-        if(enemyScript != null)
+        if (animator) animator.SetTrigger("Attack");
+
+        // Karşıdaki askerin AI scriptini bul
+        if (target != null)
         {
-            if (Random.value < 0.2f)
+            GladiatorAI enemyAI = target.GetComponent<GladiatorAI>();
+            if (enemyAI != null && gladiator.data != null)
             {
-                enemyScript.TakeDamage(damage*2);
+                // --- HASAR FORMÜLÜ (Senin JanissaryData değerlerine göre) ---
+                
+                // 1. Temel Hasar: Strength * 1.5
+                float damage = gladiator.data.strength * 1.5f;
+
+                // 2. Seviye Bonusu
+                damage += (gladiator.data.level * 2);
+
+                // 3. Kritik Vuruş (Speed etkili)
+                // Speed değeri kadar yüzde şans (Örn: 20 Speed = %20 Kritik)
+                bool isCrit = Random.Range(0, 100) < gladiator.data.speed;
+                if (isCrit)
+                {
+                    damage *= 1.5f; // %50 Daha fazla vur
+                    // Debug.Log("Kritik Vuruş!");
+                }
+
+                // Hasarı gönder
+                enemyAI.TakeDamage(damage,isCrit);
             }
-            enemyScript.TakeDamage(damage);
         }
     }
 
-    public void TakeDamage(int amount)
+    public void TakeDamage(float incomingDamage,bool isCritical = false)
     {
-        if (isDead) return;
+        if (isDead || gladiator.data == null) return;
 
-        health -= amount;
+        // --- SAVUNMA FORMÜLÜ ---
         
-        // Hasar efekti, ses, kan particle vs. buraya eklenebilir
-        // Debug.Log(gameObject.name + " hasar aldı: " + amount);
+        // Defans Puanı: Defense + (Morale / 5)
+        // Morale 100 ise +20 Defans sağlar.
+        float defensePower = gladiator.data.defense + (gladiator.data.morale / 5.0f);
 
-        if (health <= 0)
+        // Hasar Azaltma Oranı (LoL Mantığı)
+        // 50 Defans = %33 Azaltma, 100 Defans = %50 Azaltma
+        float reduction = 100.0f / (100.0f + defensePower);
+        
+        float finalDamage = incomingDamage * reduction;
+
+        // Canı azalt (Gladiator scriptindeki currentHealth'ten)
+        gladiator.currentHealth -= finalDamage;
+
+        if (DamageTextManager.Instance != null)
+        {
+            // Hasarı alan askerin pozisyonunda yazıyı çıkar
+            DamageTextManager.Instance.ShowDamage(transform.position, finalDamage, isCritical);
+        }
+
+        if (gladiator.currentHealth <= 0)
         {
             Die();
         }
@@ -138,18 +147,37 @@ public class GladiatorAI : MonoBehaviour
     void Die()
     {
         isDead = true;
-        agent.isStopped = true;
-        agent.enabled = false; // Navmesh'i kapat ki diğerleri üzerinden geçebilsin
-        GetComponent<Collider>().enabled = false; // Tıklamayı kapat
-
-        if (animator) animator.SetTrigger("Die"); // Ölme animasyonu
-
-        // Savaş bitti mi kontrolü (Basit bir kontrol)
-        CheckBattleEnd();
+        if (agent.isActiveAndEnabled) agent.isStopped = true;
         
-        // 5 saniye sonra cesedi yok et (veya yerde kalsın)
-        Destroy(gameObject, 5f);
+        GetComponent<Collider>().enabled = false; // Tıklanmayı kapat
+        if (agent.isActiveAndEnabled) agent.enabled = false; // Yolu aç
+        
+        if (animator) animator.SetTrigger("Die");
+
+        Destroy(gameObject, 4f); // 4 saniye sonra cesedi sil
     }
+
+    void FindNearestTarget()
+    {
+        // ... (Bu fonksiyon öncekiyle aynı kalabilir) ...
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag(enemyTag);
+        float minDst = Mathf.Infinity;
+        GameObject nearest = null;
+        
+        foreach (GameObject e in enemies)
+        {
+            // Kendisi değilse ve ölmediyse
+            var ai = e.GetComponent<GladiatorAI>();
+            if (ai != null && !ai.isDead)
+            {
+                float dst = Vector3.Distance(transform.position, e.transform.position);
+                if (dst < minDst) { minDst = dst; nearest = e; }
+            }
+        }
+        target = nearest != null ? nearest.transform : null;
+    }
+
+   
 
     void CheckBattleEnd()
     {

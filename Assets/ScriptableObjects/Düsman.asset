@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6f1bfd1eaa87c44ab0d82f1d6663106, type: 3}
   m_Name: "D\xFCsman"
   m_EditorClassIdentifier: Assembly-CSharp::JanissaryData
-  gladiatorName: 
-  strength: 0
-  defense: 0
-  speed: 0
-  morale: 0
-  stamina: 0
+  gladiatorName: "Bizansl\u0131"
+  strength: 10
+  defense: 10
+  speed: 10
+  morale: 10
+  stamina: 10
   level: 1
   price: 100

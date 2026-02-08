@@ -7,7 +7,7 @@ public class DayManager : MonoBehaviour
     public static DayManager Instance;
 
     public int currentDay = 1;
-
+    public int maxDays = 100;
     [Header("Olay Sistemi")]
     public List<GameEvent> possibleEvents; 
     [Range(0, 100)] public int eventChance = 10; 
@@ -16,7 +16,7 @@ public class DayManager : MonoBehaviour
     
     public event Action<int> OnDayChanged;
     public event Action<GameEvent> OnEventTriggered;
-
+    public event System.Action OnWinterArrived;
     void Awake()
     {
         Instance = this;
@@ -28,9 +28,9 @@ public class DayManager : MonoBehaviour
     }
 
 
-    public void NextDay()
+    public void NextDay(int amount)
     {
-        currentDay++;
+        currentDay+=amount;
         
         // Bir şeyler eklenebilir (Yemek yensin, askerler iyileşsin vs.)
         OnNewDay?.Invoke();
@@ -40,6 +40,12 @@ public class DayManager : MonoBehaviour
         CheckForUlufe();
       //  SaveManager.Instance.SaveGame();//Autosave ekledik
         MoneyManager.Instance.EndOfDay();   
+        if (currentDay >= maxDays)
+        {
+            Debug.Log("KIŞ GELDİ! OYUN BİTTİ.");
+            OnWinterArrived?.Invoke();
+            // GameOverManager.Instance.TriggerWinterDefeat();
+        }
     }
 
     void CheckForRandomEvent()

@@ -45,7 +45,10 @@ public class TopInfoBarUI : MonoBehaviour
 
     void UpdateDay(int day)
     {
-        dayText.text = $"{day}";//Gün:
+        if(dayText != null)
+            dayText.text = $"Gün: {day} / {100}";
+            
+        if (day > 80 && dayText != null) dayText.color = Color.red;
     }
 
     void UpdateGold(int gold)

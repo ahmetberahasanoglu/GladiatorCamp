@@ -7,6 +7,7 @@ public class Gladiator : MonoBehaviour
 {
     [SerializeField] private JanissaryData _templateData;
     public JanissaryData data {get;set;}
+    public HealthBar healthBar;
     [HideInInspector] public float currentHealth;
     [HideInInspector] public float maxHealth;
     public string candidateName;
@@ -65,7 +66,9 @@ public class Gladiator : MonoBehaviour
             // Örn: 10 Stamina, 1 Level = 105 Can
             maxHealth = (data.stamina * 10) + (data.level * 5);
             currentHealth = maxHealth;
+            if (healthBar != null) healthBar.UpdateBar(currentHealth, maxHealth);
         }
+      
         agent = GetComponent<NavMeshAgent>();
         UpdateNameLabel();
        // GoTo(GameObject.Find("Target").transform.position);

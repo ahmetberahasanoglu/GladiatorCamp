@@ -131,6 +131,10 @@ public class GladiatorAI : MonoBehaviour
 
         // Canı azalt (Gladiator scriptindeki currentHealth'ten)
         gladiator.currentHealth -= finalDamage;
+        if (gladiator.healthBar != null)
+        {
+            gladiator.healthBar.UpdateBar(gladiator.currentHealth, gladiator.maxHealth);
+        }
 
         if (DamageTextManager.Instance != null)
         {

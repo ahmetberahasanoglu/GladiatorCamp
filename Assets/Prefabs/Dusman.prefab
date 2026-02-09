@@ -65,6 +65,10 @@ PrefabInstance:
       value: MySoldier
       objectReference: {fileID: 0}
     - target: {fileID: 8261976675823311341, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
+      propertyPath: healthBar
+      value: 
+      objectReference: {fileID: 6891551871421358385}
+    - target: {fileID: 8261976675823311341, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
       propertyPath: _templateData
       value: 
       objectReference: {fileID: 11400000, guid: d3a8285aace0efc459a406f0cf41746d, type: 2}
@@ -77,3 +81,14 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
+--- !u!114 &6891551871421358385 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3646057390651392921, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
+  m_PrefabInstance: {fileID: 7870832035576242856}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43dadf9926994274d9b90970b6ec13a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HealthBar

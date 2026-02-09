@@ -139,7 +139,7 @@ public class GladiatorAI : MonoBehaviour
         if (DamageTextManager.Instance != null)
         {
             // Hasarı alan askerin pozisyonunda yazıyı çıkar
-            DamageTextManager.Instance.ShowDamage(transform.position, finalDamage, isCritical);
+            DamageTextManager.Instance.ShowDamage(transform.position, finalDamage, isCritical ? 1 : 0);
         }
 
         if (gladiator.currentHealth <= 0)
@@ -148,17 +148,37 @@ public class GladiatorAI : MonoBehaviour
         }
     }
 
-    void Die()
+   void Die()
     {
+        if (isDead) return; // Zaten baygınsa tekrar bayıltma
+
         isDead = true;
-        if (agent.isActiveAndEnabled) agent.isStopped = true;
         
-        GetComponent<Collider>().enabled = false; // Tıklanmayı kapat
-        if (agent.isActiveAndEnabled) agent.enabled = false; // Yolu aç
-        
+        // 1. Savaş dışı bırak
+        if (agent.isActiveAndEnabled) 
+        {
+            agent.isStopped = true;
+            agent.enabled = false; // Hareket edemesin
+        }
+        GetComponent<Collider>().enabled = false; // Artık tıklanamaz/vurulamaz
+
+        // 2. Animasyon
         if (animator) animator.SetTrigger("Die");
 
-        Destroy(gameObject, 4f); // 4 saniye sonra cesedi sil
+        // 3. KRİTİK NOKTA: Öldürme, sadece canını dibe çek
+        // Maksimum canının %10'una eşitliyoruz.
+        // Böylece kampa döndüğünde "Canı çok az" olarak başlayacak.
+        gladiator.currentHealth = gladiator.maxHealth * 0.1f;
+        
+        // Can barını güncelle ki kırmızı olduğu görülsün
+        if (gladiator.healthBar != null) 
+            gladiator.healthBar.UpdateBar(gladiator.currentHealth, gladiator.maxHealth);
+
+        // 4. Yok Etme (Destroy) Kodunu Kaldır!
+        // Destroy(gameObject, 4f); <-- BU SATIRI SİLİYORUZ
+        
+        // Savaşın bitip bitmediğini kontrol etmeye devam et
+        CheckBattleEnd(); 
     }
 
     void FindNearestTarget()

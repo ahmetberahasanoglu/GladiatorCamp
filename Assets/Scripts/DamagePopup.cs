@@ -11,25 +11,29 @@ public class DamagePopup : MonoBehaviour
     private float disappearSpeed = 2f;
     private float lifeTime = 1f; // Ne kadar ekranda kalacak
 
-    public void Setup(int damageAmount, bool isCritical)
+   // type: 0 = Normal, 1 = Kritik, 2 = Heal
+    public void Setup(int amount, int type) 
     {
-        textMesh.text = damageAmount.ToString();
+        textMesh.text = amount.ToString();
 
-        if (isCritical)
+        if (type == 2) // HEAL
         {
-            textMesh.fontSize = 8; // Kritikse büyük
-            textMesh.color = Color.yellow; // ve sarı
+            textMesh.text = "+" + amount; // Başına artı koy
+            textMesh.fontSize = 7;
+            textMesh.color = Color.green;
         }
-        else
+        else if (type == 1) // CRITICAL
         {
-            textMesh.fontSize = 5; // Normalse küçük
-            textMesh.color = Color.white; // ve beyaz
+            textMesh.fontSize = 8;
+            textMesh.color = Color.yellow;
+        }
+        else // NORMAL
+        {
+            textMesh.fontSize = 5;
+            textMesh.color = Color.white;
         }
 
-        // Her seferinde görünürlüğünü sıfırla
         canvasGroup.alpha = 1;
-        
-        // Hareketi başlat
         StartCoroutine(AnimateRoutine());
     }
 

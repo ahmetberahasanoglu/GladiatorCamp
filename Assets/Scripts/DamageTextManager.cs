@@ -41,7 +41,7 @@ public class DamageTextManager : MonoBehaviour
         return popup;
     }
 
-    public void ShowDamage(Vector3 position, float damageAmount, bool isCritical)
+    public void ShowDamage(Vector3 position, float amount, int type)
     {
         // Havuzda eleman kalmadıysa yeni yarat
         if (poolQueue.Count == 0)
@@ -55,9 +55,7 @@ public class DamageTextManager : MonoBehaviour
         // Pozisyonunu ayarla (Kafanın biraz üstü)
         popup.transform.position = position + Vector3.up * 1.5f; 
         popup.gameObject.SetActive(true);
-        
-        // Yazıyı hazırla (Float gelen hasarı int'e yuvarlıyoruz ki ekranda 12.4 yazmasın)
-        popup.Setup(Mathf.RoundToInt(damageAmount), isCritical);
+        popup.Setup(Mathf.RoundToInt(amount), type);
 
         // İşi bitince tekrar kuyruğa girmesi için (Basit yöntem: Enqueue'yu burada değil, obje kapanırken yapabiliriz ama şimdilik bu yeterli)
         // Daha sağlam bir pool yapısı için objenin OnDisable'ında kuyruğa geri eklemek gerekir ama bu casual oyun için Queue döngüsü yeterli olacaktır.

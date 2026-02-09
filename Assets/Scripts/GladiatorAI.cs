@@ -22,7 +22,7 @@ public class GladiatorAI : MonoBehaviour
     public Transform target;
     private Animator animator;
     private float lastAttackTime;
-    private bool isDead = false;
+    public bool isDead = false;
 
     void Awake()
     {
@@ -178,7 +178,11 @@ public class GladiatorAI : MonoBehaviour
         // Destroy(gameObject, 4f); <-- BU SATIRI SİLİYORUZ
         
         // Savaşın bitip bitmediğini kontrol etmeye devam et
-        CheckBattleEnd(); 
+       // CheckBattleEnd(); 
+        if (BattleManager.Instance != null)
+        {
+            BattleManager.Instance.CheckBattleStatus();
+        }
     }
 
     void FindNearestTarget()
@@ -202,12 +206,28 @@ public class GladiatorAI : MonoBehaviour
     }
 
    
-
-    void CheckBattleEnd()
+// Savaş bitip kampa dönünce çağrılacak
+    public void ReviveForCamp()
     {
-        // Eğer sahnede hiç "Enemy" etiketli veya "Player" etiketli kimse kalmadıysa savaşı bitir
-        // Bu kontrolü BattleManager'da yapmak daha performanslıdır ama şimdilik burada kalsın.
+        isDead = false;
+        target = null; // Hedefi unut
+
+        // Fiziği geri aç
+        GetComponent<Collider>().enabled = true;
+        
+        // Animasyonu sıfırla (Yerde yatıyorsa kalksın)
+        if (animator) 
+        {
+            animator.Rebind(); // Animasyonları resetler, Idle'a döner
+            animator.Update(0f);
+        }
+
+        // NavMesh'i tekrar aktif et (Yürüyebilsin)
+        // Warp ile kampa taşınacağı için burada enable etmesen de olur,
+        // taşıma işleminden sonra enable etmek daha sağlıklıdır.
+        agent.enabled = true; 
     }
+  
 
     IEnumerator LifeCycleRoutine()
     {

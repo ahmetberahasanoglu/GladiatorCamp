@@ -35,6 +35,7 @@ public class DayManager : MonoBehaviour
         // Bir şeyler eklenebilir (Yemek yensin, askerler iyileşsin vs.)
         OnNewDay?.Invoke();
         OnDayChanged?.Invoke(currentDay);
+        HealAllSoldiers(20 * amount);
         // NotificationManager.Instance.Show($"Gün bitti. Yeni Gün: {currentDay}", NotificationType.Success);
         CheckForRandomEvent();
         CheckForUlufe();
@@ -47,7 +48,28 @@ public class DayManager : MonoBehaviour
             // GameOverManager.Instance.TriggerWinterDefeat();
         }
     }
+    public void HealAllSoldiers(int percentageAmount)
+    {
+        var soldiers = FindObjectsOfType<Gladiator>();
+        
+        foreach(var soldier in soldiers)
+        {
+            // Ne kadar iyileşecek? (Max canın %'si kadar)
+            float healAmount = soldier.maxHealth * (percentageAmount / 100.0f);
+            
+            soldier.currentHealth += healAmount;
+            
+            // Max canı geçmesin
+            if(soldier.currentHealth > soldier.maxHealth) 
+                soldier.currentHealth = soldier.maxHealth;
 
+            // Barı güncelle
+            if(soldier.healthBar != null)
+                soldier.healthBar.UpdateBar(soldier.currentHealth, soldier.maxHealth);
+        }
+        NotificationManager.Instance.Show($"Tüm ordu %{percentageAmount} iyileşti.", NotificationType.Success);
+        //Debug.Log($"Tüm ordu %{percentageAmount} iyileşti.");
+    }
     void CheckForRandomEvent()
     {
         if (possibleEvents.Count == 0) return;

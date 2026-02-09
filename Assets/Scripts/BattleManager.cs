@@ -120,32 +120,78 @@ public void EndBattle(bool isVictory)
             defeatPanel.SetActive(true); // Yenilgi panelini aç
         }
     }
+    public void CheckBattleStatus()
+    {
+        // Eğer savaş zaten bittiyse tekrar kontrol etme
+        if (state != BattleState.Fighting) return;
+
+        // Sahnedeki tüm AI scriptlerini bul
+        var allUnits = FindObjectsOfType<GladiatorAI>();
+
+        int livingMySoldiers = 0;
+        int livingEnemies = 0;
+
+        foreach (var unit in allUnits)
+        {
+            // Eğer ölü değilse say
+            if (!unit.isDead)
+            {
+                if (unit.CompareTag("MySoldier"))
+                {
+                    livingMySoldiers++;
+                }
+                else if (unit.CompareTag("EnemySoldier"))
+                {
+                    livingEnemies++;
+                }
+            }
+        }
+
+        // --- KARAR ANI ---
+
+        // 1. Durum: Düşmanların hepsi yerde -> ZAFER
+        if (livingEnemies <= 0)
+        {
+            Debug.Log("Düşman kalmadı! Zafer!");
+            EndBattle(true); // Zafer parametresiyle bitir
+        }
+        // 2. Durum: Bizimkilerin hepsi yerde -> YENİLGİ
+        else if (livingMySoldiers <= 0)
+        {
+            Debug.Log("Asker kalmadı! Yenilgi!");
+            EndBattle(false); // Yenilgi parametresiyle bitir
+        }
+    }
 
     // "Kampa Dön" butonuna bağlanacak fonksiyon
-    public void ReturnToCamp()
+   public void ReturnToCamp()
     {
-        // 1. Panelleri Kapat
         lootPanel.SetActive(false);
         defeatPanel.SetActive(false);
 
-        // 2. Askerleri Temizle (Sahne şişmesin)
-        // (Sadece savaş alanındaki kopyaları siliyoruz, asıl veriler RecruitManager'da duruyor olmalı)
-        var allAgents = FindObjectsOfType<UnityEngine.AI.NavMeshAgent>();
-        foreach(var agent in allAgents)
+        // Sahnedeki tüm askerleri bul (Bizimkiler)
+        var soldiers = FindObjectsOfType<Gladiator>();
+
+        foreach (var soldier in soldiers)
         {
-            // Sadece "Clone" olanları veya savaş alanındakileri silebilirsin
-            // Şimdilik basitçe hepsini kampa geri ışınlayalım veya silelim
-             Destroy(agent.gameObject); 
+            // Askerin yapay zekasına ulaş
+            var ai = soldier.GetComponent<GladiatorAI>();
+            if (ai != null)
+            {
+                // 1. Askeri "Canlı" durumuna geri getir (Reset)
+                ai.ReviveForCamp(); 
+                
+                // 2. Askeri Kamp Pozisyonuna geri ışınla
+                // (Eğer askerlerin kampta sabit durduğu yerler varsa oraya, 
+                // yoksa rastgele bir yere dizebilirsin)
+                // soldier.transform.position = ... (Burası senin kamp dizilimine bağlı)
+            }
         }
 
-        // 3. Kamerayı Kampa Döndür
+        // Kamerayı kampa çevir
         StartCoroutine(MoveCameraRoutine(campCameraPos));
-
-        // 4. Harita Durumu
-        state = BattleState.Idle;
-        // MapManager.Instance.ShowMap(); // İstersen direkt haritayı aç
         
-        Debug.Log("Kampa dönüldü.");
+        state = BattleState.Idle;
     }
     void SpawnEnemyArmy(int count)
     {

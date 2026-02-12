@@ -11,6 +11,9 @@ public class GladiatorAI : MonoBehaviour
     private ActivityPoint currentPoint; // Şu an hedeflediğim nokta
     private float activityTimer;
 
+    [Header("Efektler")]
+    public GameObject deathEffectPrefab;
+
     [Header("Özellikler")]
     public string enemyTag = "Enemy"; // Bizim askerler için "Enemy", Düşmanlar için "Player" olacak
     public float attackRange = 2.0f;  // Ne kadar yakından vurabilir?
@@ -148,9 +151,9 @@ public class GladiatorAI : MonoBehaviour
         }
     }
 
-   void Die()
+ void Die()
     {
-        if (isDead) return; // Zaten baygınsa tekrar bayıltma
+        if (isDead) return; 
 
         isDead = true;
         
@@ -158,27 +161,39 @@ public class GladiatorAI : MonoBehaviour
         if (agent.isActiveAndEnabled) 
         {
             agent.isStopped = true;
-            agent.enabled = false; // Hareket edemesin
+            agent.enabled = false; 
         }
-        GetComponent<Collider>().enabled = false; // Artık tıklanamaz/vurulamaz
+        GetComponent<Collider>().enabled = false; 
 
         // 2. Animasyon
         if (animator) animator.SetTrigger("Die");
 
-        // 3. KRİTİK NOKTA: Öldürme, sadece canını dibe çek
-        // Maksimum canının %10'una eşitliyoruz.
-        // Böylece kampa döndüğünde "Canı çok az" olarak başlayacak.
-        gladiator.currentHealth = gladiator.maxHealth * 0.1f;
-        
-        // Can barını güncelle ki kırmızı olduğu görülsün
-        if (gladiator.healthBar != null) 
-            gladiator.healthBar.UpdateBar(gladiator.currentHealth, gladiator.maxHealth);
+        // 3. Canı %10'a çek (Ölmedi, bayıldı mantığı)
+        if (gladiator != null)
+        {
+            gladiator.currentHealth = gladiator.maxHealth * 0.1f;
+            if (gladiator.healthBar != null) 
+                gladiator.healthBar.UpdateBar(gladiator.currentHealth, gladiator.maxHealth);
+        }
 
-        // 4. Yok Etme (Destroy) Kodunu Kaldır!
-        // Destroy(gameObject, 4f); <-- BU SATIRI SİLİYORUZ
+        // --- YENİ EKLENEN KISIM: KURUKAFA EFEKTİ ---
+        if (deathEffectPrefab != null)
+        {
+            // Askerin kafasının biraz üzerinde (2 birim) oluştur
+            Vector3 spawnPos = transform.position + Vector3.up * 2.0f;
+            
+            // Efekti yarat
+            GameObject skullVFX = Instantiate(deathEffectPrefab, spawnPos, Quaternion.identity);
+            
+            // Eğer efekt hareketli değilse olduğu yerde kalsın
+            // Ama askerle beraber hareket etsin istersen: skullVFX.transform.SetParent(transform);
+            
+            // 3 saniye sonra kurukafayı sil
+            Destroy(skullVFX, 3.0f);
+        }
+        // -------------------------------------------
         
-        // Savaşın bitip bitmediğini kontrol etmeye devam et
-       // CheckBattleEnd(); 
+        // Savaş durumu kontrolü
         if (BattleManager.Instance != null)
         {
             BattleManager.Instance.CheckBattleStatus();
@@ -209,23 +224,28 @@ public class GladiatorAI : MonoBehaviour
 // Savaş bitip kampa dönünce çağrılacak
     public void ReviveForCamp()
     {
+        // Ölü işaretini kaldır
         isDead = false;
-        target = null; // Hedefi unut
+        target = null; 
 
-        // Fiziği geri aç
+        // Collider'ı aç (Tıklanabilsin)
         GetComponent<Collider>().enabled = true;
         
-        // Animasyonu sıfırla (Yerde yatıyorsa kalksın)
+        // Animasyonu sıfırla (Yerden kalksın, Idle dursun)
         if (animator) 
         {
-            animator.Rebind(); // Animasyonları resetler, Idle'a döner
+            animator.Rebind(); 
             animator.Update(0f);
         }
 
-        // NavMesh'i tekrar aktif et (Yürüyebilsin)
-        // Warp ile kampa taşınacağı için burada enable etmesen de olur,
-        // taşıma işleminden sonra enable etmek daha sağlıklıdır.
-        agent.enabled = true; 
+        // NavMeshAgent'ı tekrar aktif et
+        if (agent != null)
+        {
+            agent.enabled = true; 
+            agent.isStopped = true; // Kampta koşuşturmasın, dursun
+        }
+        
+        // Kan efektlerini vs. temizlemek istersen buraya ekleyebilirsin
     }
   
 

@@ -8,6 +8,8 @@ public enum BattleState { Idle, Fighting, Won, Lost }
 public class BattleManager : MonoBehaviour
 {
     public static BattleManager Instance;
+    [Header("Kamp Dizilimi")]
+    public Transform campStandingPoint;
 
     [Header("Gerekli Referanslar")]
     public Transform playerSpawnPoint; // Askerlerin dizileceği yer
@@ -27,6 +29,8 @@ public class BattleManager : MonoBehaviour
     public GameObject defeatPanel;    // Yenilgi ekranı
     public TextMeshProUGUI lootText;
 
+
+public GameObject skillPanel;
     void Awake()
     {
         Instance = this;
@@ -47,8 +51,13 @@ public class BattleManager : MonoBehaviour
         SpawnEnemyArmy(enemyCount);
 
         state = BattleState.Fighting;
+        if (skillPanel != null) skillPanel.SetActive(true);
     }
-
+void Start()
+    {
+        // Oyun başladığında Skill paneli kapalı olsun (Çünkü kamptayız)
+        if (skillPanel != null) skillPanel.SetActive(false);
+    }
    void SpawnPlayerArmy()
     {
         var soldiers = FindObjectsOfType<Gladiator>();
@@ -103,6 +112,8 @@ public class BattleManager : MonoBehaviour
 public void EndBattle(bool isVictory)
     {
         state = isVictory ? BattleState.Won : BattleState.Lost;
+
+        if (skillPanel != null) skillPanel.SetActive(false);
 
         if (isVictory)
         {
@@ -164,34 +175,68 @@ public void EndBattle(bool isVictory)
     }
 
     // "Kampa Dön" butonuna bağlanacak fonksiyon
-   public void ReturnToCamp()
+  public void ReturnToCamp()
     {
+        // 1. UI Panellerini Kapat
         lootPanel.SetActive(false);
         defeatPanel.SetActive(false);
+        if (skillPanel != null) skillPanel.SetActive(false);
+        if (MapManager.Instance != null) MapManager.Instance.HideMap(); // Haritayı da kapat
 
-        // Sahnedeki tüm askerleri bul (Bizimkiler)
-        var soldiers = FindObjectsOfType<Gladiator>();
+        // 2. Sahnedeki TÜM askerleri (Ölü/Diri) bul
+        var allUnits = FindObjectsOfType<GladiatorAI>();
+        
+        // Kamp dizilimi için basit matematik değişkenleri
+        int row = 0;
+        int col = 0;
+        float spacing = 1.5f;
 
-        foreach (var soldier in soldiers)
+        foreach (var unit in allUnits)
         {
-            // Askerin yapay zekasına ulaş
-            var ai = soldier.GetComponent<GladiatorAI>();
-            if (ai != null)
+            // --- DÜŞMANLAR YOK OLACAK ---
+            if (unit.CompareTag("EnemySoldier"))
             {
-                // 1. Askeri "Canlı" durumuna geri getir (Reset)
-                ai.ReviveForCamp(); 
-                
-                // 2. Askeri Kamp Pozisyonuna geri ışınla
-                // (Eğer askerlerin kampta sabit durduğu yerler varsa oraya, 
-                // yoksa rastgele bir yere dizebilirsin)
-                // soldier.transform.position = ... (Burası senin kamp dizilimine bağlı)
+                // Hafızadan sil
+                Destroy(unit.gameObject);
+            }
+            // --- BİZİMKİLER KAMPA DÖNECEK ---
+            else if (unit.CompareTag("MySoldier"))
+            {
+                // 1. Askeri "Canlı/Ayakta" moduna resetle
+                unit.ReviveForCamp(); 
+
+                // 2. Kampa Işınla (Warp kullanmak şart!)
+                if (campStandingPoint != null)
+                {
+                    Vector3 campPos = campStandingPoint.position;
+                    campPos.x += col * spacing;
+                    campPos.z -= row * spacing;
+
+                    if (unit.GetComponent<UnityEngine.AI.NavMeshAgent>() != null)
+                    {
+                        unit.GetComponent<UnityEngine.AI.NavMeshAgent>().Warp(campPos);
+                    }
+                    else
+                    {
+                        unit.transform.position = campPos;
+                    }
+
+                    // Yönünü düzelt (Kameraya baksınlar)
+                    unit.transform.rotation = campStandingPoint.rotation;
+
+                    // Sıraya diz
+                    col++;
+                    if(col > 5) { col = 0; row++; }
+                }
             }
         }
 
-        // Kamerayı kampa çevir
+        // 3. Kamerayı Kampa Çevir
         StartCoroutine(MoveCameraRoutine(campCameraPos));
         
         state = BattleState.Idle;
+        
+        Debug.Log("Düşmanlar temizlendi, ordu kampa döndü.");
     }
     void SpawnEnemyArmy(int count)
     {

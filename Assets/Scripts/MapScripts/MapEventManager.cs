@@ -46,6 +46,9 @@ public class MapEventManager : MonoBehaviour
             case NodeType.Boss:
                 SetupBossEvent();
                 break;
+            case NodeType.StartPoint:
+                SetupStartEvent();
+                break;
         }
     }
 
@@ -75,6 +78,18 @@ public class MapEventManager : MonoBehaviour
     
 
     // ... Önceki kodların ...
+    void SetupStartEvent()
+    {
+        titleText.text = "Kamp ekranı";
+        descText.text = "Bi kampta dinlen.";
+
+          CreateButton($"Kampa geç", () => {
+           // DayManager.Instance.NextDay(3); 
+            ClosePanel();
+            BattleManager.Instance.ReturnToCamp();
+            //BattleManager.Instance.StartBattle(5, 1); // 5 Düşman
+        });
+    }
 
     void SetupBattleEvent()
     {

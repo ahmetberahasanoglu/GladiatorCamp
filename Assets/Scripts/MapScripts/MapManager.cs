@@ -10,85 +10,78 @@ public class MapManager : MonoBehaviour
     [Header("UI")]
     public GameObject mapPanel;
     public RectTransform playerIcon;
+    public float moveDuration = 1.2f; // Gitme süresi (Saniye)
+    
+    [Header("Sallanma (Cartoon Efekt)")]
+    public float wiggleSpeed = 6f; // Ne kadar hızlı sallanacak
+    public float wiggleAngle = 12f; // Kaç derece sağa/sola yatacak
 
     [Header("Ayarlar")]
-    // Oyunun en başında gidilebilecek ilk noktalar (Sen elle seçeceksin)
     public List<MapNode> startingNodes; 
-
     public MapNode currentNode; // Şu an neredeyiz?
 
-    // MapManager.cs içine ekle:
-[Header("Çizgi Ayarları")]
-public GameObject linePrefab; // İnce uzun bir Image (UI Line)
-public Transform lineContainer; // Çizgilerin toplanacağı yer (MapContainer ile aynı olsun)
+    [Header("Çizgi Ayarları")]
+    public GameObject linePrefab; 
+    public Transform lineContainer; 
 
-void Start()
-{
-    DrawAllConnections();
-}
-
-void DrawAllConnections()
-{
-    // Tüm MapNode'ları bul
-    var allNodes = FindObjectsOfType<MapNode>();
-
-    foreach (var node in allNodes)
+    void Awake()
     {
-        foreach (var target in node.outgoingPaths)
-        {
-            if (target != null)
-            {
-                CreateVisualLine(node.GetComponent<RectTransform>(), target.GetComponent<RectTransform>());
-            }
-        }
+        Instance = this;
     }
-}
 
-// MapManager.cs içindeki CreateVisualLine fonksiyonunu güncelle:
-
-void CreateVisualLine(RectTransform start, RectTransform end)
-{
-    GameObject lineObj = Instantiate(linePrefab, lineContainer);
-    lineObj.transform.SetAsFirstSibling(); 
-
-    RectTransform rect = lineObj.GetComponent<RectTransform>();
-    
-    // İki nokta arası mesafe ve orta nokta
-    Vector3 diff = end.localPosition - start.localPosition;
-    Vector3 midpoint = (start.localPosition + end.localPosition) / 2;
-    
-    rect.localPosition = midpoint;
-    
-    // Çizgi uzunluğunu ayarla
-    // Yükseklik (5) çizginin kalınlığıdır. DashLine görselin çok büyükse bunu artır/azalt.
-    rect.sizeDelta = new Vector2(diff.magnitude, 5); 
-    
-    // Dönme açısını hesapla
-    float angle = Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg;
-    rect.rotation = Quaternion.Euler(0, 0, angle);
-
-    // --- YENİ EKLENEN KISIM: Image Tiled Ayarı ---
-    Image img = lineObj.GetComponent<Image>();
-    if (img != null)
+    void Start()
     {
-        img.type = Image.Type.Tiled; // Kodla da garantiye alalım
-        
-        // Bu değerle oynayarak kesiklerin sıklığını değiştirebilirsin
-        // 1 = Normal, 2 = Daha sık çizgiler, 0.5 = Daha seyrek
-        img.pixelsPerUnitMultiplier = 2f; 
+        DrawAllConnections();
     }
-}
+
     public void HideMap()
     {
         mapPanel.SetActive(false);
     }
+    
     public void ShowMap()
     {
         mapPanel.SetActive(true);
     }
-    void Awake()
+
+    void DrawAllConnections()
     {
-        Instance = this;
+        var allNodes = FindObjectsOfType<MapNode>();
+
+        foreach (var node in allNodes)
+        {
+            foreach (var target in node.outgoingPaths)
+            {
+                if (target != null)
+                {
+                    CreateVisualLine(node.GetComponent<RectTransform>(), target.GetComponent<RectTransform>());
+                }
+            }
+        }
+    }
+
+    void CreateVisualLine(RectTransform start, RectTransform end)
+    {
+        GameObject lineObj = Instantiate(linePrefab, lineContainer);
+        lineObj.transform.SetAsFirstSibling(); 
+
+        RectTransform rect = lineObj.GetComponent<RectTransform>();
+        
+        Vector3 diff = end.localPosition - start.localPosition;
+        Vector3 midpoint = (start.localPosition + end.localPosition) / 2;
+        
+        rect.localPosition = midpoint;
+        rect.sizeDelta = new Vector2(diff.magnitude, 5); 
+        
+        float angle = Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg;
+        rect.rotation = Quaternion.Euler(0, 0, angle);
+
+        Image img = lineObj.GetComponent<Image>();
+        if (img != null)
+        {
+            img.type = Image.Type.Tiled; 
+            img.pixelsPerUnitMultiplier = 2f; 
+        }
     }
 
     public void SelectNode(MapNode targetNode)
@@ -102,44 +95,75 @@ void CreateVisualLine(RectTransform start, RectTransform end)
 
         // HAREKET ONAYLANDI
         currentNode = targetNode;
-        StartCoroutine(MovePlayerIconRoutine(targetNode.GetComponent<RectTransform>().anchoredPosition));
-
-        // OLAYI BAŞLAT (Burası aynı)
-        Debug.Log($"Gidilen yer: {targetNode.nodeType}");
-         TriggerEvent(targetNode); 
+        
+        // SADECE yürüme animasyonunu başlatıyoruz, Event'i yürüyüş bitince açacağız
+        StartCoroutine(MoveIconRoutine(targetNode));
     }
 
-void TriggerEvent(MapNode node)
-{
-    // ... Gün ilerletme kodları ...
-
-    // Olay Panelini Aç
-    MapEventManager.Instance.TriggerEvent(node.nodeType);
-}
     bool IsMoveValid(MapNode target)
     {
-        // 1. Hiçbir yerde değilsek, sadece başlangıç noktalarına gidebiliriz
         if (currentNode == null)
         {
             return startingNodes.Contains(target);
         }
-
-        // 2. Bir yerdeysen, sadece oradan çıkan yollara (outgoing) gidebilirsin
         return currentNode.outgoingPaths.Contains(target);
     }
 
-    IEnumerator MovePlayerIconRoutine(Vector2 targetPos)
+    // YENİLENMİŞ VE BİRLEŞTİRİLMİŞ HAREKET FONKSİYONU
+    public IEnumerator MoveIconRoutine(MapNode targetNode)
     {
-        float duration = 0.5f;
-        float timer = 0;
+        RectTransform targetRect = targetNode.GetComponent<RectTransform>();
+        
+        // UI elemanları olduğu için anchoredPosition kullanıyoruz
         Vector2 startPos = playerIcon.anchoredPosition;
+        Vector2 targetPos = targetRect.anchoredPosition;
 
-        while (timer < duration)
+        // 1. ADIM: YÜZÜNÜ DÖN (FLIP)
+        Vector3 currentScale = playerIcon.localScale;
+        if (targetPos.x > startPos.x)
         {
-            timer += Time.deltaTime;
-            playerIcon.anchoredPosition = Vector2.Lerp(startPos, targetPos, timer / duration);
+            // Sağa Bak
+            playerIcon.localScale = new Vector3(Mathf.Abs(currentScale.x), currentScale.y, currentScale.z);
+        }
+        else if (targetPos.x < startPos.x)
+        {
+            // Sola Bak
+            playerIcon.localScale = new Vector3(-Mathf.Abs(currentScale.x), currentScale.y, currentScale.z);
+        }
+
+        // 2. ADIM: SMOOTH HAREKET VE SALLANMA
+        float t = 0;
+        
+        while (t < 1f)
+        {
+            t += Time.deltaTime / moveDuration;
+            float smoothT = Mathf.SmoothStep(0, 1, t);
+            
+            playerIcon.anchoredPosition = Vector2.Lerp(startPos, targetPos, smoothT);
+
+            // Tıkıdık efekti (Sallanma)
+            float currentZAngle = Mathf.Sin(t * Mathf.PI * wiggleSpeed) * wiggleAngle;
+            playerIcon.rotation = Quaternion.Euler(0, 0, currentZAngle);
+
             yield return null;
         }
+
+        // 3. ADIM: TAMAMLAMA
         playerIcon.anchoredPosition = targetPos;
+        playerIcon.rotation = Quaternion.Euler(0, 0, 0); // Dik duruma geri getir
+        
+        Debug.Log($"Yolculuk Tamamlandı! Gidilen yer: {targetNode.nodeType}");
+        
+        // 4. ADIM: EVENT BURADA TETİKLENİYOR (Yolculuk bittikten sonra!)
+        TriggerEvent(targetNode);
+    }
+
+    void TriggerEvent(MapNode node)
+    {
+        // Olay Panelini Aç
+        if (MapEventManager.Instance != null)
+        {
+            MapEventManager.Instance.TriggerEvent(node.nodeType);
+        }
     }
 }

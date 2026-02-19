@@ -15,10 +15,14 @@ public class ArcheryGameManager : MonoBehaviour
     [Header("UI Elemanları")]
     public TextMeshProUGUI scoreText; // Sol üstteki Puan yazısı
     public TextMeshProUGUI shotText;  // Sağ üstteki Atış yazısı
-    
+    [Header("Ödüller")]
+    public int rewardGold = 100;
+    public int rewardReputation = 10;
     [Header("Oyun Sonu Paneli")]
-    public GameObject resultPanel;    // Kazandın/Kaybettin paneli
-    public TextMeshProUGUI resultText;// Paneldeki yazı
+ public GameObject resultPanel;     // Panelin kendisi
+    public TextMeshProUGUI titleText;  // "Zafer" veya "Yenilgi" başlığı
+    public TextMeshProUGUI descText;   // "Puanın: 20" açıklaması
+    public TextMeshProUGUI rewardText; // "+100 Altın" yazısı
 
     void Awake()
     {
@@ -62,7 +66,11 @@ public class ArcheryGameManager : MonoBehaviour
         if (scoreText != null) scoreText.text = $"{totalScore} / {targetScore}";//Puan: 
         if (shotText != null) shotText.text = $"{currentShots} / {maxShots}";//Atış: 
     }
-
+public void ReturnToMap()
+    {
+        // Harita sahnesinin adını buraya tam doğru yazdığından emin ol!
+        SceneManager.LoadScene("CampScene"); 
+    }
     void EndGame()
     {
         // Oyuncunun tekrar UI'a tıklayabilmesi için fareyi görünür yapıyoruz
@@ -74,19 +82,26 @@ public class ArcheryGameManager : MonoBehaviour
         // KAZANDIK MI KAYBETTİK Mİ?
         if (totalScore >= targetScore)
         {
-            resultText.text = $"Tebrikler!\n{totalScore} puan topladın.\nTürkmen Beyi yeteneğinden etkilendi!\n\nÖDÜL: +500 Altın, +10 İtibar";
+           if(titleText) { titleText.text = "TEBRİKLER!"; titleText.color = new Color(0.2f, 0.4f, 0.1f); } // Koyu Yeşil
+            if(descText) descText.text = $"Türkmen Beyi yeteneğinden etkilendi. İddialaştığın puanı geçtin.\nToplam Puan: {totalScore}";
+            if(rewardText) rewardText.text = $"+{rewardGold} Altın\n+{rewardReputation} İtibar";
+            PlayerPrefs.SetInt("PlayerGold", PlayerPrefs.GetInt("PlayerGold", 0) + rewardGold);
+            PlayerPrefs.SetInt("PlayerReputation", PlayerPrefs.GetInt("PlayerReputation", 0) + rewardReputation);
+            PlayerPrefs.Save();
             // İleride buraya MoneyManager.Instance.AddGold(500) gibi kodlar ekleyeceğiz.
         }
         else
         {
-            resultText.text = $"Başarısız!\n {totalScore} puan toplayabildin.\nBey sana güldü, itibar kaybettin.\n\nCEZA: -5 İtibar";
+            if(titleText) { titleText.text = "BAŞARISIZ..."; titleText.color = new Color(0.6f, 0.1f, 0.1f); } // Koyu Kırmızı
+            if(descText) descText.text = $"Bey sana güldü, Yeterli puanı toplayamadın.\n(Gereken: {targetScore}, Sen: {totalScore})";
+            if(rewardText) rewardText.text = "Ödül Yok";
         }
     }
 
     // Sonuç panelindeki "Geri Dön" butonuna bunu bağlayacağız
     public void ReturnToMainGame()
     {
-        // BURAYA KENDİ HARİTA SAHNENİN ADINI YAZ (Örn: "MapScene", "SampleScene" vb.)
-        SceneManager.LoadScene("MapScene"); 
+       
+        SceneManager.LoadScene("CampScene"); 
     }
 }

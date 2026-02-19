@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class MapEventManager : MonoBehaviour
 {
@@ -48,6 +49,9 @@ public class MapEventManager : MonoBehaviour
                 break;
             case NodeType.StartPoint:
                 SetupStartEvent();
+                break;
+            case NodeType.Archery:
+                SetupArcheryEvent();
                 break;
         }
     }
@@ -145,7 +149,20 @@ public class MapEventManager : MonoBehaviour
             ClosePanel();
         });
     }
+ void SetupArcheryEvent()
+    {
+          titleText.text = "KIZIL KALE";
+        descText.text = "Bir Türkmen beyi senin yiğitliğini ölçmek için okçuluk müsabakasına davet etti. Gidecek misin?";
+        eventImage.sprite = bossSprite;
 
+         CreateButton("Git(1 gün)", () => {
+            GoToArcheryScene();
+            ClosePanel();
+        });
+        CreateButton("Teklifi reddet(-10 itibar,2 gün)", () => {
+            ClosePanel();
+        });
+    }
     // Yardımcı fonksiyon: Buton oluşturma
     void CreateButton(string text, UnityEngine.Events.UnityAction action)
     {
@@ -158,5 +175,9 @@ public class MapEventManager : MonoBehaviour
     {
         eventPanel.SetActive(false);
         // Olay bitti, belki tekrar kampa/haritaya döneriz
+    }
+    private void GoToArcheryScene()
+    {
+        SceneManager.LoadScene("ArcheryMiniGame");
     }
 }

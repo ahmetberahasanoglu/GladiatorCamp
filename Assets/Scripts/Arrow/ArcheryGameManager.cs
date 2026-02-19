@@ -92,7 +92,7 @@ public void ReturnToMap()
         }
         else
         {
-            if(titleText) { titleText.text = "BAŞARISIZ..."; titleText.color = new Color(0.6f, 0.1f, 0.1f); } // Koyu Kırmızı
+            if(titleText) { titleText.text = "BAŞARISIZ"; titleText.color = new Color(0.6f, 0.1f, 0.1f); } // Koyu Kırmızı
             if(descText) descText.text = $"Bey sana güldü, Yeterli puanı toplayamadın.\n(Gereken: {targetScore}, Sen: {totalScore})";
             if(rewardText) rewardText.text = "Ödül Yok";
         }

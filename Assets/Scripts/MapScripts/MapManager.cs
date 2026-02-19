@@ -32,6 +32,42 @@ public class MapManager : MonoBehaviour
     void Start()
     {
         DrawAllConnections();
+
+        LoadPlayerPosition();
+    }
+    void LoadPlayerPosition()
+    {
+        // Hafızadan son kaydedilen noktanın adını al
+        string savedNodeName = PlayerPrefs.GetString("LastNodeName", "");
+
+        if (!string.IsNullOrEmpty(savedNodeName))
+        {
+            // O isme sahip objeyi sahnede bul
+            GameObject savedNodeObj = GameObject.Find(savedNodeName);
+            
+            if (savedNodeObj != null)
+            {
+                MapNode savedNode = savedNodeObj.GetComponent<MapNode>();
+                if (savedNode != null)
+                {
+                    currentNode = savedNode;
+                    
+                    // Atlıyı o noktanın pozisyonuna anında ışınla (Animasyonsuz)
+                    playerIcon.anchoredPosition = savedNode.GetComponent<RectTransform>().anchoredPosition;
+                    Debug.Log("Kayıtlı konuma dönüldü: " + savedNodeName);
+                    return; // İşlem başarıyla bitti, fonksiyondan çık
+                }
+            }
+        }
+
+        // EĞER KAYIT YOKSA VEYA BULUNAMADIYSA (Oyuna ilk defa giriliyorsa):
+        // Başlangıç listesindeki ilk noktayı seç
+        if (startingNodes.Count > 0 && startingNodes[0] != null)
+        {
+            currentNode = startingNodes[0];
+            playerIcon.anchoredPosition = currentNode.GetComponent<RectTransform>().anchoredPosition;
+            Debug.Log("Kayıt bulunamadı, başlangıç noktasına gidildi.");
+        }
     }
 
     public void HideMap()
@@ -153,7 +189,8 @@ public class MapManager : MonoBehaviour
         playerIcon.rotation = Quaternion.Euler(0, 0, 0); // Dik duruma geri getir
         
         Debug.Log($"Yolculuk Tamamlandı! Gidilen yer: {targetNode.nodeType}");
-        
+        PlayerPrefs.SetString("LastNodeName", targetNode.gameObject.name);
+        PlayerPrefs.Save();
         // 4. ADIM: EVENT BURADA TETİKLENİYOR (Yolculuk bittikten sonra!)
         TriggerEvent(targetNode);
     }

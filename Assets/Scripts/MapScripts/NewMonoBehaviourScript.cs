@@ -5,5 +5,6 @@ public enum NodeType
     Battle,     // Savaş (Pusu)
     EliteBattle,// Zorlu Savaş (Daha çok ödül)
     RestArea,   // Dinlenme (Moral/Can yenileme)
-    Boss        // Kızıl Kale
+    Boss,        // Kızıl Kale
+    Archery
 }

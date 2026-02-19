@@ -16,6 +16,8 @@ public class ReputationManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+
+        currentReputation = PlayerPrefs.GetInt("PlayerReputation", 100);
     }
 
     void Start()
@@ -27,6 +29,10 @@ public class ReputationManager : MonoBehaviour
     {
         currentReputation += amount;
         currentReputation = Mathf.Clamp(currentReputation, 0, maxReputation);
+
+        PlayerPrefs.SetInt("PlayerReputation", currentReputation);
+        PlayerPrefs.Save();
+        
         OnReputationChanged?.Invoke(currentReputation);
 
         if (currentReputation <= 0)

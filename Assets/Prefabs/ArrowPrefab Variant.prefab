@@ -121,6 +121,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Arrow
   hitSound: {fileID: 8300000, guid: b92736bd4e713da4dad5d82dd50421f8, type: 3}
+  floatingTextPrefab: {fileID: 6460022447724729022, guid: fd5b85949abee954e984337c8eca9ce3, type: 3}
 --- !u!54 &-3885751810698787144
 Rigidbody:
   m_ObjectHideFlags: 0

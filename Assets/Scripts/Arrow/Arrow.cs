@@ -7,6 +7,9 @@ public class Arrow : MonoBehaviour
     public AudioClip hitSound; // Ahşaba saplanma sesi
     private AudioSource audioSource;
 
+    [Header("Efektler")]
+    public GameObject floatingTextPrefab;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -63,11 +66,24 @@ if (audioSource != null && hitSound != null)
         int score = 0;
         
         // Mesafeye göre puan ver (Bu değerleri kendi hedef tahtanın boyutuna göre ayarlayacağız)
-        if (distance < 0.2f) score = 10;      // Tam on ikiden
-        else if (distance < 0.5f) score = 5;  // Orta halka
+        if (distance < 0.3f) score = 10;      // Tam on ikiden
+        else if (distance < 0.55f) score = 5;  // Orta halka
         else if (distance < 1.0f) score = 2;  // Dış halka
         else score = 1;                       // Tahtaya değdi ama çok kenarda
 
+
+        if (floatingTextPrefab != null)
+        {
+            // Vuruş noktasında yazıyı oluştur
+            GameObject floatText = Instantiate(floatingTextPrefab, hitPoint, Quaternion.identity);
+            
+            // Scriptine ulaşıp puanı gönder
+            FloatingTextAnim animScript = floatText.GetComponent<FloatingTextAnim>();
+            if (animScript != null)
+            {
+                animScript.Setup(score);
+            }
+        }
        // Debug.Log($"Vurulan Puan: {score} (Merkeze Uzaklık: {distance:F2})");
         if (ArcheryGameManager.Instance != null)
     {

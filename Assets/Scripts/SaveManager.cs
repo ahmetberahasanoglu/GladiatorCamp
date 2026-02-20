@@ -23,6 +23,7 @@ public class SaveManager : MonoBehaviour
         // Global veriler...
         data.savedGold = MoneyManager.Instance.gold;
         data.savedFood = SupplyManager.Instance.currentFood;
+       // data.
         if (DayManager.Instance != null) data.savedDay = DayManager.Instance.currentDay;
 
         // --- DÜZELTİLMESİ GEREKEN KISIM ---
@@ -115,6 +116,7 @@ public class SaveManager : MonoBehaviour
         }
 
         Debug.Log("Oyun Yüklendi!");
+        Debug.Log(savePath);
         var topBar = FindObjectOfType<TopInfoBarUI>();
         if (topBar != null)
         {

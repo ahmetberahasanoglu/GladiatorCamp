@@ -10,6 +10,7 @@ public class MapEventManager : MonoBehaviour
 
     [Header("UI Elemanları")]
     public GameObject eventPanel;       // Panelin kendisi
+    public GameObject topPanel; 
     public Image eventImage;            // Olay resmi
     public TextMeshProUGUI titleText;   // Başlık
     public TextMeshProUGUI descText;    // Açıklama
@@ -91,6 +92,7 @@ public class MapEventManager : MonoBehaviour
            // DayManager.Instance.NextDay(3); 
             ClosePanel();
             BattleManager.Instance.ReturnToCamp();
+            topPanel.SetActive(true);
             //BattleManager.Instance.StartBattle(5, 1); // 5 Düşman
         });
     }

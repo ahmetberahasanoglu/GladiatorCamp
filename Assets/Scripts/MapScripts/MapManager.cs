@@ -24,6 +24,9 @@ public class MapManager : MonoBehaviour
     public GameObject linePrefab; 
     public Transform lineContainer; 
 
+    // Oturum boyunca konumu aklında tutacak statik değişken
+    public static string sessionLastNode = "";
+
     void Awake()
     {
         Instance = this;
@@ -32,42 +35,7 @@ public class MapManager : MonoBehaviour
     void Start()
     {
         DrawAllConnections();
-
         LoadPlayerPosition();
-    }
-    void LoadPlayerPosition()
-    {
-        // Hafızadan son kaydedilen noktanın adını al
-        string savedNodeName = PlayerPrefs.GetString("LastNodeName", "");
-
-        if (!string.IsNullOrEmpty(savedNodeName))
-        {
-            // O isme sahip objeyi sahnede bul
-            GameObject savedNodeObj = GameObject.Find(savedNodeName);
-            
-            if (savedNodeObj != null)
-            {
-                MapNode savedNode = savedNodeObj.GetComponent<MapNode>();
-                if (savedNode != null)
-                {
-                    currentNode = savedNode;
-                    
-                    // Atlıyı o noktanın pozisyonuna anında ışınla (Animasyonsuz)
-                    playerIcon.anchoredPosition = savedNode.GetComponent<RectTransform>().anchoredPosition;
-                    Debug.Log("Kayıtlı konuma dönüldü: " + savedNodeName);
-                    return; // İşlem başarıyla bitti, fonksiyondan çık
-                }
-            }
-        }
-
-        // EĞER KAYIT YOKSA VEYA BULUNAMADIYSA (Oyuna ilk defa giriliyorsa):
-        // Başlangıç listesindeki ilk noktayı seç
-        if (startingNodes.Count > 0 && startingNodes[0] != null)
-        {
-            currentNode = startingNodes[0];
-            playerIcon.anchoredPosition = currentNode.GetComponent<RectTransform>().anchoredPosition;
-            Debug.Log("Kayıt bulunamadı, başlangıç noktasına gidildi.");
-        }
     }
 
     public void HideMap()
@@ -120,6 +88,40 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    void LoadPlayerPosition()
+    {
+        // 1. Hafızada (O anki oturumda) kayıtlı bir düğüm var mı?
+        if (!string.IsNullOrEmpty(sessionLastNode))
+        {
+            GameObject savedNodeObj = GameObject.Find(sessionLastNode);
+            
+            if (savedNodeObj != null)
+            {
+                MapNode savedNode = savedNodeObj.GetComponent<MapNode>();
+                if (savedNode != null)
+                {
+                    currentNode = savedNode;
+                    playerIcon.anchoredPosition = savedNode.GetComponent<RectTransform>().anchoredPosition;
+                    Debug.Log("Sahneler arası dönüş: " + sessionLastNode + " noktasına dönüldü.");
+                    return; // İşlem bitti
+                }
+            }
+        }
+
+        // 2. KAYIT YOKSA (Oyuna veya Editöre ilk defa Play denildiyse):
+        /*
+        if (startingNodes.Count > 0 && startingNodes[0] != null)
+        {
+            currentNode = startingNodes[0];
+            playerIcon.anchoredPosition = currentNode.GetComponent<RectTransform>().anchoredPosition;
+            
+            // Başlangıç noktasını da oturum hafızasına yazalım ki hata olmasın
+            sessionLastNode = currentNode.gameObject.name; 
+            
+            Debug.Log("Yeni oyun: Başlangıç noktasına gidildi.");
+        }*/
+    }
+
     public void SelectNode(MapNode targetNode)
     {
         // KONTROL: Oraya gitmeye iznimiz var mı?
@@ -131,8 +133,6 @@ public class MapManager : MonoBehaviour
 
         // HAREKET ONAYLANDI
         currentNode = targetNode;
-        
-        // SADECE yürüme animasyonunu başlatıyoruz, Event'i yürüyüş bitince açacağız
         StartCoroutine(MoveIconRoutine(targetNode));
     }
 
@@ -145,7 +145,6 @@ public class MapManager : MonoBehaviour
         return currentNode.outgoingPaths.Contains(target);
     }
 
-    // YENİLENMİŞ VE BİRLEŞTİRİLMİŞ HAREKET FONKSİYONU
     public IEnumerator MoveIconRoutine(MapNode targetNode)
     {
         RectTransform targetRect = targetNode.GetComponent<RectTransform>();
@@ -158,12 +157,10 @@ public class MapManager : MonoBehaviour
         Vector3 currentScale = playerIcon.localScale;
         if (targetPos.x > startPos.x)
         {
-            // Sağa Bak
             playerIcon.localScale = new Vector3(Mathf.Abs(currentScale.x), currentScale.y, currentScale.z);
         }
         else if (targetPos.x < startPos.x)
         {
-            // Sola Bak
             playerIcon.localScale = new Vector3(-Mathf.Abs(currentScale.x), currentScale.y, currentScale.z);
         }
 
@@ -177,7 +174,6 @@ public class MapManager : MonoBehaviour
             
             playerIcon.anchoredPosition = Vector2.Lerp(startPos, targetPos, smoothT);
 
-            // Tıkıdık efekti (Sallanma)
             float currentZAngle = Mathf.Sin(t * Mathf.PI * wiggleSpeed) * wiggleAngle;
             playerIcon.rotation = Quaternion.Euler(0, 0, currentZAngle);
 
@@ -186,18 +182,20 @@ public class MapManager : MonoBehaviour
 
         // 3. ADIM: TAMAMLAMA
         playerIcon.anchoredPosition = targetPos;
-        playerIcon.rotation = Quaternion.Euler(0, 0, 0); // Dik duruma geri getir
+        playerIcon.rotation = Quaternion.Euler(0, 0, 0); 
         
         Debug.Log($"Yolculuk Tamamlandı! Gidilen yer: {targetNode.nodeType}");
-        PlayerPrefs.SetString("LastNodeName", targetNode.gameObject.name);
-        PlayerPrefs.Save();
-        // 4. ADIM: EVENT BURADA TETİKLENİYOR (Yolculuk bittikten sonra!)
+        
+        // --- SADECE OTURUMA (STATE) KAYDET ---
+        sessionLastNode = targetNode.gameObject.name;
+        // -------------------------------------
+
+        // 4. ADIM: EVENT BURADA TETİKLENİYOR
         TriggerEvent(targetNode);
     }
 
     void TriggerEvent(MapNode node)
     {
-        // Olay Panelini Aç
         if (MapEventManager.Instance != null)
         {
             MapEventManager.Instance.TriggerEvent(node.nodeType);

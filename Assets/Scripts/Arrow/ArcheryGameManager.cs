@@ -82,13 +82,13 @@ public void ReturnToMap()
         // KAZANDIK MI KAYBETTİK Mİ?
         if (totalScore >= targetScore)
         {
-           if(titleText) { titleText.text = "TEBRİKLER!"; titleText.color = new Color(0.2f, 0.4f, 0.1f); } // Koyu Yeşil
+           if(titleText) { titleText.text = "TEBRİKLER!";  } // titleText.color = new Color(0.2f, 0.4f, 0.1f);
             if(descText) descText.text = $"Türkmen Beyi yeteneğinden etkilendi. İddialaştığın puanı geçtin.\nToplam Puan: {totalScore}";
             if(rewardText) rewardText.text = $"+{rewardGold} Altın\n+{rewardReputation} İtibar";
-            PlayerPrefs.SetInt("PlayerGold", PlayerPrefs.GetInt("PlayerGold", 0) + rewardGold);
-            PlayerPrefs.SetInt("PlayerReputation", PlayerPrefs.GetInt("PlayerReputation", 0) + rewardReputation);
-            PlayerPrefs.Save();
-            // İleride buraya MoneyManager.Instance.AddGold(500) gibi kodlar ekleyeceğiz.
+           // PlayerPrefs.SetInt("PlayerGold", PlayerPrefs.GetInt("PlayerGold", 0) + rewardGold);
+           // PlayerPrefs.SetInt("PlayerReputation", PlayerPrefs.GetInt("PlayerReputation", 0) + rewardReputation);
+            //PlayerPrefs.Save();
+            MoneyManager.Instance.Add(500);
         }
         else
         {

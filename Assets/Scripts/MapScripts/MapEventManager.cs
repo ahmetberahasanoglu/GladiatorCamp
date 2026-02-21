@@ -22,6 +22,7 @@ public class MapEventManager : MonoBehaviour
     public Sprite villageSprite;
     public Sprite battleSprite;
     public Sprite bossSprite;
+    public Sprite merchant;
 
     void Awake()
     {
@@ -124,6 +125,39 @@ public class MapEventManager : MonoBehaviour
         });
     }
 
+    void ShowForestEvent()
+    {
+        titleText.text = "Ormanda Bir Tüccar";
+        descText.text = "Ağaçların arasında tekerleği kırılmış bir tüccar arabası buldun. Sana bir teklifi var: 'Bana 50 Altın ver, sana devlet sırları (İtibar) vereyim.'";
+
+        CreateButton("Kabul Et (-50 Altın, +15 İtibar)", () => {
+        DayManager.Instance.NextDay(1);
+             if ( MoneyManager.Instance.gold>= 50)
+            {
+                
+                // Altını al, İtibarı ver
+                MoneyManager.Instance.Spend(50);
+                ReputationManager.Instance.ChangeReputation(15);
+                 NotificationManager.Instance.Show("Takas yapıldı", NotificationType.Success);
+                
+            }
+             else
+            {
+             NotificationManager.Instance.Show("Yeterli altının yok!", NotificationType.Error);
+            }
+            // Askerleri iyileştirme kodu (Örnek)
+            // HealAllSoldiers(20); 
+            
+            
+            ClosePanel();
+        });
+     CreateButton("Yoluna devam et())", () =>
+     {
+        ClosePanel(); 
+     }
+     );
+    
+    }
     void SetupRestEvent() // Dinlenme Noktası (Oba/Kervansaray)
     {
         titleText.text = "Yörük Obası";

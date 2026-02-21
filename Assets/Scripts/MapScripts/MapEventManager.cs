@@ -23,11 +23,12 @@ public class MapEventManager : MonoBehaviour
     public Sprite battleSprite;
     public Sprite bossSprite;
     public Sprite merchant;
+    // İhtiyacın olursa buraya vahşi, zindan vb. spritelar da ekleyebilirsin.
 
     void Awake()
     {
         Instance = this;
-        eventPanel.SetActive(false); // Başlangıçta kapalı
+        if (eventPanel != null) eventPanel.SetActive(false); // Başlangıçta kapalı
     }
 
     // MapManager'dan çağrılacak fonksiyon
@@ -35,38 +36,167 @@ public class MapEventManager : MonoBehaviour
     {
         eventPanel.SetActive(true);
         
-        // Önceki butonları temizle
-        foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+        // Önceki butonları temizle (Yeni event için tertemiz bir sayfa)
+        foreach(Transform child in buttonContainer) 
+        {
+            Destroy(child.gameObject);
+        }
 
         switch (type)
         {
-            case NodeType.Village:
-                SetupVillageEvent();
-                break;
-            case NodeType.Battle:
-                SetupBattleEvent();
-                break;
-            case NodeType.Boss:
-                SetupBossEvent();
-                break;
-            case NodeType.StartPoint:
-                SetupStartEvent();
-                break;
-            case NodeType.Archery:
-                SetupArcheryEvent();
-                break;
+            case NodeType.Village:      SetupVillageEvent(); break;
+            case NodeType.Battle:       SetupBattleEvent(); break;
+            case NodeType.Boss:         SetupBossEvent(); break;
+            case NodeType.StartPoint:   SetupStartEvent(); break;
+            case NodeType.Archery:      SetupArcheryEvent(); break;
+            case NodeType.Atyarisi:     SetupAtYarisi(); break;
+            case NodeType.KuleSavas:    SetupKuleSavas(); break;
+            case NodeType.Treasure:     SetupTreasure(); break;
+            case NodeType.Tuccar:       SetupTuccar(); break;
+            case NodeType.Kalkan:       SetupKalkan(); break;
+            case NodeType.RestArea:     SetupRestEvent(); break;
+            case NodeType.Zindan:       SetupZindan(); break;
+            case NodeType.Vahsi:        SetupVahsi(); break;
         }
     }
+
+    // --------------------------------------------------------
+    // YENİ EKLENEN VE DOLDURULAN EVENTLER
+    // --------------------------------------------------------
+
+    void SetupVahsi()
+    {
+        titleText.text = "Aç Kurt Sürüsü";
+        descText.text = "Ormandan geçerken etrafını aç bir kurt sürüsü sardı! Savaşmak yorucu olacak ama kaçmak da vakit kaybettirir.";
+        // eventImage.sprite = vahsiSprite; // Varsa ekle
+
+        CreateButton("Savaş (-1 Gün, +20 Altın)", () => {
+            DayManager.Instance.NextDay(1);
+            MoneyManager.Instance.Add(20); // Postlarını sattın
+            NotificationManager.Instance.Show("Kurtları alt ettin ve postlarını sattın.", NotificationType.Success);
+            ClosePanel();
+            // İleride buraya mini savaş sahnesi de eklenebilir
+        });
+
+        CreateButton("Etrafından Dolaşarak Kaç (-2 Gün)", () => {
+            DayManager.Instance.NextDay(2);
+            NotificationManager.Instance.Show("Güvenli ama uzun yolu seçtin.", NotificationType.Info);
+            ClosePanel();
+        });
+    }
+
+    void SetupZindan()
+    {
+        titleText.text = "Karanlık Mağara";
+        descText.text = "İçeriden garip sesler geliyor. Büyük bir tehlike ama aynı zamanda büyük bir ganimet yatıyor olabilir.";
+        
+        CreateButton("İçeri Gir (Savaş)", () => {
+            DayManager.Instance.NextDay(1);
+            ClosePanel();
+            // BattleManager.Instance.StartBattle(6, 1); // İleride zindan savaşı eklenecek
+            NotificationManager.Instance.Show("Zindana girdin!", NotificationType.Warning);
+        });
+
+        CreateButton("Tehlikeye Atılma (Yola Devam Et)", () => {
+            ClosePanel();
+        });
+    }
+
+    void SetupKalkan()
+    {
+        titleText.text = "Terk Edilmiş Karakol";
+        descText.text = "Eski ve terk edilmiş bir gözetleme kulesi buldun. Askerlerin geride bıraktığı sağlam kalkanlar ve silahlar var.";
+        
+        CreateButton("Ganimetleri Topla (+30 Altın)", () => {
+            DayManager.Instance.NextDay(1);
+            MoneyManager.Instance.Add(30);
+            NotificationManager.Instance.Show("Eşyaları alıp sattın.", NotificationType.Success);
+            ClosePanel();
+        });
+
+        CreateButton("Burası Tekinsiz, Ayrıl", () => {
+            ClosePanel();
+        });
+    }
+
+    void SetupTuccar() // Eski "ShowForestEvent" kodunu buraya entegre ettim
+    {
+        titleText.text = "Ormanda Bir Tüccar";
+        descText.text = "Tekerleği kırılmış bir tüccar arabası buldun. Sana bir teklifi var: 'Bana 50 Akçe ver, devlet ricaliyle aranı yapayım (İtibar).'";
+        if(merchant != null) eventImage.sprite = merchant;
+
+        CreateButton("Kabul Et (-50 Altın, +15 İtibar)", () => {
+            DayManager.Instance.NextDay(1);
+            if (MoneyManager.Instance.gold >= 50)
+            {
+                MoneyManager.Instance.Spend(50);
+                ReputationManager.Instance.ChangeReputation(15);
+                NotificationManager.Instance.Show("Takas yapıldı, itibarın arttı!", NotificationType.Success);
+            }
+            else
+            {
+                NotificationManager.Instance.Show("Yeterli altının yok!", NotificationType.Error);
+            }
+            ClosePanel();
+        });
+
+        CreateButton("Yoluna Devam Et", () => {
+            ClosePanel(); 
+        });
+    }
+
+    // --------------------------------------------------------
+    // DÜZELTİLEN EVENTLER (Kopyala-Yapıştır Hataları Giderildi)
+    // --------------------------------------------------------
+
+    void SetupTreasure()
+    {
+        titleText.text = "Gizli Hazine";
+        descText.text = "Burada büyük bir hazine yatıyor ancak biraz kürek sallamanız gerekecek. 1 Gününü alacak, sence zahmetine değecek mi?";
+
+        CreateButton("Kazmaya Başla (-1 Gün, +100 Altın)", () => {
+            DayManager.Instance.NextDay(1); 
+            MoneyManager.Instance.Add(100);
+            NotificationManager.Instance.Show("Büyük bir define buldun!", NotificationType.Success);
+            ClosePanel();
+        });
+
+        CreateButton("Vaktim Yok, İlerle", () => {
+            ClosePanel();
+        });
+    }
+
+    void SetupKuleSavas()
+    {
+        titleText.text = "Kule Savunması";
+        descText.text = "İlerideki dost gözetleme kulesi haydutların saldırısı altında! Onlara yardım edecek misin?";
+
+        CreateButton("Savunmaya Yardım Et", () => {
+            DayManager.Instance.NextDay(1); 
+            ClosePanel();
+            topPanel.SetActive(true);
+            // BattleManager.Instance.StartBattle(5, 1); // 5 Düşman
+            NotificationManager.Instance.Show("Savaş Başlıyor!", NotificationType.Warning);
+        });
+
+        CreateButton("Beni İlgilendirmez", () => {
+            ReputationManager.Instance.ChangeReputation(-5); // Yardım etmediği için itibar düşer
+            NotificationManager.Instance.Show("Kule düştü, itibar kaybettin.", NotificationType.Error);
+            ClosePanel();
+        });
+    }
+
+    // --------------------------------------------------------
+    // MEVCUT DOĞRU EVENTLER
+    // --------------------------------------------------------
 
     void SetupVillageEvent()
     {
         titleText.text = "Türkmen Köyü";
         descText.text = "Köy halkı zor durumda. Onlara yardım edersen dualarını alırsın.";
-        eventImage.sprite = villageSprite;
+        if(villageSprite != null) eventImage.sprite = villageSprite;
 
-        // SEÇENEK 1: Yardım Et (İtibar Kazan)
         CreateButton("Köy Halkına Yardım Et (+10 İtibar)", () => {
-            
             if (ReputationManager.Instance != null)
                 ReputationManager.Instance.ChangeReputation(10);
             
@@ -76,25 +206,37 @@ public class MapEventManager : MonoBehaviour
             ClosePanel();
         });
 
-        // SEÇENEK 2: Pas Geç
         CreateButton("Yola Devam Et", () => {
             ClosePanel();
         });
     }
     
+    void SetupAtYarisi()
+    {
+        titleText.text = "At Yarışı";
+        descText.text = "Şehrin ileri gelenlerinden Mustafa bey seni at yarışına davet etti.";
 
-    // ... Önceki kodların ...
+        CreateButton("Yarış", () => {
+            ClosePanel();
+            topPanel.SetActive(true);
+            // At yarışı sahnesine veya mekaniğine geçiş
+        });
+
+        CreateButton("Reddet", () => {
+            ClosePanel();
+        });
+    }
+
     void SetupStartEvent()
     {
-        titleText.text = "Kamp ekranı";
-        descText.text = "Bi kampta dinlen.";
-
-          CreateButton($"Kampa geç", () => {
-           // DayManager.Instance.NextDay(3); 
+        titleText.text = "Kamp Ekranı";
+        descText.text = "Bir kampta dinlen ve hazırlıklarını yap.";
+        if(villageSprite != null) eventImage.sprite = villageSprite;
+        
+        CreateButton("Kampa Geç", () => {
             ClosePanel();
-            BattleManager.Instance.ReturnToCamp();
             topPanel.SetActive(true);
-            //BattleManager.Instance.StartBattle(5, 1); // 5 Düşman
+            // BattleManager.Instance.ReturnToCamp();
         });
     }
 
@@ -102,73 +244,28 @@ public class MapEventManager : MonoBehaviour
     {
         titleText.text = "Çapulcu Pusu";
         descText.text = "Yol kesen eşkıyalar! Savaşmak 3 gün sürecek ama ganimetleri iyi görünüyor.";
-        // ... Resim ayarları ...
+        if(battleSprite != null) eventImage.sprite = battleSprite;
 
-        // SEÇENEK 1: Savaş (-3 Gün)
-        CreateButton($"Saldır (3 Gün Sürer)", () => {
-            
-            // 1. Zamanı harca
+        CreateButton("Saldır (3 Gün Sürer)", () => {
             DayManager.Instance.NextDay(3); 
-            
-            // 2. Savaşa Git
             ClosePanel();
-            BattleManager.Instance.StartBattle(5, 1); // 5 Düşman
+            // BattleManager.Instance.StartBattle(5, 1); 
         });
 
-        // SEÇENEK 2: Kaç / Etrafından Dolaş (-5 Gün)
-        // Savaşmazsın ama yolu uzatırsın, vakit kaybedersin
         CreateButton("Etrafından Dolaş (5 Gün Kaybet)", () => {
             DayManager.Instance.NextDay(5);
             NotificationManager.Instance.Show("Güvenli ama uzun yolu seçtin.", NotificationType.Info);
             ClosePanel();
-            // Bir sonraki harita noktasına geçiş izni verilir
         });
     }
 
-    void ShowForestEvent()
-    {
-        titleText.text = "Ormanda Bir Tüccar";
-        descText.text = "Ağaçların arasında tekerleği kırılmış bir tüccar arabası buldun. Sana bir teklifi var: 'Bana 50 Altın ver, sana devlet sırları (İtibar) vereyim.'";
-
-        CreateButton("Kabul Et (-50 Altın, +15 İtibar)", () => {
-        DayManager.Instance.NextDay(1);
-             if ( MoneyManager.Instance.gold>= 50)
-            {
-                
-                // Altını al, İtibarı ver
-                MoneyManager.Instance.Spend(50);
-                ReputationManager.Instance.ChangeReputation(15);
-                 NotificationManager.Instance.Show("Takas yapıldı", NotificationType.Success);
-                
-            }
-             else
-            {
-             NotificationManager.Instance.Show("Yeterli altının yok!", NotificationType.Error);
-            }
-            // Askerleri iyileştirme kodu (Örnek)
-            // HealAllSoldiers(20); 
-            
-            
-            ClosePanel();
-        });
-     CreateButton("Yoluna devam et())", () =>
-     {
-        ClosePanel(); 
-     }
-     );
-    
-    }
-    void SetupRestEvent() // Dinlenme Noktası (Oba/Kervansaray)
+    void SetupRestEvent()
     {
         titleText.text = "Yörük Obası";
         descText.text = "Dost bir oba buldun. Burada dinlenip yaraları sarabiliriz.";
         
         CreateButton("Dinlen ve İyileş (1 Gün)", () => {
             DayManager.Instance.NextDay(1);
-            
-            // Askerleri iyileştirme kodu (Örnek)
-            // HealAllSoldiers(20); 
-            
             NotificationManager.Instance.Show("Askerler dinlendi, moraller düzeldi.", NotificationType.Success);
             ClosePanel();
         });
@@ -178,28 +275,38 @@ public class MapEventManager : MonoBehaviour
     {
         titleText.text = "KIZIL KALE";
         descText.text = "Sonunda hedefe ulaştın. Kale surları göğe yükseliyor. Bu son savaş olacak.";
-        eventImage.sprite = bossSprite;
+        if(bossSprite != null) eventImage.sprite = bossSprite;
 
         CreateButton("KUŞATMAYI BAŞLAT", () => {
             Debug.Log("Final Savaşı!");
             ClosePanel();
+            // Final sahnesine geçiş eklenecek
         });
     }
- void SetupArcheryEvent()
-    {
-          titleText.text = "KIZIL KALE";
-        descText.text = "Bir Türkmen beyi senin yiğitliğini ölçmek için okçuluk müsabakasına davet etti. Gidecek misin?";
-        eventImage.sprite = bossSprite;
 
-         CreateButton("Git(1 gün)", () => {
+    void SetupArcheryEvent()
+    {
+        titleText.text = "Okçuluk Müsabakası";
+        descText.text = "Bir Türkmen beyi senin yiğitliğini ölçmek için okçuluk müsabakasına davet etti. Gidecek misin?";
+        if(bossSprite != null) eventImage.sprite = bossSprite; // Okçuluk için ayrı sprite eklenebilir
+
+        CreateButton("Git (1 Gün)", () => {
+            DayManager.Instance.NextDay(1);
             GoToArcheryScene();
             ClosePanel();
         });
-        CreateButton("Teklifi reddet(-10 itibar,2 gün)", () => {
+
+        CreateButton("Teklifi Reddet (-5 İtibar)", () => {
+            ReputationManager.Instance.ChangeReputation(-5);
+            NotificationManager.Instance.Show("Bey bu teklifi reddetmene kırıldı.", NotificationType.Warning);
             ClosePanel();
         });
     }
-    // Yardımcı fonksiyon: Buton oluşturma
+
+    // --------------------------------------------------------
+    // YARDIMCI FONKSİYONLAR
+    // --------------------------------------------------------
+
     void CreateButton(string text, UnityEngine.Events.UnityAction action)
     {
         GameObject btnObj = Instantiate(buttonPrefab, buttonContainer);
@@ -210,8 +317,8 @@ public class MapEventManager : MonoBehaviour
     public void ClosePanel()
     {
         eventPanel.SetActive(false);
-        // Olay bitti, belki tekrar kampa/haritaya döneriz
     }
+
     private void GoToArcheryScene()
     {
         SceneManager.LoadScene("ArcheryMiniGame");

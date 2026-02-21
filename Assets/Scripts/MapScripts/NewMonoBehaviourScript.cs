@@ -5,8 +5,14 @@ public enum NodeType
     Battle,     // Savaş (Pusu)
     Treasure,
     Atyarisi,
-    EliteBattle,// Zorlu Savaş (Daha çok ödül)
+    KuleSavas,
     RestArea,   // Dinlenme (Moral/Can yenileme)
     Boss,        // Kızıl Kale
+    Kacak,
+    Tuccar,
+    Vahsi,
+    Zindan,
+    Kalkan,
+    
     Archery
 }

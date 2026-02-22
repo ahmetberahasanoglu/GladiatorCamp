@@ -236,7 +236,7 @@ public class MapEventManager : MonoBehaviour
         CreateButton("Kampa Geç", () => {
             ClosePanel();
             topPanel.SetActive(true);
-            // BattleManager.Instance.ReturnToCamp();
+            BattleManager.Instance.ReturnToCamp();
         });
     }
 
@@ -249,7 +249,7 @@ public class MapEventManager : MonoBehaviour
         CreateButton("Saldır (3 Gün Sürer)", () => {
             DayManager.Instance.NextDay(3); 
             ClosePanel();
-            // BattleManager.Instance.StartBattle(5, 1); 
+            BattleManager.Instance.StartBattle(5, 1); 
         });
 
         CreateButton("Etrafından Dolaş (5 Gün Kaybet)", () => {

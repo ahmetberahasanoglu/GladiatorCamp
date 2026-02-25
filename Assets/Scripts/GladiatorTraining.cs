@@ -13,13 +13,41 @@ public class GladiatorTraining : MonoBehaviour
     private int remainingDays = 0;
     private TrainingType currentTrainingType;
 
+    [Header("Görsel Geri Bildirim")]
+    public GameObject selectionRing;
+
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
         gladiator = GetComponent<Gladiator>();
+
+        if (selectionRing != null) selectionRing.SetActive(false);
+    }
+    void OnMouseDown()
+    {
+        // Asker eğitimdeyse seçilemesin
+        if (IsTraining)
+        {
+            if (NotificationManager.Instance != null) 
+                NotificationManager.Instance.Show("Bu asker şu an eğitimde, rahatsız etme!", NotificationType.Warning);
+            return;
+        }
+
+        // Kendi kendini yöneticiye "Beni seçti" diye bildirir
+        if (TrainingUIManager.Instance != null)
+        {
+            TrainingUIManager.Instance.SetCurrentGladiator(this);
+        }
+    }
+    public void SetSelectedVisual(bool isSelected)
+    {
+        if (selectionRing != null)
+        {
+            selectionRing.SetActive(isSelected);
+        }
     }
 
-    // UI butonundan çağrılır
+    // 3D Obje (TrainingSpot) tıklandığında çağrılır
     public void StartTraining(TrainingSpot spot)
     {
         if (IsTraining) return;
@@ -29,7 +57,6 @@ public class GladiatorTraining : MonoBehaviour
         spot.isBusy = true;
 
         currentTrainingType = spot.trainingType;
-
         remainingDays = GetRequiredDays(gladiator.data.level);
 
         // Eğitim yerine yürüsün
@@ -41,18 +68,22 @@ public class GladiatorTraining : MonoBehaviour
 
     IEnumerator WalkAndBeginTraining()
     {
-      
-        // Noktaya varmasını bekle
-       // while (Vector3.Distance(transform.position, currentSpot.trainingPoint.position) > 0.6f)
-        //    yield return null;
+        // 1. NavMesh yolunu hesaplayana kadar bekle
+        while (agent.pathPending) yield return null;
+        
+        // 2. Noktaya varana kadar bekle
+        while (agent.remainingDistance > agent.stoppingDistance)
+        {
+            yield return null;
+        }
 
-        // Animasyon ileride eklenecek
+        // Hedefe vardı! Animasyonu başlatabilirsin
+        // GetComponent<Animator>().SetBool("IsTraining", true);
 
-        // GÜN BAZLI eğitim başlıyor
+        // GÜN BAZLI eğitim başlıyor (Tıkladığın an gün GEÇMEZ)
         UITrainingProgress.Instance.StartProgress(remainingDays);
 
         DayManager.Instance.OnNewDay += OnNewDay;
-        yield return null;
     }
 
     void OnNewDay()
@@ -81,6 +112,9 @@ public class GladiatorTraining : MonoBehaviour
         DayManager.Instance.OnNewDay -= OnNewDay;
         gladiator.RefreshStats();
         UITrainingProgress.Instance.Hide();
+        
+        // Eğitim bitti animasyonunu kapatabilirsin
+        // GetComponent<Animator>().SetBool("IsTraining", false);
     }
 
     int GetRequiredDays(int level)
@@ -102,6 +136,7 @@ public class GladiatorTraining : MonoBehaviour
             case TrainingType.Morale: d.morale += amount; break;
             case TrainingType.Stamina: d.stamina += amount; break;
         }
-        NotificationManager.Instance.Show($"Stat Artışı → {type} +{amount}", NotificationType.Success);
+        if (NotificationManager.Instance != null)
+            NotificationManager.Instance.Show($"Eğitim Tamamlandı! {type} +{amount}", NotificationType.Success);
     }
 }

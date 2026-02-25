@@ -1,77 +1,31 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 public class TrainingUIManager : MonoBehaviour
 {
     public static TrainingUIManager Instance;
 
-    public GladiatorTraining current; // �u an se�ili gladyat�r�n GladiatorTraining bile�eni
-
-    // Her buton i�in ilgili TrainingSpot referans� (Inspector'da s�r�kle)
-    public TrainingSpot strengthSpot;
-    public TrainingSpot speedSpot;
-    public TrainingSpot defenseSpot;
-    public TrainingSpot moraleSpot;
-    public TrainingSpot staminaSpot;
-
-    public Button strengthBtn;
-    public Button speedBtn;
-    public Button defenseBtn;
-    public Button moraleBtn;
-    public Button staminaBtn;
+    public GladiatorTraining current; // Şu an seçili gladyatörün referansı
 
     void Awake()
     {
         Instance = this;
     }
 
+    // Karakter seçildiğinde bu fonksiyon çağrılır
     public void SetCurrentGladiator(GladiatorTraining gladiator)
     {
+       if (current != null)
+        {
+            current.SetSelectedVisual(false);
+        }
+
+        // 2. Yeni seçilen askeri kaydet
         current = gladiator;
-        UpdateButtons(current != null);
-    }
 
-    public void TrainStrength()
-    {
-        if (current == null || strengthSpot == null) return;
-        if (MoneyManager.Instance.Spend(MoneyManager.Instance.trainingCost))
-            current.StartTraining(strengthSpot);
-    }
-
-    public void TrainSpeed()
-    {
-        if (current == null || speedSpot == null) return;
-        if (MoneyManager.Instance.Spend(MoneyManager.Instance.trainingCost))
-            current.StartTraining(speedSpot);
-    }
-
-    public void TrainDefense()
-    {
-        if (current == null || defenseSpot == null) return;
-        if (MoneyManager.Instance.Spend(MoneyManager.Instance.trainingCost))
-            current.StartTraining(defenseSpot);
-    }
-
-    public void TrainMorale()
-    {
-        if (current == null || moraleSpot == null) return;
-        if (MoneyManager.Instance.Spend(MoneyManager.Instance.trainingCost))
-            current.StartTraining(moraleSpot);
-    }
-
-    public void TrainStamina()
-    {
-        if (current == null || staminaSpot == null) return;
-        if (MoneyManager.Instance.Spend(MoneyManager.Instance.trainingCost))
-            current.StartTraining(staminaSpot);
-    }
-
-    void UpdateButtons(bool state)
-    {
-        strengthBtn.interactable = state;
-        speedBtn.interactable = state;
-        defenseBtn.interactable = state;
-        moraleBtn.interactable = state;
-        staminaBtn.interactable = state;
+        // 3. Eğer yeni seçilen kişi boş (null) değilse, onun ışığını AÇ
+        if (current != null)
+        {
+            current.SetSelectedVisual(true);
+        }
     }
 }

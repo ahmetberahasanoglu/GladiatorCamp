@@ -57,6 +57,7 @@ public class TrainingSpot : MonoBehaviour
         // 1. KONTROL: Seçili bir gladyatör var mı?
         GladiatorTraining currentGladiator = TrainingUIManager.Instance.current;
         
+        // Eğer hafızada seçili asker yoksa direkt uyarı ver ve işlemi durdur
         if (currentGladiator == null)
         {
             if (NotificationManager.Instance != null) NotificationManager.Instance.Show("Önce bir asker seçmelisin!", NotificationType.Warning);
@@ -72,8 +73,15 @@ public class TrainingSpot : MonoBehaviour
         // 2. KONTROL: Paramız yetiyor mu?
         if (MoneyManager.Instance.Spend(MoneyManager.Instance.trainingCost))
         {
-            // Gladyatöre "Buraya gel ve eğitime başla" komutunu veriyoruz
+            // Askeri hedefe gönder
             currentGladiator.StartTraining(this);
+            
+            // --- KRİTİK ÇÖZÜM: SEÇİMİ TEMİZLE ---
+            // Askeri göreve gönderdikten sonra hafızadan siliyoruz ki
+            // askeri seçmeden başka bir hedefe tıkladığımızda eski asker gelmesin!
+            TrainingUIManager.Instance.SetCurrentGladiator(null);
+            // ------------------------------------
+
             OnMouseExit(); // Tıklayınca yazıyı ve büyümeyi kapat
         }
         else

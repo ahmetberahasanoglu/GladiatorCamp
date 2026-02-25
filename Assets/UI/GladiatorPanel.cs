@@ -15,6 +15,10 @@ public class GladiatorPanel : MonoBehaviour
         {
             _currentGladiator.OnStatsChanged -= UpdateUI;
         }
+        if (TrainingUIManager.Instance != null)
+        {
+            TrainingUIManager.Instance.SetCurrentGladiator(null);
+        }
     }
 
     // ARTIK PARAMETRE OLARAK 'JanissaryData' YERİNE 'Gladiator' ALIYORUZ

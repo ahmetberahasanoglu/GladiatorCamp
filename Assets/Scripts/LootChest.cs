@@ -4,9 +4,13 @@ using System.Collections;
 
 public class LootChest : MonoBehaviour
 {
+    // Diğer scriptlerden kolayca ulaşmak için Singleton yapıyoruz
+    public static LootChest Instance; 
+
     [Header("Görsel ve Ses Efektleri")]
-    public ParticleSystem coinBurstParticle; // Havaya saçılan altınlar
-    public AudioSource coinSound;            // Şıngırdayan altın sesi
+    public GameObject chestVisuals;          // YENİ: Sandığın 3D modelini buraya sürükleyeceğiz
+    public ParticleSystem coinBurstParticle; 
+    public AudioSource coinSound;            
     
     [Header("Etkileşim UI")]
     public GameObject hoverTextObj;
@@ -16,20 +20,33 @@ public class LootChest : MonoBehaviour
     private int pendingGold = 0;
     private int pendingReputation = 0;
 
+    void Awake()
+    {
+        Instance = this;
+    }
+
     void Start()
     {
         originalScale = transform.localScale;
         if (hoverTextObj != null) hoverTextObj.SetActive(false);
 
-        // 1. Hafızada bekleyen ganimet var mı bakıyoruz
+        // İlk açılışta kontrol et
+        CheckForLoot(); 
+    }
+
+    // Kampa dönüldüğünde çağrılacak ana fonksiyon
+    public void CheckForLoot()
+    {
         pendingGold = PlayerPrefs.GetInt("PendingGold", 0);
         pendingReputation = PlayerPrefs.GetInt("PendingReputation", 0);
 
-        // 2. Eğer hiç ganimet yoksa, bu sandığı tamamen gizle (Kampa öylesine döndüysek sandık çıkmaz)
-        if (pendingGold <= 0 && pendingReputation <= 0)
-        {
-            gameObject.SetActive(false);
-        }
+        bool hasLoot = (pendingGold > 0 || pendingReputation > 0);
+
+        // Objenin kendisini DEĞİL, görselini ve tıklanmasını aç/kapat
+        if (chestVisuals != null) chestVisuals.SetActive(hasLoot);
+        
+        Collider col = GetComponent<Collider>();
+        if (col != null) col.enabled = hasLoot;
     }
 
     void OnMouseEnter()
@@ -50,51 +67,41 @@ public class LootChest : MonoBehaviour
 
     void OnMouseDown()
     {
-        // Zaten tıklanmışsa tekrar tıklanmasın diye collider'ı kapat
+        // Çift tıklamayı önle
         GetComponent<Collider>().enabled = false;
-        OnMouseExit(); // Büyümeyi ve yazıyı sıfırla
+        OnMouseExit(); 
 
-        // 1. Ganimetleri gerçek yöneticilere (cebimize) ekle
-        if (pendingGold > 0)
-        {
-            MoneyManager.Instance.Add(pendingGold);
-            // NotificationManager'dan bildirim gönderebiliriz
-        }
+        // 1. Ödülleri ver
+        if (pendingGold > 0) MoneyManager.Instance.Add(pendingGold);
+        if (pendingReputation > 0) ReputationManager.Instance.ChangeReputation(pendingReputation);
 
-        if (pendingReputation > 0)
-        {
-            ReputationManager.Instance.ChangeReputation(pendingReputation);
-        }
-
-        // 2. Coşkulu Efektleri Oynat!
+        // 2. Coşkulu Efektler!
         if (coinBurstParticle != null) coinBurstParticle.Play();
         if (coinSound != null) coinSound.Play();
 
-        // 3. Ekrana toplam kazancı büyük bir yazıyla yazdır
+        // 3. Bildirim
         if (NotificationManager.Instance != null)
         {
             NotificationManager.Instance.Show($"Seferden Dönüldü! +{pendingGold} Akçe, +{pendingReputation} İtibar", NotificationType.Success);
         }
 
-        // 4. Hafızayı temizle (Aynı ganimeti tekrar almamak için)
+        // 4. Hafızayı sıfırla
         PlayerPrefs.SetInt("PendingGold", 0);
         PlayerPrefs.SetInt("PendingReputation", 0);
         PlayerPrefs.Save();
 
-        // 5. Sandığı yavaşça gizle
+        // 5. Kaybolma rutini
         StartCoroutine(HideAfterEffects());
     }
 
     IEnumerator HideAfterEffects()
     {
-        // Tıklanır tıklanmaz sandığın 3D modelini (Mesh) gizle, sadece partiküller uçuşmaya devam etsin
-        MeshRenderer mesh = GetComponent<MeshRenderer>();
-        if (mesh != null) mesh.enabled = false;
+        // Tıklanır tıklanmaz sandığın modelini gizle, partiküller patlamaya devam etsin
+        if (chestVisuals != null) chestVisuals.SetActive(false);
 
-        // Partikülün ve sesin bitmesi için 2 saniye bekle
         yield return new WaitForSeconds(2f);
         
-        // Obje işlevini tamamen bitirdi, kapat.
-        gameObject.SetActive(false);
+        // ESKİDEN BURADA gameObject.SetActive(false) VARDI, ARTIK SİLDİK! 
+        // Obje uyanık kalmaya devam ediyor.
     }
 }

@@ -122,7 +122,14 @@ public void EndBattle(bool isVictory)
             lootText.text = $"ZAFER!\n\nKazanılan: {goldReward} Akçe\nİtibar Arttı!";
             
             // Parayı cüzdana ekle (Burada MoneyManager çağrılmalı)
-            if(MoneyManager.Instance != null) MoneyManager.Instance.Add(goldReward);
+            if(MoneyManager.Instance != null)
+            {
+                int currentPending = PlayerPrefs.GetInt("PendingGold", 0);
+    PlayerPrefs.SetInt("PendingGold", currentPending + goldReward);
+     //MoneyManager.Instance.Add(goldReward);
+    PlayerPrefs.Save();
+            }
+           
 
             lootPanel.SetActive(true); // Ganimet panelini aç
         }

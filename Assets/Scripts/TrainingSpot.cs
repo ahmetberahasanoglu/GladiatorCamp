@@ -64,11 +64,20 @@ public class TrainingSpot : MonoBehaviour
             return;
         }
 
+      // Asker eğitimde mi?
         if (currentGladiator.IsTraining)
         {
             if (NotificationManager.Instance != null) NotificationManager.Instance.Show("Bu asker zaten eğitimde!", NotificationType.Warning);
             return;
         }
+
+
+        if (currentGladiator.GetComponent<GladiatorHealing>() != null && currentGladiator.GetComponent<GladiatorHealing>().IsHealing)
+        {
+            if (NotificationManager.Instance != null) NotificationManager.Instance.Show("Bu asker şu an şifahanede, eğitim yapamaz!", NotificationType.Warning);
+            return;
+        }
+
 
         // 2. KONTROL: Paramız yetiyor mu?
         if (MoneyManager.Instance.Spend(MoneyManager.Instance.trainingCost))

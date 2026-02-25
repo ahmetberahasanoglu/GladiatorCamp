@@ -11,6 +11,7 @@ public class JanissaryData : ScriptableObject
     public int stamina;
     public int level = 1;     
    // public int baseTrainingTime = 3;
+   public bool isGazi = false;
 
     public int price = 100;
 

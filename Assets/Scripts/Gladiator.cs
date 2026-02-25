@@ -7,6 +7,7 @@ public class Gladiator : MonoBehaviour
 {
     [SerializeField] private JanissaryData _templateData;
     public JanissaryData data {get;set;}
+
     public HealthBar healthBar;
     [HideInInspector] public float currentHealth;
     [HideInInspector] public float maxHealth;

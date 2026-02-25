@@ -7,6 +7,7 @@ public class GladiatorPanel : MonoBehaviour
 
     private Gladiator _currentGladiator; // Şu an kimi gösteriyoruz?
 
+
     // Event sistemlerinde, obje kapanırken aboneliği iptal etmek çok önemlidir!
     // Yoksa "MissingReferenceException" hatası alırsın.
     void OnDisable()
@@ -48,9 +49,10 @@ public class GladiatorPanel : MonoBehaviour
         
         // Veriye _currentGladiator.data üzerinden ulaşıyoruz
         JanissaryData data = _currentGladiator.data;
+        string gaziTitle = data.isGazi ? "<color=yellow>[GAZİ]</color> " : "";
 
         infoText.text =
-            $"<size=120%>{data.gladiatorName}</size>\n" + // İsim biraz büyük olsun
+               $"<size=120%>{gaziTitle}{data.gladiatorName}</size>\n" + 
             "---------\n" +
             $"STR: {data.strength}\n" +
             $"DEF: {data.defense}\n" +

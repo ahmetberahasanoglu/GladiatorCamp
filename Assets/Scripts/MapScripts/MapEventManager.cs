@@ -72,7 +72,10 @@ public class MapEventManager : MonoBehaviour
 
         CreateButton("Savaş (-1 Gün, +20 Altın)", () => {
             DayManager.Instance.NextDay(1);
-            MoneyManager.Instance.Add(20); // Postlarını sattın
+           // MoneyManager.Instance.Add(20); // Postlarını sattın
+           int currentPending = PlayerPrefs.GetInt("PendingGold", 0);
+            PlayerPrefs.SetInt("PendingGold", currentPending + 20);
+            PlayerPrefs.Save();
             NotificationManager.Instance.Show("Kurtları alt ettin ve postlarını sattın.", NotificationType.Success);
             ClosePanel();
             // İleride buraya mini savaş sahnesi de eklenebilir
@@ -109,7 +112,10 @@ public class MapEventManager : MonoBehaviour
         
         CreateButton("Ganimetleri Topla (+30 Altın)", () => {
             DayManager.Instance.NextDay(1);
-            MoneyManager.Instance.Add(30);
+            int currentPending = PlayerPrefs.GetInt("PendingGold", 0);
+    PlayerPrefs.SetInt("PendingGold", currentPending + 30);
+    PlayerPrefs.Save();
+            //MoneyManager.Instance.Add(30);
             NotificationManager.Instance.Show("Eşyaları alıp sattın.", NotificationType.Success);
             ClosePanel();
         });
@@ -156,7 +162,10 @@ public class MapEventManager : MonoBehaviour
 
         CreateButton("Kazmaya Başla (-1 Gün, +100 Altın)", () => {
             DayManager.Instance.NextDay(1); 
-            MoneyManager.Instance.Add(100);
+            //MoneyManager.Instance.Add(100);
+            int currentPending = PlayerPrefs.GetInt("PendingGold", 0);
+            PlayerPrefs.SetInt("PendingGold", currentPending + 100);
+            PlayerPrefs.Save();
             NotificationManager.Instance.Show("Büyük bir define buldun!", NotificationType.Success);
             ClosePanel();
         });
@@ -249,7 +258,7 @@ public class MapEventManager : MonoBehaviour
         CreateButton("Saldır (3 Gün Sürer)", () => {
             DayManager.Instance.NextDay(3); 
             ClosePanel();
-            BattleManager.Instance.StartBattle(5, 1); 
+            BattleManager.Instance.StartBattle(1, 1); 
         });
 
         CreateButton("Etrafından Dolaş (5 Gün Kaybet)", () => {

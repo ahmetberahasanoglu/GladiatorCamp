@@ -51,7 +51,7 @@ public class GladiatorPanel : MonoBehaviour
 
         infoText.text =
             $"<size=120%>{data.gladiatorName}</size>\n" + // İsim biraz büyük olsun
-            "----------------\n" +
+            "---------\n" +
             $"STR: {data.strength}\n" +
             $"DEF: {data.defense}\n" +
             $"SPD: {data.speed}\n" +

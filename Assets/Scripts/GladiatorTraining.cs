@@ -16,6 +16,9 @@ public class GladiatorTraining : MonoBehaviour
     [Header("Görsel Geri Bildirim")]
     public GameObject selectionRing;
 
+    [Header("Efektler")]
+public ParticleSystem levelUpParticle;
+
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -112,7 +115,11 @@ public class GladiatorTraining : MonoBehaviour
         DayManager.Instance.OnNewDay -= OnNewDay;
         gladiator.RefreshStats();
         UITrainingProgress.Instance.Hide();
-        
+        // Eğitim bitince coşkulu bir partikül patlat!
+if (levelUpParticle != null)
+{
+    levelUpParticle.Play();
+}
         // Eğitim bitti animasyonunu kapatabilirsin
         // GetComponent<Animator>().SetBool("IsTraining", false);
     }

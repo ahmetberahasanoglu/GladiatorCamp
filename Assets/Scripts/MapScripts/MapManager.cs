@@ -41,6 +41,11 @@ public class MapManager : MonoBehaviour
     public void HideMap()
     {
         mapPanel.SetActive(false);
+     
+if (LootChest.Instance != null)
+{
+    LootChest.Instance.CheckForLoot();
+}
     }
     
     public void ShowMap()

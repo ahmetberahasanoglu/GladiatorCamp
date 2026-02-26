@@ -30,11 +30,11 @@ public class ReputationDisplay : MonoBehaviour
 
     void UpdateText(int amount)
     {
-        _textMesh.text = $"İtibar: {amount}";
+        _textMesh.text = $" {amount}";
 
-        // Renklendirme (İsteğe bağlı)
-        if (amount >= 80) _textMesh.color = Color.green;       
-        else if (amount >= 50) _textMesh.color = Color.white;
-        else _textMesh.color = Color.red;                    
+       // if (amount >= 80) _textMesh.color = Color.green;       
+       // else if (amount >= 50) _textMesh.color = Color.white;
+      //  else _textMesh.color = Color.red;         
+      if (amount <= 50) _textMesh.color = Color.red;      
     }
 }

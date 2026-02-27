@@ -12,6 +12,10 @@ public class MapManager : MonoBehaviour
     public RectTransform playerIcon;
     public float moveDuration = 1.2f; // Gitme süresi (Saniye)
     
+    // YENİ EKLENEN: İkonun merkezden ne kadar uzakta duracağı (Örn: X'te -30 sol demek)
+    [Header("Hiza Ayarı")]
+    public Vector2 iconOffset = new Vector2(-40f, 0f); 
+
     [Header("Sallanma (Cartoon Efekt)")]
     public float wiggleSpeed = 6f; // Ne kadar hızlı sallanacak
     public float wiggleAngle = 12f; // Kaç derece sağa/sola yatacak
@@ -19,6 +23,9 @@ public class MapManager : MonoBehaviour
     [Header("Ayarlar")]
     public List<MapNode> startingNodes; 
     public MapNode currentNode; // Şu an neredeyiz?
+    [Header("Geri Çekilme (Retreat) Hafızası")]
+    public MapNode previousNode; // Bir önceki düğüm
+    public static string sessionPreviousNode = ""; // Oturumda kalan eski düğüm
 
     [Header("Çizgi Ayarları")]
     public GameObject linePrefab; 
@@ -42,10 +49,10 @@ public class MapManager : MonoBehaviour
     {
         mapPanel.SetActive(false);
      
-if (LootChest.Instance != null)
-{
-    LootChest.Instance.CheckForLoot();
-}
+        if (LootChest.Instance != null)
+        {
+            LootChest.Instance.CheckForLoot();
+        }
     }
     
     public void ShowMap()
@@ -106,28 +113,18 @@ if (LootChest.Instance != null)
                 if (savedNode != null)
                 {
                     currentNode = savedNode;
-                    playerIcon.anchoredPosition = savedNode.GetComponent<RectTransform>().anchoredPosition;
+                    
+                    // DEĞİŞEN KISIM: Yüklemede de Offset'i ekliyoruz
+                    playerIcon.anchoredPosition = savedNode.GetComponent<RectTransform>().anchoredPosition + iconOffset;
+                    
                     Debug.Log("Sahneler arası dönüş: " + sessionLastNode + " noktasına dönüldü.");
                     return; // İşlem bitti
                 }
             }
         }
-
-        // 2. KAYIT YOKSA (Oyuna veya Editöre ilk defa Play denildiyse):
-        /*
-        if (startingNodes.Count > 0 && startingNodes[0] != null)
-        {
-            currentNode = startingNodes[0];
-            playerIcon.anchoredPosition = currentNode.GetComponent<RectTransform>().anchoredPosition;
-            
-            // Başlangıç noktasını da oturum hafızasına yazalım ki hata olmasın
-            sessionLastNode = currentNode.gameObject.name; 
-            
-            Debug.Log("Yeni oyun: Başlangıç noktasına gidildi.");
-        }*/
     }
 
-    public void SelectNode(MapNode targetNode)
+   public void SelectNode(MapNode targetNode)
     {
         // KONTROL: Oraya gitmeye iznimiz var mı?
         if (!IsMoveValid(targetNode))
@@ -135,6 +132,14 @@ if (LootChest.Instance != null)
             Debug.Log("Oraya gidemezsin! Bağlantı yok.");
             return;
         }
+
+        // --- YENİ EKLENEN: Harekete başlamadan önce eski konumu hafızaya al ---
+        if (currentNode != null)
+        {
+            previousNode = currentNode;
+            sessionPreviousNode = previousNode.gameObject.name;
+        }
+        // ------------------------------------------------------------------------
 
         // HAREKET ONAYLANDI
         currentNode = targetNode;
@@ -150,21 +155,42 @@ if (LootChest.Instance != null)
         return currentNode.outgoingPaths.Contains(target);
     }
 
+    // Savaşi kaybedince BattleManager veya UI tarafından çağrılacak
+    public void RetreatToPreviousNode()
+    {
+        if (previousNode != null)
+        {
+            Debug.Log($"Savaş Kaybedildi! Geri çekiliniyor: {previousNode.nodeType}");
+            
+            // Konumları geri al
+            currentNode = previousNode;
+            sessionLastNode = sessionPreviousNode;
+
+            // İkonu anında eski düğüme ışınla (Zaten harita o an kapalı olduğu için oyuncu ışınlanmayı görmez)
+            playerIcon.anchoredPosition = previousNode.GetComponent<RectTransform>().anchoredPosition + iconOffset;
+        }
+        else
+        {
+            Debug.LogWarning("Geri dönülecek bir önceki konum bulunamadı!");
+        }
+    }
     public IEnumerator MoveIconRoutine(MapNode targetNode)
     {
         RectTransform targetRect = targetNode.GetComponent<RectTransform>();
         
         // UI elemanları olduğu için anchoredPosition kullanıyoruz
         Vector2 startPos = playerIcon.anchoredPosition;
-        Vector2 targetPos = targetRect.anchoredPosition;
+        
+        // DEĞİŞEN KISIM: Hedef pozisyona Offset'i ekliyoruz
+        Vector2 targetPos = targetRect.anchoredPosition + iconOffset;
 
-        // 1. ADIM: YÜZÜNÜ DÖN (FLIP)
+        // 1. ADIM: YÜZÜNÜ DÖN (FLIP) - Yüzünü dönerken asıl Node'un pozisyonunu baz alıyoruz ki kayma şaşırtmasın
         Vector3 currentScale = playerIcon.localScale;
-        if (targetPos.x > startPos.x)
+        if (targetRect.anchoredPosition.x > startPos.x)
         {
             playerIcon.localScale = new Vector3(Mathf.Abs(currentScale.x), currentScale.y, currentScale.z);
         }
-        else if (targetPos.x < startPos.x)
+        else if (targetRect.anchoredPosition.x < startPos.x)
         {
             playerIcon.localScale = new Vector3(-Mathf.Abs(currentScale.x), currentScale.y, currentScale.z);
         }

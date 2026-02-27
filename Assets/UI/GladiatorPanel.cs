@@ -7,9 +7,6 @@ public class GladiatorPanel : MonoBehaviour
 
     private Gladiator _currentGladiator; // Şu an kimi gösteriyoruz?
 
-
-    // Event sistemlerinde, obje kapanırken aboneliği iptal etmek çok önemlidir!
-    // Yoksa "MissingReferenceException" hatası alırsın.
     void OnDisable()
     {
         if (_currentGladiator != null)
@@ -22,44 +19,67 @@ public class GladiatorPanel : MonoBehaviour
         }
     }
 
-    // ARTIK PARAMETRE OLARAK 'JanissaryData' YERİNE 'Gladiator' ALIYORUZ
     public void ShowInfo(Gladiator gladiator)
     {
-        // 1. Eğer daha önce başkasına bakıyorsak, ondan aboneliğimizi çekelim
         if (_currentGladiator != null)
         {
             _currentGladiator.OnStatsChanged -= UpdateUI;
         }
 
-        // 2. Yeni askeri kaydet ve panelini aç
         _currentGladiator = gladiator;
         gameObject.SetActive(true);
 
-        // 3. Yeni askerin değişim olayına abone ol
         _currentGladiator.OnStatsChanged += UpdateUI;
-
-        // 4. İlk açılışta verileri ekrana yaz
         UpdateUI();
     }
 
-    // Bu fonksiyon hem ilk açılışta hem de event tetiklendiğinde çalışır
     private void UpdateUI()
     {
         if (_currentGladiator == null) return;
         
-        // Veriye _currentGladiator.data üzerinden ulaşıyoruz
         JanissaryData data = _currentGladiator.data;
-        string gaziTitle = data.isGazi ? "<color=yellow>[GAZİ]</color> " : "";
+        
+        // --- 1. GAZİ ÜNVANI (Daha parlak altın sarısı) ---
+        string gaziTitle = data.isGazi ? "<color=#FFD700>[GAZİ]</color> " : "";
 
+        // --- 2. CAN GÖSTERİMİ VE RENKLENDİRME ---
+        int currentHp = Mathf.RoundToInt(_currentGladiator.currentHealth);
+        int maxHp = Mathf.RoundToInt(_currentGladiator.maxHealth);
+        
+        string hpColor = "green"; // Varsayılan sağlıklı
+        if (currentHp < maxHp * 0.3f) hpColor = "red";        // %30 altı (Ağır yaralı)
+        else if (currentHp < maxHp * 0.7f) hpColor = "orange"; // %70 altı (Hafif yaralı)
+
+        // --- 3. MEŞGULİYET (DURUM) KONTROLÜ ---
+        string statusText = "<color=white>Boşta</color>";
+        
+        if (_currentGladiator.isOnMission) 
+        {
+            statusText = "<color=red>Seferde</color>";
+        }
+        else 
+        {
+            // Eğitim ve Şifa scriptlerine bakarak ne yaptığını anlıyoruz
+            var training = _currentGladiator.GetComponent<GladiatorTraining>();
+            var healing = _currentGladiator.GetComponent<GladiatorHealing>();
+            
+            if (training != null && training.IsTraining) 
+                statusText = "<color=yellow>Talimde</color>";
+            else if (healing != null && healing.IsHealing) 
+                statusText = "<color=green>Şifahanede</color>";
+        }
+
+        // --- 4. YAZIYI OLUŞTURMA ---
         infoText.text =
-               $"<size=120%>{gaziTitle}{data.gladiatorName}</size>\n" + 
-            "---------\n" +
+            $"<size=120%>{gaziTitle}{data.gladiatorName}</size>\n" + 
+            $"DURUM: {statusText}\n" +
+            $"CAN: <color={hpColor}>{currentHp} / {maxHp}</color>\n" +
+            "-----------------\n" +
             $"STR: {data.strength}\n" +
             $"DEF: {data.defense}\n" +
             $"SPD: {data.speed}\n" +
             $"MOR: {data.morale}\n" +
             $"STA: {data.stamina}\n" +
-            $"Level: {data.level}\n" +
-            $"Değer: {data.GetSellValue()} Akçe";
+            $"Seviye: {data.level}";
     }
 }

@@ -181,6 +181,12 @@ public class MapEventManager : MonoBehaviour
         descText.text = "İlerideki dost gözetleme kulesi haydutların saldırısı altında! Onlara yardım edecek misin?";
 
         CreateButton("Savunmaya Yardım Et", () => {
+            if (!HasAliveSoldiers())
+            {
+                if (NotificationManager.Instance != null)
+                    NotificationManager.Instance.Show("Savaşa sokacak hiç askerin yok! Kampa dönmelisin.", NotificationType.Error);
+                return; // Kodu burada kes, savaşa GİRME!
+            }
             DayManager.Instance.NextDay(1); 
             ClosePanel();
             topPanel.SetActive(true);
@@ -248,7 +254,22 @@ public class MapEventManager : MonoBehaviour
             BattleManager.Instance.ReturnToCamp();
         });
     }
-
+    // Savaşa girebilecek en az 1 tane yaşayan askerimiz var mı?
+    private bool HasAliveSoldiers()
+    {
+        var allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
+        
+        foreach (var soldier in allSoldiers)
+        {
+            // Eğer askerin datası varsa ve canı 0'dan büyükse (yaşıyorsa)
+            if (soldier.data != null && soldier.data.currentHealth > 0)
+            {
+                return true; // Savaşa girebiliriz!
+            }
+        }
+        
+        return false; // Kimse hayatta değil
+    }
     void SetupBattleEvent()
     {
         titleText.text = "Çapulcu Pusu";
@@ -256,9 +277,15 @@ public class MapEventManager : MonoBehaviour
         if(battleSprite != null) eventImage.sprite = battleSprite;
 
         CreateButton("Saldır (3 Gün Sürer)", () => {
+            if (!HasAliveSoldiers())
+            {
+                if (NotificationManager.Instance != null)
+                    NotificationManager.Instance.Show("Savaşa sokacak hiç askerin yok! Kampa dönmelisin.", NotificationType.Error);
+                return; 
+            }
             DayManager.Instance.NextDay(3); 
             ClosePanel();
-            BattleManager.Instance.StartBattle(1, 1); 
+            BattleManager.Instance.StartBattle(3, 1); //kac kisilik savaş.
         });
 
         CreateButton("Etrafından Dolaş (5 Gün Kaybet)", () => {
@@ -287,6 +314,13 @@ public class MapEventManager : MonoBehaviour
         if(bossSprite != null) eventImage.sprite = bossSprite;
 
         CreateButton("KUŞATMAYI BAŞLAT", () => {
+            if (!HasAliveSoldiers())
+            {
+                if (NotificationManager.Instance != null)
+                    NotificationManager.Instance.Show("Savaşa sokacak hiç askerin yok! Kampa dönmelisin.", NotificationType.Error);
+                return; 
+                
+            }
             Debug.Log("Final Savaşı!");
             ClosePanel();
             // Final sahnesine geçiş eklenecek

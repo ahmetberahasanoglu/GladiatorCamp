@@ -47,12 +47,12 @@ public class WorkplaceManager : MonoBehaviour
         // Temizlik
         foreach (Transform child in contentArea) Destroy(child.gameObject);
 
-        // Tüm askerleri bul
-        var allSoldiers = FindObjectsOfType<Gladiator>();
+        // --- GÜNCEL KOD: FindObjectsByType ve SortMode.None kullanıyoruz ---
+        var allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
 
         foreach (var soldier in allSoldiers)
         {
-            // Sadece yaşıyorsa ve müsaitse listele       AAAAAAAAAAAAAAAAAAAA
+            // Sadece yaşıyorsa ve müsaitse listele
             if (soldier.IsAvailable)
             {
                 GameObject newSlot = Instantiate(slotPrefab, contentArea);
@@ -68,12 +68,17 @@ public class WorkplaceManager : MonoBehaviour
     {
         int count = 0;
         int gold = 0;
-        foreach (var s in FindObjectsOfType<Gladiator>())
+        
+        // --- GÜNCEL KOD ---
+        var allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
+        
+        foreach (var s in allSoldiers)
         {
-            if (s.currentActivity == SoldierActivity.Working)
+            if (s.data != null && s.data.currentActivity == SoldierActivity.Working)
             {
                 count++;
-                gold += s.dailyWage;
+                // Eğer dailyWage data içindeyse s.data.dailyWage yapabilirsin
+                gold += s.data.dailyWage;
             }
         }
         if(summaryText) summaryText.text = $"Çalışan: {count} Kişi \nBeklenen Gelir: {gold} Akçe";
@@ -85,18 +90,18 @@ public class WorkplaceManager : MonoBehaviour
         int totalIncome = 0;
         int workerCount = 0;
         
-        var allSoldiers = FindObjectsOfType<Gladiator>();
+        // --- GÜNCEL KOD ---
+        var allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
 
         foreach (var soldier in allSoldiers)
         {
-            // Eğer kutucuğu işaretliyse (Working modundaysa)
-            if (soldier.currentActivity == SoldierActivity.Working)
+            if (soldier.data != null && soldier.data.currentActivity == SoldierActivity.Working)
             {
-                totalIncome += soldier.dailyWage;
+                totalIncome += soldier.data.dailyWage;
                 workerCount++;
 
                 // KRİTİK NOKTA: "Bugünlük" dediğin için, parayı aldıktan sonra
-                // askeri tekrar talime döndürüyoruz (Kutucuğu sıfırlıyoruz)
+                // askeri tekrar talime döndürüyoruz
                 soldier.SetActivity(SoldierActivity.Training);
             }
         }
@@ -113,6 +118,7 @@ public class WorkplaceManager : MonoBehaviour
                 );
             }
         }
+        
         if (workPanel.activeSelf)
         {
             RefreshList(); 

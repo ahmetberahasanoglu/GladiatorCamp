@@ -27,6 +27,8 @@ public class BattleManager : MonoBehaviour
     [Header("UI Panelleri")]
     public GameObject lootPanel;      // Zafer ekranı (Ganimet)
     public GameObject defeatPanel;    // Yenilgi ekranı
+    public GameObject bgPanel;
+    public GameObject topPanel;
     public TextMeshProUGUI lootText;
 
 
@@ -52,6 +54,8 @@ public GameObject skillPanel;
 
         state = BattleState.Fighting;
         if (skillPanel != null) skillPanel.SetActive(true);
+        topPanel.SetActive(false);
+        bgPanel.SetActive(false);
     }
 void Start()
     {
@@ -114,6 +118,7 @@ public void EndBattle(bool isVictory)
         state = isVictory ? BattleState.Won : BattleState.Lost;
 
         if (skillPanel != null) skillPanel.SetActive(false);
+        topPanel.SetActive(true);
 
         if (isVictory)
         {
@@ -178,6 +183,10 @@ public void EndBattle(bool isVictory)
         {
             Debug.Log("Asker kalmadı! Yenilgi!");
             EndBattle(false); // Yenilgi parametresiyle bitir
+            if (MapManager.Instance != null)
+            {
+    MapManager.Instance.RetreatToPreviousNode();
+            }
         }
     }
 
@@ -187,7 +196,9 @@ public void EndBattle(bool isVictory)
         // 1. UI Panellerini Kapat
         lootPanel.SetActive(false);
         defeatPanel.SetActive(false);
+        bgPanel.SetActive(false);
         if (skillPanel != null) skillPanel.SetActive(false);
+        topPanel.SetActive(true);
         if (MapManager.Instance != null) MapManager.Instance.HideMap(); // Haritayı da kapat
 
         // 2. Sahnedeki TÜM askerleri (Ölü/Diri) bul

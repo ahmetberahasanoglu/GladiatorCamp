@@ -105,8 +105,10 @@ public class GladiatorAI : MonoBehaviour
     public void TakeDamage(float incomingDamage, bool isCritical = false)
     {
         if (isDead || gladiator.data == null) return;
-
-        float defensePower = gladiator.data.defense + (gladiator.data.morale / 5.0f);
+        //  kampın genel moralini alıyoruz. Moral %100 ise ekstra +10 Defans sağlar.
+        float campMorale = CampMoraleManager.Instance != null ? CampMoraleManager.Instance.currentMorale : 50f;
+        float defensePower = gladiator.data.defense + (campMorale / 10.0f);
+        
         float reduction = 100.0f / (100.0f + defensePower);
         float finalDamage = incomingDamage * reduction;
 
@@ -226,7 +228,7 @@ public class GladiatorAI : MonoBehaviour
         gladiator.data.isGazi = true;
         
         // Gazi olan askerin morali kalıcı olarak artar
-        gladiator.data.morale += 30; 
+       // gladiator.data.morale += 30; 
         /*
         if (gaziEffectPrefab != null)
         {

@@ -53,7 +53,7 @@ public class SaveManager : MonoBehaviour
             sData.stamina = soldier.data.stamina;
             sData.defense = soldier.data.defense;
             sData.speed = soldier.data.speed;
-            sData.morale = soldier.data.morale;
+            //sData.morale = soldier.data.morale;
             sData.level = soldier.data.level;
             
             data.soldiers.Add(sData);

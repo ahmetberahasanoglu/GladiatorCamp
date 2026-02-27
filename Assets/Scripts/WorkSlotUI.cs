@@ -19,14 +19,14 @@ public class WorkSlotUI : MonoBehaviour
 
         // İsim ve Ücreti Yaz
         nameText.text = soldier.data.gladiatorName;
-        wageText.text = $"+{soldier.dailyWage} Akçe";
+        wageText.text = $"+{soldier.data.dailyWage} Akçe";
 
         // 1. Önce Toggle'ın dinleyicisini temizle (Eski eventler kalmasın)
         workToggle.onValueChanged.RemoveAllListeners();
 
         // 2. Askerin şu anki durumuna göre kutuyu dolu veya boş yap
         // Eğer Working ise kutu tikli (isOn = true) olsun
-        workToggle.isOn = (_soldier.currentActivity == SoldierActivity.Working);
+        workToggle.isOn = (_soldier.data.currentActivity == SoldierActivity.Working);
 
         // 3. Kullanıcı kutuya tıkladığında ne olacağını belirle
         workToggle.onValueChanged.AddListener(OnToggleChanged);

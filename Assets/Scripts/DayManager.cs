@@ -86,7 +86,7 @@ public class DayManager : MonoBehaviour
         
         if (e.moneyChange != 0) MoneyManager.Instance.Add(e.moneyChange); 
         if (e.foodChange != 0) SupplyManager.Instance.BuyFood(e.foodChange); 
-        
+        /*
         if (e.moraleChange != 0)
         {
             foreach(var s in FindObjectsOfType<Gladiator>())
@@ -94,7 +94,7 @@ public class DayManager : MonoBehaviour
                 if(e.moraleChange < 0) s.DecreaseMorale(Mathf.Abs(e.moraleChange));
                 else s.data.morale += e.moraleChange; 
             }
-        }
+        } buraya direkt genel moral değişimi yapıcaz*/
         OnEventTriggered?.Invoke(e);
         Debug.Log($"OLAY VAR: {e.title}");
     }

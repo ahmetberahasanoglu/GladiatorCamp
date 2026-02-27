@@ -58,11 +58,11 @@ public class SupplyManager : MonoBehaviour
              NotificationManager.Instance.Show("<color=red>ERZAK BİTTİ! Askerler huzursuz!</color>", NotificationType.Warning);
 
 
-            // CEZA: Herkesin morali düşer
+            /* CEZA: Herkesin morali düşer
             foreach (var soldier in soldiers)
             {
                 soldier.DecreaseMorale(10); // Her gün 10 moral kaybı
-            }
+            }*/
         }
 
         UpdateUI();

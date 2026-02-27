@@ -9,7 +9,7 @@ public class JanissaryData : ScriptableObject
     public int strength;
     public int defense;
     public int speed;
-    public int morale;
+   // public int morale;
     public int stamina;
     public int level = 1;     
     public bool isGazi = false;
@@ -24,6 +24,6 @@ public class JanissaryData : ScriptableObject
 
     public int GetTotalStats()
     {
-        return strength + defense + stamina + speed + morale;
+        return strength + defense + stamina + speed ;
     }
 }

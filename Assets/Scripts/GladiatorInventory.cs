@@ -28,7 +28,7 @@ public void InitializeBaseStats()
         baseDef = data.defense;
         baseSpd = data.speed;
         baseSta = data.stamina;
-        baseMor = data.morale;
+       // baseMor = data.morale;
 
         isInitialized = true;
     }
@@ -96,7 +96,7 @@ public void InitializeBaseStats()
         data.defense = baseDef;
         data.speed = baseSpd;
         data.stamina = baseSta;
-        data.morale = baseMor;
+       // data.morale = baseMor;
 
         AddBonus(weapon);
         AddBonus(armor);

@@ -95,7 +95,7 @@ public class Gladiator : MonoBehaviour
             healthBar.UpdateBar(data.currentHealth, data.maxHealth);
         }
     }
-
+/*
     public void DecreaseMorale(int amount)
     {
         data.morale -= amount;
@@ -107,7 +107,7 @@ public class Gladiator : MonoBehaviour
             NotificationManager.Instance.Show($"{data.gladiatorName} moral kaybetti. Yeni Moral: {data.morale}", NotificationType.Error);
         }
     }
-
+*/
     public void UpdateNameLabel()
     {
         if (nameLabel != null && data != null)

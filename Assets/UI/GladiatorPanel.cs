@@ -77,8 +77,7 @@ public class GladiatorPanel : MonoBehaviour
             "-----------------\n" +
             $"STR: {data.strength}\n" +
             $"DEF: {data.defense}\n" +
-            $"SPD: {data.speed}\n" +
-            $"MOR: {data.morale}\n" +
+            $"SPD: {data.speed}\n" +// $"MOR: {data.morale}\n" +
             $"STA: {data.stamina}\n" +
             $"Seviye: {data.level}";
     }

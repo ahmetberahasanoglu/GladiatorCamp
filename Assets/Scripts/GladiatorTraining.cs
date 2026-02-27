@@ -140,7 +140,7 @@ if (levelUpParticle != null)
             case TrainingType.Strength: d.strength += amount; break;
             case TrainingType.Speed: d.speed += amount; break;
             case TrainingType.Defense: d.defense += amount; break;
-            case TrainingType.Morale: d.morale += amount; break;
+            //case TrainingType.Morale: d.morale += amount; break;
             case TrainingType.Stamina: d.stamina += amount; break;
         }
         if (NotificationManager.Instance != null)

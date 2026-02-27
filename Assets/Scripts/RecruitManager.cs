@@ -85,10 +85,10 @@ public class RecruitManager : MonoBehaviour
         newData.stamina = savedData.stamina;
         newData.defense = savedData.defense;
         newData.speed = savedData.speed;
-        newData.morale = savedData.morale;
+       // newData.morale = savedData.morale;
         newData.level = savedData.level;
 
-        gladComponent.data = newData;
+        gladComponent.InitializeData(newData); // CORRECT
 
       //  var inventory = newObj.GetComponent<GladiatorInventory>();
         
@@ -146,7 +146,7 @@ public class RecruitManager : MonoBehaviour
 
         // 2. KONTROL: Kışlada yer var mı? (CampManager entegrasyonu)
         // Sahnedeki mevcut askerleri sayıyoruz
-        int currentCount = FindObjectsOfType<Gladiator>().Length;
+        int currentCount = FindObjectsByType<Gladiator>(FindObjectsSortMode.None).Length;
         int maxCap = CampManager.Instance.GetMaxSoldierCapacity();
 
         if (currentCount >= maxCap)
@@ -165,11 +165,11 @@ public class RecruitManager : MonoBehaviour
         newData.stamina = candidate.potentialStamina;
         newData.defense = 1; 
         newData.speed = 1;
-        newData.morale = 100;
+        //newData.morale = 100;
         newData.level = 1;
 
     
-        glad.data = newData;
+        glad.InitializeData(newData);
         dailyCandidates.Remove(candidate);
         OnSoldierCountChanged?.Invoke();
         NotificationManager.Instance.Show($"{candidate.candidateName} ocağa katıldı!", NotificationType.Success);

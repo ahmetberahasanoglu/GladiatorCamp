@@ -46,7 +46,7 @@ public class CampMoraleManager : MonoBehaviour
     {
         if (moraleText != null)
         {
-            moraleText.text = $"Moral: %{currentMorale}";
+            moraleText.text = $"{currentMorale}";
             
             // Moralin durumuna göre modeli değiştirebilirm simdi değil
            

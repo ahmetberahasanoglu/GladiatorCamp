@@ -8,19 +8,22 @@ public class CenkCardUI : MonoBehaviour
     public TextMeshProUGUI powerText;
     public Button cardButton;
 
-    [HideInInspector] public int cardPower;
     [HideInInspector] public string cardName;
+    [HideInInspector] public int basePower;
+    [HideInInspector] public int currentPower;
+    [HideInInspector] public bool isPlayerCard;
 
     // Kartı görsel olarak hazırlar
     public void SetupCard(string name, int power, bool isPlayer)
     {
         cardName = name;
-        cardPower = power;
+        basePower = power;
+        currentPower = basePower;
+        isPlayerCard = isPlayer;
 
-        if (nameText != null) nameText.text = cardName;
-        if (powerText != null) powerText.text = cardPower.ToString();
+        UpdateVisuals();
 
-        // Eğer düşman kartıysa tıklanamaz yap ve arkasını dönük göster (isim yerine ? yazabilirsin)
+        // Eğer düşman kartıysa tıklanamaz yap ve arkasını dönük göster
         if (!isPlayer)
         {
             cardButton.interactable = false;
@@ -30,20 +33,29 @@ public class CenkCardUI : MonoBehaviour
         else
         {
             cardButton.interactable = true;
+            cardButton.onClick.RemoveAllListeners();
             cardButton.onClick.AddListener(OnCardClicked);
         }
     }
 
-    // Oyuncu kendi kartına tıkladığında Manager'a haber verir
+    public void UpdateVisuals()
+    {
+        if (nameText != null) nameText.text = cardName;
+        // Eğer sinerji ile gücü artmışsa yeşil yazsın
+        if (powerText != null) 
+        {
+            powerText.text = currentPower.ToString();
+            powerText.color = currentPower > basePower ? Color.green : Color.white;
+        }
+    }
+
     void OnCardClicked()
     {
         CenkGameManager.Instance.PlayerPlaysCard(this);
     }
 
-    // Düşman kartı oynandığında gerçek değerini göster
     public void RevealEnemyCard()
     {
-        if (nameText != null) nameText.text = cardName;
-        if (powerText != null) powerText.text = cardPower.ToString();
+        UpdateVisuals();
     }
 }

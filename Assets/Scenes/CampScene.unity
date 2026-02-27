@@ -17803,6 +17803,8 @@ MonoBehaviour:
   state: 0
   lootPanel: {fileID: 1318391836}
   defeatPanel: {fileID: 1102795776}
+  bgPanel: {fileID: 851836722}
+  topPanel: {fileID: 1790668193}
   lootText: {fileID: 595811205}
   skillPanel: {fileID: 1138378409}
 --- !u!1 &584794684
@@ -53471,11 +53473,13 @@ MonoBehaviour:
   mapPanel: {fileID: 1355957311}
   playerIcon: {fileID: 728898796}
   moveDuration: 1.2
+  iconOffset: {x: -40, y: 0}
   wiggleSpeed: 6
   wiggleAngle: 12
   startingNodes:
   - {fileID: 1448328651}
   currentNode: {fileID: 0}
+  previousNode: {fileID: 0}
   linePrefab: {fileID: 7201500997551776876, guid: 49609915684cb494da70054e296e8dff, type: 3}
   lineContainer: {fileID: 1083941332}
 --- !u!1 &2054359309

@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 699836e63d1404a48b76775d3c82f351
+guid: 55f47895088724b49852c8e9f550e025
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -123,7 +123,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: PhotoshopExtension_Image (33)_0
+      name: zarlar6_0
       rect:
         serializedVersion: 2
         x: 108
@@ -138,14 +138,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 56be73e13cd023d4e95bb79fe444b025
-      internalID: 573042522
+      spriteID: ec9d630a804d259428fb6f39f22369aa
+      internalID: -351293509
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: PhotoshopExtension_Image (33)_1
+      name: zarlar6_1
       rect:
         serializedVersion: 2
         x: 488
@@ -160,14 +160,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 20b9491875e54cb49b61f435e89a91fa
-      internalID: 1495005726
+      spriteID: 71163e0ab196fae409ce8adede463e18
+      internalID: -1999536883
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: PhotoshopExtension_Image (33)_2
+      name: zarlar6_2
       rect:
         serializedVersion: 2
         x: 847
@@ -182,14 +182,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b425503ca4a90a94b811cdf66eebf8ad
-      internalID: -734254556
+      spriteID: 452a3d592fbae5b4e98941711a85f94a
+      internalID: 1093298561
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: PhotoshopExtension_Image (33)_3
+      name: zarlar6_3
       rect:
         serializedVersion: 2
         x: 109
@@ -204,14 +204,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e679abc5e0d08514a917b33c562be083
-      internalID: 1177824479
+      spriteID: a3ac49b5a0476624c88d4ae269699f61
+      internalID: -173422446
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: PhotoshopExtension_Image (33)_4
+      name: zarlar6_4
       rect:
         serializedVersion: 2
         x: 489
@@ -226,14 +226,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2dfec7afce49f764cb4fea20f233ca12
-      internalID: 1835014821
+      spriteID: a21eff6dcd7195841ab8e5cca271126c
+      internalID: -3401679
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: PhotoshopExtension_Image (33)_5
+      name: zarlar6_5
       rect:
         serializedVersion: 2
         x: 847
@@ -248,8 +248,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 1e942ec09165d0741a0c47e9f3cc3804
-      internalID: -1649062210
+      spriteID: 967a7c198186a6b47ad5931da1a34272
+      internalID: -879823380
       vertices: []
       indices: 
       edges: []
@@ -258,7 +258,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: f09626994b70f3a4fac45e4fe1d86edc
+    spriteID: 7dbad009023a88e41878ccea7809474a
     internalID: 0
     vertices: []
     indices: 
@@ -268,14 +268,14 @@ TextureImporter:
     spriteCustomMetadata:
       entries:
       - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":5.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      PhotoshopExtension_Image (33)_0: 573042522
-      PhotoshopExtension_Image (33)_1: 1495005726
-      PhotoshopExtension_Image (33)_2: -734254556
-      PhotoshopExtension_Image (33)_3: 1177824479
-      PhotoshopExtension_Image (33)_4: 1835014821
-      PhotoshopExtension_Image (33)_5: -1649062210
+      zarlar6_0: -351293509
+      zarlar6_1: -1999536883
+      zarlar6_2: 1093298561
+      zarlar6_3: -173422446
+      zarlar6_4: -3401679
+      zarlar6_5: -879823380
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

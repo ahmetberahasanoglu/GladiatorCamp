@@ -9,16 +9,23 @@ public class DiceManager : MonoBehaviour
     public static DiceManager Instance;
 
     [Header("UI Ayarları")]
-    public GameObject dicePanel;        // Tüm ekranı hafif karartan veya ortada çıkan panel
-    public RectTransform diceTransform; // Zarın kendisi (Döndürmek ve büyütmek için)
-    public Image diceImage;             // Eğer zar resimlerin varsa
-    public TextMeshProUGUI diceText;    // Resim yoksa zarın üstünde yazan sayı
+    public GameObject dicePanel;        
+    public RectTransform diceTransform; 
+    public Image diceImage;             
+    public TextMeshProUGUI diceText;    
     
-    [Header("Animasyon (Juiciness)")]
-    public float rollDuration = 1.5f;   // Zar kaç saniye dönecek
-    public float shakeIntensity = 20f;  // Ne kadar titreyecek
+    [Header("Yeni: Devam Butonu")]
+    public GameObject continueButton;   // Zar durunca çıkacak buton
 
-    public Sprite[] diceSprites;        // İsteğe bağlı: 6 adet zar resmi (1'den 6'ya)
+    [Header("Animasyon (Juiciness)")]
+    public float rollDuration = 1.5f;   
+    public float shakeIntensity = 20f;  
+
+    public Sprite[] diceSprites;        
+
+    // Hafızada tutulacaklar
+    private Action<int> currentCallback;
+    private int finalResult;
 
     void Awake()
     {
@@ -26,62 +33,75 @@ public class DiceManager : MonoBehaviour
         if (dicePanel != null) dicePanel.SetActive(false);
     }
 
-    // Başka scriptlerden çağrılacak ana fonksiyon. 
-    // "Action<int> onRollComplete" sayesinde zar durduğunda ne olacağını ona söyleyeceğiz.
     public void RollDice(Action<int> onRollComplete)
     {
+        currentCallback = onRollComplete;
+        
         dicePanel.SetActive(true);
-        StartCoroutine(RollRoutine(onRollComplete));
+        if (continueButton != null) continueButton.SetActive(false); // Başta butonu gizle
+        
+        StartCoroutine(RollRoutine());
     }
 
-    IEnumerator RollRoutine(Action<int> onRollComplete)
+    IEnumerator RollRoutine()
     {
         float timer = 0f;
         int currentFace = 1;
-
         Vector3 originalScale = diceTransform.localScale;
         
-        // 1. ZAR DÖNME / TİTREME EFEKTİ (JUICE)
+        // 1. ZAR DÖNME / TİTREME EFEKTİ
         while (timer < rollDuration)
         {
-            currentFace = UnityEngine.Random.Range(1, 7); // 1 ile 6 arası
+            currentFace = UnityEngine.Random.Range(1, 7); 
             UpdateDiceVisual(currentFace);
 
-            // Rastgele sağa sola rotasyon ver (Zar atılıyormuş hissi)
             float randomZ = UnityEngine.Random.Range(-shakeIntensity, shakeIntensity);
             diceTransform.rotation = Quaternion.Euler(0, 0, randomZ);
 
-            timer += 0.1f; // Her 0.1 saniyede bir şekil değiştir
+            timer += 0.1f; 
             yield return new WaitForSeconds(0.1f);
         }
 
         // 2. KESİN SONUCU BELİRLE
-        int finalResult = UnityEngine.Random.Range(1, 7);
+        finalResult = UnityEngine.Random.Range(1, 7);
         UpdateDiceVisual(finalResult);
-        diceTransform.rotation = Quaternion.identity; // Düzelt
+        diceTransform.rotation = Quaternion.identity; 
 
-        // 3. VURGU (POP EFEKTİ) - Zar durduğunda bir anlığına büyüsün
+        // 3. VURGU (POP EFEKTİ)
         diceTransform.localScale = originalScale * 1.5f;
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(0.15f);
         diceTransform.localScale = originalScale;
 
-        // Oyuncu sonucu idrak etsin diye 1 saniye bekle
-        yield return new WaitForSeconds(1.0f);
+        // 4. OYUNCUYA KONTROLÜ VER (Butonu Aç)
+        if (continueButton != null)
+        {
+            continueButton.SetActive(true);
+        }
+        else
+        {
+            // Eğer buton eklemeyi unutursan oyun çökmesin diye eski usul devam etsin
+            yield return new WaitForSeconds(1.5f);
+            FinishRoll();
+        }
+    }
 
-        // 4. BİTİR VE SONUCU GÖNDER
+    // Butona tıklandığında çalışacak fonksiyon
+    public void FinishRoll()
+    {
         dicePanel.SetActive(false);
-        onRollComplete?.Invoke(finalResult);
+        if (continueButton != null) continueButton.SetActive(false);
+        
+        // Zar sonucunu harita olayına (MapEventManager'a) gönder
+        currentCallback?.Invoke(finalResult);
     }
 
     void UpdateDiceVisual(int number)
     {
-        // Eğer elinde zar spriteları varsa onları kullan
         if (diceSprites != null && diceSprites.Length >= 6)
         {
             diceImage.sprite = diceSprites[number - 1];
         }
         
-        // Her halükarda texti de güncelle (Sprite yoksa bile çalışır)
         if (diceText != null)
         {
             diceText.text = number.ToString();

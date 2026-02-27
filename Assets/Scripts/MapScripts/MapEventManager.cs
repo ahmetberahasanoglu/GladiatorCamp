@@ -57,6 +57,7 @@ public class MapEventManager : MonoBehaviour
             case NodeType.RestArea:     SetupRestEvent(); break;
             case NodeType.Zindan:       SetupZindan(); break;
             case NodeType.Vahsi:        SetupVahsi(); break;
+            case NodeType.Dice:         SetupMysteriousDiceEvent(); break;
         }
     }
 
@@ -87,7 +88,46 @@ public class MapEventManager : MonoBehaviour
             ClosePanel();
         });
     }
+// Bu olayı haritadaki "?" (Soru İşareti) nodelarından birine bağlayabilirsin
+    public void SetupMysteriousDiceEvent()
+    {
+        titleText.text = "Gizemli Yabancı";
+        descText.text = "Karanlık bir pelerin giymiş bir adam yolunu kesti. Avucundan kemikten yapılma bir zar çıkardı.\n\n<color=yellow>\"Şu zarı at bakalım Uç Beyi... Eğer 3'ten büyük atarsan sana bir sırrımı (ve altınlarımı) vereceğim.\"</color>";
+        // if (mysteriousSprite != null) eventImage.sprite = mysteriousSprite; // Varsa görselini koy
 
+        // --- 1. SEÇENEK: ZARI AT ---
+        CreateButton("Zarı At (Risk Al)", () => 
+        {
+            // Olay panelini geçici olarak gizleyebiliriz veya butonları kapatabiliriz
+            // Zar yöneticisini çağırıyoruz:
+            DiceManager.Instance.RollDice((zarSonucu) => 
+            {
+                // ZAR DURDUĞUNDA BURASI ÇALIŞIR!
+                if (zarSonucu > 3)
+                {
+                    // KAZANDI!
+                    NotificationManager.Instance.Show($"Zar {zarSonucu} geldi! Adam sana kese fırlattı (+150 Akçe)", NotificationType.Success);
+                    MoneyManager.Instance.Add(150); // veya item ver
+                    if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(5);
+                }
+                else
+                {
+                    // KAYBETTI!
+                    NotificationManager.Instance.Show($"Zar {zarSonucu} geldi... Adam gülerek karanlıkta kayboldu.", NotificationType.Warning);
+                    if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-5);
+                }
+
+                ClosePanel(); // Harita olayını kapat
+            });
+        });
+
+        // --- 2. SEÇENEK: GÖRMEZDEN GEL ---
+        CreateButton("Adamı Kov", () => 
+        {
+            NotificationManager.Instance.Show("Kumara ayıracak vaktim yok deyip yoluna devam ettin.", NotificationType.Info);
+            ClosePanel();
+        });
+    }
     void SetupZindan()
     {
         titleText.text = "Karanlık Mağara";

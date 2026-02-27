@@ -14,5 +14,6 @@ public enum NodeType
     Zindan,
     Kalkan,
     
-    Archery
+    Archery,
+    Dice
 }

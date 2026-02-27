@@ -20,7 +20,16 @@ public class CardTable : MonoBehaviour
         if (hoverTextObj != null) 
         {
             hoverTextObj.SetActive(true);
-            hoverTextObj.GetComponentInChildren<TextMeshPro>().text = "Cenk Oyna\n(Moral Kazan)";
+            
+            // Eğer bugün oynadıysa farklı, oynamadıysa farklı yazı çıksın
+            if (CenkGameManager.Instance != null && CenkGameManager.Instance.hasPlayedToday)
+            {
+                hoverTextObj.GetComponentInChildren<TextMeshPro>().text = "<color=red>Bugünlük Yeter</color>\n(Yarın Gel)";
+            }
+            else
+            {
+                hoverTextObj.GetComponentInChildren<TextMeshPro>().text = "Cenk Oyna\n(Moral Kazan)";
+            }
         }
     }
 
@@ -32,9 +41,19 @@ public class CardTable : MonoBehaviour
 
     void OnMouseDown()
     {
-        // Masaya tıklandığında mini oyun panelini aç ve oyunu başlat!
         if (CenkGameManager.Instance != null)
         {
+            // 1. KONTROL: Bugün oynanmış mı?
+            if (CenkGameManager.Instance.hasPlayedToday)
+            {
+                if (NotificationManager.Instance != null)
+                {
+                    NotificationManager.Instance.Show("Cenk oynamak için yarını beklemelisin!", NotificationType.Warning);
+                }
+                return; // Kodu burada kes, oyunu AÇMA!
+            }
+
+            // 2. Oynanmadıysa oyunu aç
             CenkGameManager.Instance.OpenMinigame();
             OnMouseExit(); // Yazıyı gizle
         }

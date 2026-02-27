@@ -227,13 +227,10 @@ public class GladiatorAI : MonoBehaviour
     {
         gladiator.data.isGazi = true;
         
-        // Gazi olan askerin morali kalıcı olarak artar
-       // gladiator.data.morale += 30; 
-        /*
-        if (gaziEffectPrefab != null)
+        if (CampMoraleManager.Instance != null)
         {
-            Instantiate(gaziEffectPrefab, transform.position, Quaternion.identity, transform);
-        }*/
+            CampMoraleManager.Instance.ChangeMorale(10);
+        }
 
         if (NotificationManager.Instance != null)
         {

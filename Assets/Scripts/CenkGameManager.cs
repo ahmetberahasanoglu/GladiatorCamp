@@ -32,9 +32,11 @@ public class CenkGameManager : MonoBehaviour
     public TextMeshProUGUI enemyCardCountText;  // Örn: 2/3 yazacak
     private const int MAX_CARDS_PER_ROUND = 3;  // Sınırımız
 
-    [Header("Prefab")]
+    [Header("Prefab ve Görseller")]
     public GameObject cardPrefab;
+    public Sprite[] cardSprites; // YENİ: Kart resimlerini buradan atayacağız
 
+    // KART VERİTABANI (Sıralama çok önemli!)
     private string[] cardNames = { "Kılıçlı Er", "Zırhlı Yaya", "Uzun Yay", "Arbaletçi", "Hafif Süvari", "Ağır Sipahi" };
     private int[] cardPowers = { 3, 5, 4, 6, 5, 8 };
 
@@ -42,6 +44,9 @@ public class CenkGameManager : MonoBehaviour
     private int playerWins, enemyWins;
     private bool playerPassed, enemyPassed;
     private bool isPlayerTurn;
+
+    [Header("Günlük Sınır")]
+    public bool hasPlayedToday = false; // Bugün oynandı mı?
     
     private List<CenkCardUI> enemyHandCards = new List<CenkCardUI>();
 
@@ -50,11 +55,33 @@ public class CenkGameManager : MonoBehaviour
         Instance = this;
         if (cenkPanel != null) cenkPanel.SetActive(false);
     }
+    void Start()
+    {
+        
+        if (DayManager.Instance != null)
+        {
+            DayManager.Instance.OnNewDay += ResetDailyPlayLimit;
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (DayManager.Instance != null)
+        {
+            DayManager.Instance.OnNewDay -= ResetDailyPlayLimit;
+        }
+    }
+
+    void ResetDailyPlayLimit()
+    {
+        hasPlayedToday = false; // Yeni gün doğdu, tekrar oynayabilir!
+    }
 
     public void OpenMinigame()
     {
         cenkPanel.SetActive(true);
         closeButton.SetActive(false);
+        hasPlayedToday = true;
         playerWins = 0; enemyWins = 0;
         
         foreach(var c in playerCrowns) c.SetActive(false);
@@ -92,7 +119,15 @@ public class CenkGameManager : MonoBehaviour
         int r = Random.Range(0, cardNames.Length);
         GameObject obj = Instantiate(cardPrefab, parentArea);
         CenkCardUI card = obj.GetComponent<CenkCardUI>();
-        card.SetupCard(cardNames[r], cardPowers[r], isPlayer);
+        
+        // YENİ: İndekse göre doğru resmi bul ve karta gönder
+        Sprite selectedSprite = null;
+        if (cardSprites != null && cardSprites.Length > r)
+        {
+            selectedSprite = cardSprites[r];
+        }
+
+        card.SetupCard(cardNames[r], cardPowers[r], selectedSprite, isPlayer);
         return card;
     }
 
@@ -113,7 +148,7 @@ public class CenkGameManager : MonoBehaviour
         {
             playerPassed = true;
             passButton.interactable = false;
-            infoText.text = "Sahadaki limit doldu! Otomatik pas geçildi.";
+            infoText.text = "Tur bitti!";
         }
         else
         {

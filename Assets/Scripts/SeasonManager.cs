@@ -75,7 +75,7 @@ public class SeasonManager : MonoBehaviour
                 if (snowParticle != null) snowParticle.Stop();
                 
                 if (windAudioSource != null) windAudioSource.Stop();
-                RenderSettings.fogDensity = 0.01f; // Sis az
+                RenderSettings.fogDensity = 0.005f; // Sis az
                 RenderSettings.fogColor = summerColor;
             }
         }
@@ -120,7 +120,7 @@ public class SeasonManager : MonoBehaviour
                     windAudioSource.Play();
                 }
 
-                RenderSettings.fogDensity = 0.04f; // Yoğun, kasvetli sis
+                RenderSettings.fogDensity = 0.02f; // Yoğun, kasvetli sis
                 RenderSettings.fogColor = winterColor;
 
                 if (NotificationManager.Instance != null)

@@ -12,6 +12,7 @@ public class RavenThief : MonoBehaviour
 
     [Header("Efektler")]
     public GameObject featherPoofEffect; // Vurulunca çıkacak tüy/altın efekti
+    public AudioSource coinSound; 
 
     // Spawner bu kuşu yarattığında hedefini belirlemek için bu fonksiyonu çağıracak
     public void SetupFlight(Vector3 startPoint, Vector3 endPoint)
@@ -40,7 +41,7 @@ public class RavenThief : MonoBehaviour
     {
         // Eğer UI (Menü vs) açıksa tıklamayı yoksay
         if (EventSystem.current.IsPointerOverGameObject()) return;
-
+        coinSound.Play();
         // 1. Ödülü Ver
         if (MoneyManager.Instance != null)
         {

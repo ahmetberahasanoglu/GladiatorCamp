@@ -15,9 +15,11 @@ public class CampAnimal : MonoBehaviour
 
     [Header("Etkileşim Ayarları")]
     public GameObject loveEffectPrefab; // Tıklayınca çıkacak Kalp efekti
-    public int moraleBoost = 2;         // Vereceği moral
+    public int moraleBoost = 1;         // Vereceği moral
     public float interactionCooldown = 60f; // Sınırsız sevilmesin diye (Örn: 60 saniyede bir)
+
     private float nextInteractionTime = 0f;
+     public AudioSource barkSound;
 
     private Animator animator;
 
@@ -74,12 +76,14 @@ public class CampAnimal : MonoBehaviour
 
     // Fareyle hayvana tıklandığında
     void OnMouseDown()
-    {
+    {   
+       
         if (EventSystem.current.IsPointerOverGameObject()) return;
-
+        barkSound.Play();
         // Hayvanı sevme süresi gelmiş mi?
         if (Time.time >= nextInteractionTime)
         {
+          
             nextInteractionTime = Time.time + interactionCooldown;
 
             // 1. Moral Ver

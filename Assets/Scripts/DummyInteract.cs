@@ -5,8 +5,11 @@ using System.Collections;
 public class DummyInteract : MonoBehaviour
 {
     [Header("Görsel ve Ses")]
-    public ParticleSystem hitParticles;   // Tahta tozları/kıymıklar
-    public AudioSource hitSound;          // Kılıç/odun vurma sesi
+    // DÜZELTME 1: Instantiate edeceğimiz için bunu ParticleSystem yerine GameObject yapıyoruz.
+    // İsmine de Prefab ekledik ki Unity editöründe ne olduğu belli olsun.
+    public GameObject hitParticlesPrefab; 
+    
+    public AudioSource hitSound;          
     private Animator animator;
 
     private bool isHit = false;
@@ -20,23 +23,25 @@ public class DummyInteract : MonoBehaviour
     {
         if (EventSystem.current.IsPointerOverGameObject()) return;
         
-        // Eğer şu an zaten sallanmıyorsa vur
         if (!isHit) StartCoroutine(WobbleRoutine());
     }
 
     IEnumerator WobbleRoutine()
     {
-        isHit = true; // Kuklayı kilitledik, başka tıklama almayacak
+        isHit = true; 
 
-        // Efektleri ve animasyonu oynat
-        if (hitParticles != null) hitParticles.Play();
+        // DÜZELTME 2: Güvenlik kontrolü ekledik ve GameObject olarak ürettik
+        if (hitParticlesPrefab != null)
+        {
+            GameObject fx = Instantiate(hitParticlesPrefab, transform.position + Vector3.up * 2.5f, Quaternion.identity);
+            Destroy(fx, 2f);
+        }
+
         if (hitSound != null) hitSound.Play();
         if (animator != null) animator.SetTrigger("hit");
         
-        // Animasyonun uzunluğu kadar bekle (Örn: 0.5 saniye)
-        // Eğer animasyonun daha uzun veya kısaysa bu süreyi ona göre değiştirebilirsin
         yield return new WaitForSeconds(0.2f); 
         
-        isHit = false; // Süre bitti, artık tekrar vurulabilir
+        isHit = false; 
     }
 }

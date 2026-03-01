@@ -71,14 +71,14 @@ public class GladiatorPanel : MonoBehaviour
 
         // --- 4. YAZIYI OLUŞTURMA ---
         infoText.text =
-            $"<size=120%>{gaziTitle}{data.gladiatorName}</size>\n" + 
+          //{data.gladiatorName}
             $"DURUM: {statusText}\n" +
             $"CAN: <color={hpColor}>{currentHp} / {maxHp}</color>\n" +
-            "-----------------\n" +
+           // "-----------------\n" +
             $"STR: {data.strength}\n" +
             $"DEF: {data.defense}\n" +
             $"SPD: {data.speed}\n" +// $"MOR: {data.morale}\n" +
             $"STA: {data.stamina}\n" +
-            $"Seviye: {data.level}";
+            $"Seviye: {data.level}"+  $"<size=120%>{gaziTitle}</size>" ;
     }
 }

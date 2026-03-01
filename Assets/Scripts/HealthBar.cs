@@ -24,7 +24,7 @@ public class HealthBar : MonoBehaviour
             fillImage.fillAmount = ratio;
 
             // Renk değişimi (Can azaldıkça kırmızıya dönsün - Opsiyonel)
-            fillImage.color = Color.Lerp(Color.red, Color.green, ratio);
+          //  fillImage.color = Color.Lerp(Color.red, Color.green, ratio);
         }
     }
 

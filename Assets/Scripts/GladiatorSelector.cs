@@ -1,12 +1,15 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+
 public class GladiatorSelector : MonoBehaviour
 {
     public static GladiatorSelector Instance;
     public Camera cam;
-    public GladiatorPanel panel;
+    
     private GladiatorInventory selectedInventory;
-void Awake()
+    private GameObject currentlyOpenLocalUI;
+
+    void Awake()
     {
         Instance = this;
     }
@@ -17,47 +20,33 @@ void Awake()
         {
             cam = Camera.main;
         }
-        if (panel == null)
-        {
-            panel = FindObjectOfType<GladiatorPanel>(true);
-        }
     }
+
     public void DeselectIfDead(GameObject deadSoldier)
     {
-        // Eğer ölen asker, şu an seçili olan askerse seçimi sıfırla
         if (selectedInventory != null && selectedInventory.gameObject == deadSoldier)
         {
-            selectedInventory = null;
-            Debug.Log("Seçili asker öldüğü için seçim temizlendi.");
-            
-            // Eğer ekranda seçili askerin adını gösteren bir UI varsa onu da burada kapatabilirsin
+            ClearSelection();
         }
     }
+
     public void OpenSelectedInventory()
     {
         if (selectedInventory != null)
         {
-            // Eğer bir asker seçiliyse onun envanterini aç
             InventoryUIManager.Instance.OpenInventoryFor(selectedInventory);
         }
         else
         {
-            // Asker seçili değilken butona basılırsa uyarı ver
             if (NotificationManager.Instance != null)
-            {
                 NotificationManager.Instance.Show("Önce bir asker seçmelisin!", NotificationType.Warning);
-            }
-            else
-            {
-                Debug.LogWarning("Asker seçili değil!");
-            }
         }
     }
+
     void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            // Eğer UI (Panel, Buton vb.) üzerine tıkladıysak 3D Raycast atma
             if (EventSystem.current.IsPointerOverGameObject()) return;
             
             Ray ray = cam.ScreenPointToRay(Input.mousePosition);
@@ -66,25 +55,58 @@ void Awake()
             {
                 if (hit.collider.TryGetComponent(out Gladiator gladiator))
                 {
-                    // 1. Bilgi panelini aç
-                    panel.ShowInfo(gladiator);
-
-                    // 2. Eğitim yöneticisine askeri bildir
+                    // 1. Eğitim yöneticisine askeri bildir
                     var training = gladiator.GetComponent<GladiatorTraining>();
                     if (TrainingUIManager.Instance != null)
                     {
                         TrainingUIManager.Instance.SetCurrentGladiator(training);
                     }
 
-                    // 3. ENVANTERİ AÇMA, SADECE HAFIZAYA AL
+                    // 2. Envanteri hafızaya al
                     selectedInventory = gladiator.GetComponent<GladiatorInventory>();
+
+                    // 3. KART SİSTEMİ
+                    if (currentlyOpenLocalUI != null)
+                    {
+                        currentlyOpenLocalUI.SetActive(false);
+                    }
+
+                    GladiatorPanel localPanel = gladiator.GetComponentInChildren<GladiatorPanel>(true);
+                    
+                    if (localPanel != null)
+                    {
+                        localPanel.gameObject.SetActive(true); 
+                        currentlyOpenLocalUI = localPanel.gameObject; 
+                        localPanel.ShowInfo(gladiator); 
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"{gladiator.name} içinde 'GladiatorPanel' scripti olan bir Panel bulunamadı!");
+                    }
+                }
+                else
+                {
+                    // --- YENİ: Yere, binalara veya asker olmayan herhangi bir objeye tıklandıysa! ---
+                    ClearSelection();
                 }
             }
             else
             {
-                // Eğer boşluğa tıkladıysak seçili envanteri hafızadan sil
-                selectedInventory = null;
+                // --- GÖKYÜZÜNE (Tamamen boşluğa) tıklandıysa ---
+                ClearSelection();
             }
+        }
+    }
+
+    // Kod tekrarını önlemek için temizlik işini tek bir fonksiyona topladık
+    private void ClearSelection()
+    {
+        selectedInventory = null;
+
+        if (currentlyOpenLocalUI != null)
+        {
+            currentlyOpenLocalUI.SetActive(false);
+            currentlyOpenLocalUI = null;
         }
     }
 }

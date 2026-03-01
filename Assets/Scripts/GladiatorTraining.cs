@@ -84,7 +84,7 @@ public ParticleSystem levelUpParticle;
         // GetComponent<Animator>().SetBool("IsTraining", true);
 
         // GÜN BAZLI eğitim başlıyor (Tıkladığın an gün GEÇMEZ)
-        UITrainingProgress.Instance.StartProgress(remainingDays);
+       // UITrainingProgress.Instance.StartProgress(remainingDays);
 
         DayManager.Instance.OnNewDay += OnNewDay;
     }
@@ -95,7 +95,7 @@ public ParticleSystem levelUpParticle;
 
         remainingDays--;
 
-        UITrainingProgress.Instance.UpdateProgress(remainingDays);
+       // UITrainingProgress.Instance.UpdateProgress(remainingDays);
 
         if (remainingDays <= 0)
         {
@@ -114,7 +114,7 @@ public ParticleSystem levelUpParticle;
 
         DayManager.Instance.OnNewDay -= OnNewDay;
         gladiator.RefreshStats();
-        UITrainingProgress.Instance.Hide();
+        //UITrainingProgress.Instance.Hide();
         // Eğitim bitince coşkulu bir partikül patlat!
 if (levelUpParticle != null)
 {

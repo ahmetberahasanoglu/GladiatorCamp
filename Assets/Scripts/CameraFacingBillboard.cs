@@ -15,6 +15,7 @@ public class CameraFacingBillboard : MonoBehaviour
         {
 
             transform.rotation = _mainCamera.transform.rotation;
+            transform.forward = _mainCamera.transform.forward;
         }
     }
 }

@@ -3,11 +3,19 @@ using TMPro;
 
 public class TopInfoBarUI : MonoBehaviour
 {
+    // --- YENİ EKLENEN KISIM: İstenilen yerden ulaşabilmek için Instance ---
+    public static TopInfoBarUI Instance;
+
     [Header("UI Textleri")]
     public TextMeshProUGUI dayText;
     public TextMeshProUGUI goldText;
     public TextMeshProUGUI foodText;
     public TextMeshProUGUI capacityText; // "Asker: 3/5"
+
+    void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
@@ -33,7 +41,7 @@ public class TopInfoBarUI : MonoBehaviour
 
     void OnDestroy()
     {
-        // ABONELİKLERİ İPTAL ET (Hata almamak için şart)
+        // ABONELİKLERİ İPTAL ET
         if (DayManager.Instance != null) DayManager.Instance.OnDayChanged -= UpdateDay;
         if (MoneyManager.Instance != null) MoneyManager.Instance.OnGoldChanged -= UpdateGold;
         if (SupplyManager.Instance != null) SupplyManager.Instance.OnFoodChanged -= UpdateFood;
@@ -58,21 +66,31 @@ public class TopInfoBarUI : MonoBehaviour
 
     void UpdateFood()
     {
-        // SupplyManager'ın event'i parametre almıyorsa direkt instance'tan çekiyoruz
         if(SupplyManager.Instance != null)
             foodText.text = $"{SupplyManager.Instance.currentFood}";
     }
 
-    void UpdateCapacity()
+    // YENİ: Başka scriptlerden çağrılabilmesi için "public" yapıldı
+    public void UpdateCapacity() 
     {
-        if (RecruitManager.Instance == null || CampManager.Instance == null) return;
+        if (CampManager.Instance == null) return;
 
-        // Mevcut asker sayısı
-        int currentCount = FindObjectsOfType<Gladiator>().Length;
-        // Maksimum kapasite
+        // DÜZELTME: Artık cesetleri ve düşmanları saymıyoruz!
+        Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
+        int currentCount = 0;
+
+        foreach (var soldier in allSoldiers)
+        {
+            GladiatorAI ai = soldier.GetComponent<GladiatorAI>();
+            
+            // Sadece bizim askerimizse ("MySoldier") VE ölmediyse sayıyı artır
+            if (soldier.CompareTag("MySoldier") && (ai == null || !ai.isDead))
+            {
+                currentCount++;
+            }
+        }
+
         int maxCap = CampManager.Instance.GetMaxSoldierCapacity();
-
-        // Renklendirme: Doluysa Kırmızı, Boş yer varsa Beyaz
         string color = (currentCount >= maxCap) ? "red" : "white";
 
         capacityText.text = $"<color={color}>{currentCount} / {maxCap}</color>";

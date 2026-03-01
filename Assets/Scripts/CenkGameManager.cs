@@ -315,7 +315,33 @@ public class CenkGameManager : MonoBehaviour
             infoText.text = "<color=red>CENK'İ KAYBETTİN!</color>";
         }
     }
+// --- YENİ: PES ETME FONKSİYONU ---
+    public void SurrenderGame()
+    {
+        // Eğer oyun zaten bittiyse (kapatma butonu aktifse) butona basılmasını engelle
+        if (closeButton.activeSelf) return;
 
+        // Bütün akışı durdur
+        StopAllCoroutines(); 
+        
+        // Pas butonunu kapat, Kapatma (Çıkış) butonunu aç
+        if (passButton != null) passButton.interactable = false;
+        closeButton.SetActive(true);
+
+        // Ekrana pes ettiğini yazdır
+        infoText.text = "<color=red>PES ETTİN!</color> Masadan çekildin.";
+
+        // İsteğe Bağlı: Pes ettiği için küçük bir ceza (Moral düşüşü) uygulayabilirsin
+        if (CampMoraleManager.Instance != null) 
+        {
+            CampMoraleManager.Instance.ChangeMorale(-5); 
+        }
+
+        if (NotificationManager.Instance != null)
+        {
+            NotificationManager.Instance.Show("Cenkten çekildin. Askerlerin morali biraz bozuldu.", NotificationType.Warning);
+        }
+    } 
     public void CloseMinigame()
     {
         cenkPanel.SetActive(false);

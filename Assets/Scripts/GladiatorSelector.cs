@@ -22,6 +22,17 @@ void Awake()
             panel = FindObjectOfType<GladiatorPanel>(true);
         }
     }
+    public void DeselectIfDead(GameObject deadSoldier)
+    {
+        // Eğer ölen asker, şu an seçili olan askerse seçimi sıfırla
+        if (selectedInventory != null && selectedInventory.gameObject == deadSoldier)
+        {
+            selectedInventory = null;
+            Debug.Log("Seçili asker öldüğü için seçim temizlendi.");
+            
+            // Eğer ekranda seçili askerin adını gösteren bir UI varsa onu da burada kapatabilirsin
+        }
+    }
     public void OpenSelectedInventory()
     {
         if (selectedInventory != null)

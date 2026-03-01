@@ -166,6 +166,10 @@ public class GladiatorAI : MonoBehaviour
 
         isDead = true;
         
+        // --- YENİ EKLENEN SATIR: UI'a "Ben öldüm, kapasiteyi güncelle" diye bağır ---
+        if (TopInfoBarUI.Instance != null) TopInfoBarUI.Instance.UpdateCapacity();
+        if (GladiatorSelector.Instance != null) GladiatorSelector.Instance.DeselectIfDead(this.gameObject);
+        
         if (agent.isActiveAndEnabled) 
         {
             agent.isStopped = true;

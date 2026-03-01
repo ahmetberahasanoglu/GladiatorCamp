@@ -22192,9 +22192,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: GladiatorSelector, Assembly-CSharp
-        m_MethodName: OpenSelectedInventory
+      - m_Target: {fileID: 7644893569607945889}
+        m_TargetAssemblyTypeName: GladiatorPanel, Assembly-CSharp
+        m_MethodName: OnInventoryButtonClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

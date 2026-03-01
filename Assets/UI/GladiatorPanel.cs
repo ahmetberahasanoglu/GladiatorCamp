@@ -18,6 +18,19 @@ public class GladiatorPanel : MonoBehaviour
             TrainingUIManager.Instance.SetCurrentGladiator(null);
         }
     }
+  
+    public void OnInventoryButtonClicked()
+    {
+        // Sahnede bir Selector varsa ona "Seçili olanı aç" komutunu yolla
+        if (GladiatorSelector.Instance != null)
+        {
+            GladiatorSelector.Instance.OpenSelectedInventory();
+        }
+        else
+        {
+            Debug.LogWarning("Sahnede GladiatorSelector bulunamadı!");
+        }
+    }
 
     public void ShowInfo(Gladiator gladiator)
     {

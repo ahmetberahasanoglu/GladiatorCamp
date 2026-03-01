@@ -27,6 +27,10 @@ public class CenkGameManager : MonoBehaviour
     public GameObject[] playerCrowns; 
     public GameObject[] enemyCrowns;
 
+    [Header("Pes Etme Ayarları")]
+    public TextMeshProUGUI surrenderButtonText; // Unity Editöründen butonun içindeki Text objesini sürükleyeceğiz
+    private bool isFirstTurn = true; // Oyun yeni mi başladı?
+
     [Header("Kart Sayacı (YENİ)")]
     public TextMeshProUGUI playerCardCountText; // Örn: 1/3 yazacak
     public TextMeshProUGUI enemyCardCountText;  // Örn: 2/3 yazacak
@@ -112,6 +116,9 @@ public class CenkGameManager : MonoBehaviour
         passButton.interactable = true;
         infoText.text = "Yeni Raunt! Sıra Sende.";
         UpdateScoresAndCounters(); // İlk başta 0/3 yazsın
+        // (Oyunun başladığı fonksiyonun içine ekle)
+        isFirstTurn = true;
+        if (surrenderButtonText != null) surrenderButtonText.text = "Çık";
     }
 
     CenkCardUI CreateRandomCard(Transform parentArea, bool isPlayer)
@@ -135,7 +142,12 @@ public class CenkGameManager : MonoBehaviour
     public void PlayerPlaysCard(CenkCardUI playedCard)
     {
         if (!isPlayerTurn || playerPassed) return;
-
+        // (Oyuncunun hamle yaptığı fonksiyonun içine ekle)
+    if (isFirstTurn)
+    {
+        isFirstTurn = false;
+        if (surrenderButtonText != null) surrenderButtonText.text = "Çekil (-5)";
+    }
         // Kartı sahaya sür
         playedCard.transform.SetParent(playerBoardArea);
         playedCard.cardButton.interactable = false;
@@ -318,30 +330,40 @@ public class CenkGameManager : MonoBehaviour
 // --- YENİ: PES ETME FONKSİYONU ---
     public void SurrenderGame()
     {
-        // Eğer oyun zaten bittiyse (kapatma butonu aktifse) butona basılmasını engelle
         if (closeButton.activeSelf) return;
 
-        // Bütün akışı durdur
         StopAllCoroutines(); 
         
-        // Pas butonunu kapat, Kapatma (Çıkış) butonunu aç
         if (passButton != null) passButton.interactable = false;
         closeButton.SetActive(true);
 
-        // Ekrana pes ettiğini yazdır
-        infoText.text = "<color=red>PES ETTİN!</color> Masadan çekildin.";
-
-        // İsteğe Bağlı: Pes ettiği için küçük bir ceza (Moral düşüşü) uygulayabilirsin
-        if (CampMoraleManager.Instance != null) 
+        // --- YENİ EKLENEN KONTROL ---
+        if (isFirstTurn)
         {
-            CampMoraleManager.Instance.ChangeMorale(-5); 
+            // OYUN BAŞLAMADAN ÇIKTI (CEZA YOK)
+            infoText.text = "Masadan kalktın.";
+            
+            if (NotificationManager.Instance != null)
+            {
+                NotificationManager.Instance.Show("Savaşa başlamadan masadan ayrıldın.", NotificationType.Info);
+            }
         }
-
-        if (NotificationManager.Instance != null)
+        else
         {
-            NotificationManager.Instance.Show("Cenkten çekildin. Askerlerin morali biraz bozuldu.", NotificationType.Warning);
+            // OYUN BAŞLADI VE PES ETTİ (CEZA VAR)
+            infoText.text = "<color=red>PES ETTİN!</color> Masadan çekildin.";
+            
+            if (CampMoraleManager.Instance != null) 
+            {
+                CampMoraleManager.Instance.ChangeMorale(-5); 
+            }
+
+            if (NotificationManager.Instance != null)
+            {
+                NotificationManager.Instance.Show("Savaştan çekildin. Askerlerin morali bozuldu (-5)", NotificationType.Warning);
+            }
         }
-    } 
+    }
     public void CloseMinigame()
     {
         cenkPanel.SetActive(false);

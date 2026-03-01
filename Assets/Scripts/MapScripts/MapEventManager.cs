@@ -96,28 +96,25 @@ public class MapEventManager : MonoBehaviour
         // if (mysteriousSprite != null) eventImage.sprite = mysteriousSprite; // Varsa görselini koy
 
         // --- 1. SEÇENEK: ZARI AT ---
+        // --- 1. SEÇENEK: ZARI AT ---
         CreateButton("Zarı At (Risk Al)", () => 
         {
-            // Olay panelini geçici olarak gizleyebiliriz veya butonları kapatabiliriz
-            // Zar yöneticisini çağırıyoruz:
-            DiceManager.Instance.RollDice((zarSonucu) => 
+            // YENİ: Zarın hedefi 4 (Çünkü 3'ten büyük olmalı: 4, 5, 6)
+            DiceManager.Instance.RollDice(4, (zarSonucu) => 
             {
-                // ZAR DURDUĞUNDA BURASI ÇALIŞIR!
-                if (zarSonucu > 3)
+                if (zarSonucu >= 4) // Kuralı da buna göre düzenledik
                 {
-                    // KAZANDI!
                     NotificationManager.Instance.Show($"Zar {zarSonucu} geldi! Adam sana kese fırlattı (+150 Akçe)", NotificationType.Success);
-                    MoneyManager.Instance.Add(150); // veya item ver
+                    MoneyManager.Instance.Add(150); 
                     if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(5);
                 }
                 else
                 {
-                    // KAYBETTI!
                     NotificationManager.Instance.Show($"Zar {zarSonucu} geldi... Adam gülerek karanlıkta kayboldu.", NotificationType.Warning);
                     if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-5);
                 }
 
-                ClosePanel(); // Harita olayını kapat
+                ClosePanel(); 
             });
         });
 

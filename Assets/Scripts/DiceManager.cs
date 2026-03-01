@@ -12,10 +12,12 @@ public class DiceManager : MonoBehaviour
     public GameObject dicePanel;        
     public RectTransform diceTransform; 
     public Image diceImage;             
-    public TextMeshProUGUI diceText;    
+    //public TextMeshProUGUI diceText;    
     
-    [Header("Yeni: Devam Butonu")]
-    public GameObject continueButton;   // Zar durunca çıkacak buton
+    [Header("Yeni: UI Elemanları")]
+    public GameObject continueButton;   
+    public TextMeshProUGUI statusText; // "BAŞARILI / BAŞARISIZ" yazısı
+    public TextMeshProUGUI targetText; // Opsiyonel: Zardan önce "Hedef: 4" yazısı
 
     [Header("Animasyon (Juiciness)")]
     public float rollDuration = 1.5f;   
@@ -23,9 +25,9 @@ public class DiceManager : MonoBehaviour
 
     public Sprite[] diceSprites;        
 
-    // Hafızada tutulacaklar
     private Action<int> currentCallback;
     private int finalResult;
+    private int currentTarget;
 
     void Awake()
     {
@@ -33,12 +35,41 @@ public class DiceManager : MonoBehaviour
         if (dicePanel != null) dicePanel.SetActive(false);
     }
 
+    // Hedefsiz düz zar atmak istersek
     public void RollDice(Action<int> onRollComplete)
     {
+        StartRoll(0, onRollComplete);
+    }
+
+    // BG3 Tarzı: Hedefli zar atmak istersek (Örn: Hedef 4)
+    public void RollDice(int targetNumber, Action<int> onRollComplete)
+    {
+        StartRoll(targetNumber, onRollComplete);
+    }
+
+    private void StartRoll(int targetNumber, Action<int> onRollComplete)
+    {
+        currentTarget = targetNumber;
         currentCallback = onRollComplete;
         
         dicePanel.SetActive(true);
-        if (continueButton != null) continueButton.SetActive(false); // Başta butonu gizle
+        
+        // Başlangıçta butonları ve yazıları gizle
+        if (continueButton != null) continueButton.SetActive(false);
+        if (statusText != null) statusText.gameObject.SetActive(false);
+        
+        if (targetText != null) 
+        {
+            if (currentTarget > 0)
+            {
+                targetText.gameObject.SetActive(true);
+                targetText.text = $"{currentTarget}";
+            }
+            else
+            {
+                targetText.gameObject.SetActive(false);
+            }
+        }
         
         StartCoroutine(RollRoutine());
     }
@@ -67,31 +98,45 @@ public class DiceManager : MonoBehaviour
         UpdateDiceVisual(finalResult);
         diceTransform.rotation = Quaternion.identity; 
 
-        // 3. VURGU (POP EFEKTİ)
+        // 3. VURGU (Zar durunca büyür)
         diceTransform.localScale = originalScale * 1.5f;
         yield return new WaitForSeconds(0.15f);
         diceTransform.localScale = originalScale;
 
-        // 4. OYUNCUYA KONTROLÜ VER (Butonu Aç)
+        // --- 4. YENİ: BAŞARI KONTROLÜ VE YAZISI ---
+        if (currentTarget > 0 && statusText != null)
+        {
+            statusText.gameObject.SetActive(true);
+            if (finalResult >= currentTarget)
+            {
+                statusText.text = "<color=green>BAŞARILI</color>";
+                // İleride buraya tatlı bir 'Çın!' sesi ekleyebilirsin
+            }
+            else
+            {
+                statusText.text = "<color=red>BAŞARISIZ</color>";
+                // İleride buraya boğuk bir 'Güm' sesi ekleyebilirsin
+            }
+        }
+
+        // 5. DEVAM BUTONUNU AÇ
         if (continueButton != null)
         {
             continueButton.SetActive(true);
         }
         else
         {
-            // Eğer buton eklemeyi unutursan oyun çökmesin diye eski usul devam etsin
             yield return new WaitForSeconds(1.5f);
             FinishRoll();
         }
     }
 
-    // Butona tıklandığında çalışacak fonksiyon
     public void FinishRoll()
     {
         dicePanel.SetActive(false);
         if (continueButton != null) continueButton.SetActive(false);
+        if (statusText != null) statusText.gameObject.SetActive(false);
         
-        // Zar sonucunu harita olayına (MapEventManager'a) gönder
         currentCallback?.Invoke(finalResult);
     }
 
@@ -101,10 +146,6 @@ public class DiceManager : MonoBehaviour
         {
             diceImage.sprite = diceSprites[number - 1];
         }
-        
-        if (diceText != null)
-        {
-            diceText.text = number.ToString();
-        }
+       
     }
 }

@@ -67,7 +67,7 @@ public class BattleSkillManager : MonoBehaviour
         // Prefab kontrolü
         if (healEffectPrefab == null) Debug.LogWarning("Heal Effect Prefab atanmamış!");
 
-        var allUnits = FindObjectsOfType<Gladiator>();
+        var allUnits = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
 
         foreach (var unit in allUnits)
         {

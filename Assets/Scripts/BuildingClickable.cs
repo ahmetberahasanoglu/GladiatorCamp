@@ -18,8 +18,13 @@ public class BuildingClickable : MonoBehaviour
 
     [Header("Renk Değişimi")]
     public Color highlightColor = Color.yellow;
-    private Renderer _renderer; // O an aktif olan renderer
+    private Renderer _renderer; 
     private Color _originalColor;
+
+    // --- YENİ EKLENEN KISIM: EFEKT ---
+    [Header("Efektler (Juiciness)")]
+    public GameObject buildEffectPrefab; // İnşaat toz bulutu / parlaması
+    public Vector3 effectOffset = new Vector3(0, 2f, 0); // Efektin yerden ne kadar yukarıda çıkacağı
 
     [Header("Olaylar")]
     public UnityEvent OnBuiltClick;   
@@ -27,7 +32,6 @@ public class BuildingClickable : MonoBehaviour
 
     void Start()
     {
-        // Start içinde renderer aramaya gerek yok, UpdateVisuals zaten bunu yapacak.
         UpdateVisuals();
     }
 
@@ -35,22 +39,18 @@ public class BuildingClickable : MonoBehaviour
     void OnMouseEnter()
     {
         if (EventSystem.current.IsPointerOverGameObject()) return;
-        
-        // Renderer null değilse rengi değiştir
         if (_renderer != null) _renderer.material.color = highlightColor;
     }
 
     void OnMouseExit()
     {
-        // Renderer null değilse eski rengine döndür
         if (_renderer != null) _renderer.material.color = _originalColor;
     }
 
     public void OnMouseDown()
     {
         if (EventSystem.current.IsPointerOverGameObject()) return;
-         NotificationManager.Instance.Show($"{buildingName} tıklandı. ", NotificationType.Info);
-  
+        NotificationManager.Instance.Show($"{buildingName} tıklandı. ", NotificationType.Info);
 
         switch (currentState)
         {
@@ -71,23 +71,17 @@ public class BuildingClickable : MonoBehaviour
         }
     }
 
-    // --- KRİTİK DÜZELTME BURADA ---
     public void UpdateVisuals()
     {
-        // 1. Önce modelleri aç/kapat
         if (ruinedModel != null) ruinedModel.SetActive(currentState == BuildingState.Ruined);
         if (builtModel != null) builtModel.SetActive(currentState == BuildingState.Built);
         
-        // 2. Şu an hangi modelin aktif olduğunu bul
         GameObject activeModel = null;
         if (currentState == BuildingState.Built) activeModel = builtModel;
         else if (currentState == BuildingState.Ruined) activeModel = ruinedModel;
 
-        // 3. Aktif modelin Renderer'ını bul (Highlight için şart)
         if (activeModel != null)
         {
-            // DÜZELTME: GetComponent yerine GetComponentInChildren kullanıyoruz.
-            // Çünkü modelin MeshRenderer'ı genelde ana objede değil, alt objelerindedir.
             _renderer = activeModel.GetComponentInChildren<Renderer>();
 
             if (_renderer != null)
@@ -103,18 +97,30 @@ public class BuildingClickable : MonoBehaviour
 
     public void RepairBuilding()
     {
-        // NOT: Senin projende fonksiyon adı 'SpendGold' ise onu kullan, kodda 'Spend' yazmışsın.
         if (MoneyManager.Instance != null && MoneyManager.Instance.gold >= repairCost)
         {
-            MoneyManager.Instance.Spend(repairCost); // Fonksiyon adını kontrol et
+            MoneyManager.Instance.Spend(repairCost); 
             
             currentState = BuildingState.Built;
-            UpdateVisuals(); // Bu çağrılınca renderer Built modele geçecek
+            UpdateVisuals(); 
+
+            // --- YENİ EKLENEN KISIM: EFEKTİ YARAT ---
+            if (buildEffectPrefab != null)
+            {
+                // Efekti binanın merkezinden biraz yukarıda oluştur (Offset ile)
+                Vector3 spawnPos = transform.position + effectOffset;
+                GameObject vfx = Instantiate(buildEffectPrefab, spawnPos, Quaternion.identity);
+                
+                // Oyunu kastırmaması için 3 saniye sonra sil
+                Destroy(vfx, 3f);
+            }
+            // ----------------------------------------
+
             NotificationManager.Instance.Show("Bina tamir edildi!", NotificationType.Info);
         }
         else
         {
-           NotificationManager.Instance.Show("Hazine tam takır! Yeterli akçe yok.", NotificationType.Error);
+            NotificationManager.Instance.Show("Hazine tam takır! Yeterli akçe yok.", NotificationType.Error);
         }
     }
 }

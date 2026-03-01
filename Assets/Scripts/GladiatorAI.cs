@@ -13,7 +13,6 @@ public class GladiatorAI : MonoBehaviour
 
     [Header("Efektler")]
     public GameObject deathEffectPrefab;
-   // public ParticleSystem gaziEffectPrefab; // İsteğe bağlı: Gazi olunca çıkacak parlama efekti
 
     [Header("Özellikler")]
     public string enemyTag = "Enemy"; 
@@ -28,6 +27,10 @@ public class GladiatorAI : MonoBehaviour
     private float lastAttackTime;
     public bool isDead = false;
 
+    // --- YENİ EKLENEN KISIM ---
+    // Hasar alırken animasyonun kesilmemesi için ufak bir kontrol
+    private bool isGettingHit = false; 
+
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -37,19 +40,28 @@ public class GladiatorAI : MonoBehaviour
 
     void Start()
     {
-        animator = GetComponent<Animator>();
+        // YENİ: Animator bileşenini sadece ana objede değil, çocuk objelerde de ara
+        // (Çünkü modeli genelde Gladiator objesinin altına sürükleriz)
+        animator = GetComponentInChildren<Animator>();
+        if (animator == null) Debug.LogWarning(gameObject.name + " objesinde Animator bulunamadı!");
+
         agent.speed = 3.5f + (gladiator.data.speed * 0.05f);
         StartCoroutine(LifeCycleRoutine());
     }
     
     void Update()
     {
-        if (isDead || BattleManager.Instance.state != BattleState.Fighting) return;
+        // Eğer öldüysek, savaşmıyorsak veya hasar animasyonu oynuyorsa hareketi kes
+        if (isDead || BattleManager.Instance.state != BattleState.Fighting || isGettingHit) return;
 
         if (target == null)
         {
             FindNearestTarget();
-            if (target == null) return;
+            if (target == null)
+            {
+                if (animator) animator.SetBool("isRunning", false);
+                return;
+            }
         }
 
         float distance = Vector3.Distance(transform.position, target.position);
@@ -105,7 +117,7 @@ public class GladiatorAI : MonoBehaviour
     public void TakeDamage(float incomingDamage, bool isCritical = false)
     {
         if (isDead || gladiator.data == null) return;
-        //  kampın genel moralini alıyoruz. Moral %100 ise ekstra +10 Defans sağlar.
+        
         float campMorale = CampMoraleManager.Instance != null ? CampMoraleManager.Instance.currentMorale : 50f;
         float defensePower = gladiator.data.defense + (campMorale / 10.0f);
         
@@ -123,10 +135,29 @@ public class GladiatorAI : MonoBehaviour
             DamageTextManager.Instance.ShowDamage(transform.position, finalDamage, isCritical ? 1 : 0);
         }
 
-        if (gladiator.currentHealth <= 0)
+        // --- YENİ EKLENEN KISIM: HASAR ALMA ANİMASYONU ---
+        if (gladiator.currentHealth > 0)
+        {
+            if (animator) animator.SetTrigger("getHit");
+            StartCoroutine(HitStunRoutine());
+        }
+        else
         {
             Die();
         }
+    }
+
+    // Hasar alındığında kısa süreli (0.5s) sersemleme efekti yaratır
+    IEnumerator HitStunRoutine()
+    {
+        isGettingHit = true;
+        if (agent.isActiveAndEnabled) agent.isStopped = true;
+        if (animator) animator.SetBool("isRunning", false);
+        
+        // Animasyonun bitmesini bekle (Yaklaşık yarım saniye)
+        yield return new WaitForSeconds(0.5f);
+        
+        isGettingHit = false;
     }
 
     void Die()
@@ -135,7 +166,6 @@ public class GladiatorAI : MonoBehaviour
 
         isDead = true;
         
-        // 1. Savaş dışı bırak
         if (agent.isActiveAndEnabled) 
         {
             agent.isStopped = true;
@@ -143,13 +173,10 @@ public class GladiatorAI : MonoBehaviour
         }
         GetComponent<Collider>().enabled = false; 
 
-        // 2. Animasyon
         if (animator) animator.SetTrigger("Die");
 
-        // --- DEĞİŞEN KISIM: ARTIK KALICI ÖLÜM VAR ---
-        gladiator.currentHealth = 0; // Can sıfırda kalır
-        if (gladiator.healthBar != null) gladiator.healthBar.gameObject.SetActive(false); // Can barını gizle
-        // -------------------------------------------
+        gladiator.currentHealth = 0; 
+        if (gladiator.healthBar != null) gladiator.healthBar.gameObject.SetActive(false); 
 
         if (deathEffectPrefab != null)
         {
@@ -168,10 +195,6 @@ public class GladiatorAI : MonoBehaviour
             NotificationManager.Instance.Show($"{gladiator.data.gladiatorName} öldü", NotificationType.Error);
         }
 
-        // --- YENİ EKLENEN KISIM: CESEDİ SİL VE LİSTEDEN ÇIKAR ---
-        // Askerin birliğinden kalıcı olarak silinmesini sağlayan fonksiyonu çağır (GladiatorRoster gibi bir kodun varsa)
-        // Sonra da objeyi yok et ki kampa geri dönmesin. 
-        // 5 saniye bekle ki ölüm animasyonu izlensin.
         Destroy(gameObject, 5f);
     }
 
@@ -193,10 +216,8 @@ public class GladiatorAI : MonoBehaviour
         target = nearest != null ? nearest.transform : null;
     }
 
-    // --- YENİLENEN KISIM: SAVAŞTAN SAĞ DÖNENLER İÇİN GAZİ SİSTEMİ ---
     public void ReviveForCamp()
     {
-        // Eğer asker öldüyse zaten Destroy edilecek, kod buraya girmesin.
         if (isDead) return;
 
         target = null; 
@@ -214,9 +235,6 @@ public class GladiatorAI : MonoBehaviour
             agent.isStopped = true; 
         }
 
-        // --- GAZİ SİSTEMİ KONTROLÜ ---
-        // Eğer asker savaşa girdiyse, seviyesi 3'ten büyükse ve henüz gazi değilse ona bu onuru ver.
-        // (JanissaryData içine public bool isGazi; eklemen gerekecek)
         if (gladiator.data.level >= 3 && !gladiator.data.isGazi)
         {
             MakeGazi();
@@ -242,7 +260,7 @@ public class GladiatorAI : MonoBehaviour
     {
         while (true)
         {
-            if (isDead) yield break; // Öldüyse döngüyü kır
+            if (isDead) yield break; 
 
             if (gladiator.isOnMission || (training != null && training.IsTraining))
             {
@@ -251,13 +269,19 @@ public class GladiatorAI : MonoBehaviour
                 continue;
             }
 
+            // --- YENİ EKLENEN KISIM: KAMP İÇİ HAREKET ANİMASYONLARI ---
             if (currentPoint != null)
             {
                 if (agent.isActiveAndEnabled && agent.isOnNavMesh) 
                 {
                     if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
                     {
+                        if (animator) animator.SetBool("isRunning", false);
                         activityTimer -= Time.deltaTime;
+                    }
+                    else
+                    {
+                        if (animator) animator.SetBool("isRunning", true);
                     }
                 }   
                 if (activityTimer <= 0)

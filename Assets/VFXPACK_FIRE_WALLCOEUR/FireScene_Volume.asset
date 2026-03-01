@@ -21,7 +21,7 @@ MonoBehaviour:
     m_Value: {x: 0.5, y: 0.5}
   intensity:
     m_OverrideState: 1
-    m_Value: 0.367
+    m_Value: 0.331
   smoothness:
     m_OverrideState: 1
     m_Value: 0.4
@@ -46,10 +46,10 @@ MonoBehaviour:
     m_Value: 1
   threshold:
     m_OverrideState: 1
-    m_Value: 0.8
+    m_Value: 0.62
   intensity:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 2.06
   scatter:
     m_OverrideState: 0
     m_Value: 0.7
@@ -57,8 +57,8 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 65472
   tint:
-    m_OverrideState: 0
-    m_Value: {r: 1, g: 1, b: 1, a: 1}
+    m_OverrideState: 1
+    m_Value: {r: 0.9529412, g: 0.6752447, b: 0.0039215665, a: 1}
   highQualityFiltering:
     m_OverrideState: 0
     m_Value: 0
@@ -90,7 +90,7 @@ MonoBehaviour:
   active: 1
   mode:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 2
   neutralHDRRangeReductionMode:
     m_OverrideState: 0
     m_Value: 2

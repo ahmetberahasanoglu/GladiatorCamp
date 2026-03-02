@@ -12,7 +12,7 @@ public class RavenThief : MonoBehaviour
 
     [Header("Efektler")]
     public GameObject featherPoofEffect;
-    public AudioClip coinClip;
+    //public AudioClip coinClip;
 
     public void SetupFlight(Vector3 startPoint, Vector3 endPoint)
     {
@@ -62,10 +62,8 @@ public class RavenThief : MonoBehaviour
             );
         }
 
-        if (coinClip != null)
-        {
-            AudioSource.PlayClipAtPoint(coinClip, transform.position);
-        }
+       // AudioManager.Instance.PlaySFX(AudioManager.Instance.ravenPoof); // TÜY/ÖLÜM SESİ ÇAL
+        AudioManager.Instance.PlayGold();
 
         if (featherPoofEffect != null)
         {

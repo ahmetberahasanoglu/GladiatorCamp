@@ -59,6 +59,7 @@ public bool isMapOpen = false;
     {
         mapPanel.SetActive(true);
        isMapOpen = true;
+       AudioManager.Instance.PlayPaper();
     }
 
     void DrawAllConnections()

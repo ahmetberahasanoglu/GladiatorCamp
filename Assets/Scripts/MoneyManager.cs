@@ -32,9 +32,13 @@ public class MoneyManager : MonoBehaviour
     }*/
     public bool Spend(int amount)
     {
-        if (gold < amount) return false;
+        if (gold < amount) {
+            AudioManager.Instance.PlayError();
+            return false;
+        }
        // SaveGold();
         gold -= amount;
+        AudioManager.Instance.PlayGold();
         OnGoldChanged?.Invoke(gold);
         return true;
     }

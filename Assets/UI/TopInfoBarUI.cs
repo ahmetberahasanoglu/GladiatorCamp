@@ -78,13 +78,26 @@ public class TopInfoBarUI : MonoBehaviour
 
     void UpdateGold(int gold)
     {
-        if (goldText != null) goldText.text = $"{gold}";
+       if (goldText != null && MoneyManager.Instance != null) 
+        {
+            int current = MoneyManager.Instance.gold;
+            int cost = MoneyManager.Instance.GetExpectedDailyWageCost();
+
+            goldText.text = $"{current} <size=70%><color=#ff6666>(-{cost})</color></size>";
+        }
     }
 
     void UpdateFood()
     {
-        if(SupplyManager.Instance != null && foodText != null)
-            foodText.text = $"{SupplyManager.Instance.currentFood}";
+     if(SupplyManager.Instance != null && foodText != null)
+        {
+            int current = SupplyManager.Instance.currentFood;
+            int cost = SupplyManager.Instance.GetExpectedDailyFoodCost();
+            
+            // Çıktı Örneği: 50 (-3)
+            // Kırmızı ve %70 küçültülmüş font ile gideri yanına ekliyoruz
+            foodText.text = $"{current} <size=70%><color=#ff6666>(-{cost})</color></size>";
+        }
     }
 
     // --- YENİ: ODUN GÜNCELLEMESİ ---
@@ -138,6 +151,10 @@ public class TopInfoBarUI : MonoBehaviour
 
         if (capacityText != null)
             capacityText.text = $"<color={color}>{currentCount} / {maxCap}</color>";
+
+       
+    UpdateFood(); 
+    if (MoneyManager.Instance != null) UpdateGold(MoneyManager.Instance.gold);
     }
 
     public void ForceUpdateAll()

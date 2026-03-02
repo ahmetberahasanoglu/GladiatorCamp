@@ -27,12 +27,19 @@ public class CampRestSystem : MonoBehaviour
         }
     }
 
+   // CampRestSystem.cs içindeki HealIdleSoldiers fonksiyonu
     void HealIdleSoldiers()
     {
-      if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Idle)
+        // 1. Kilit: Savaşta mıyız? Savaşta dinlenme olmaz.
+        if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Idle) return;
+
+        // 2. Kilit: KAMP SOĞUK MU?
+        // Sıcaklık 50'den düşükse askerler üşür ve yaraları iyileşemez!
+        if (CampSurvivalManager.Instance != null && CampSurvivalManager.Instance.currentTemperature < 50)
         {
-            return; 
+            return; // Kod burada durur, aşağıya (şifa kısmına) inmez.
         }
+
         Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
         bool anyoneHealed = false;
 
@@ -40,37 +47,24 @@ public class CampRestSystem : MonoBehaviour
         {
             GladiatorAI ai = soldier.GetComponent<GladiatorAI>();
             
-            // Eğer asker ölü değilse (veya AI'ı yoksa) VE canı maksimumdan azsa
-            if ((ai == null || !ai.isDead) && soldier.currentHealth < soldier.maxHealth)
+            if ((ai == null || !ai.isDead) && soldier.CompareTag("MySoldier") && soldier.currentHealth < soldier.maxHealth)
             {
-                // 1. Şifayı uygula
-                soldier.currentHealth += healAmount;
+                // Şifayı uygula (10 saniyede bir 2 can çok dengelidir)
+                soldier.currentHealth += healAmount; 
                 
-                // 2. Maksimum canı aşmasını engelle
-                if (soldier.currentHealth > soldier.maxHealth) 
-                {
-                    soldier.currentHealth = soldier.maxHealth;
-                }
+                if (soldier.currentHealth > soldier.maxHealth) soldier.currentHealth = soldier.maxHealth;
 
-                // 3. UI Barını Güncelle (Senin DayManager'da kullandığın kodun aynısı!)
-                if (soldier.healthBar != null)
-                {
-                    soldier.healthBar.UpdateBar(soldier.currentHealth, soldier.maxHealth);
-                }
+                if (soldier.healthBar != null) soldier.healthBar.UpdateBar(soldier.currentHealth, soldier.maxHealth);
 
                 anyoneHealed = true;
 
-                // 4. Şifa Efekti (Yeşil Artı)
+                // Yeşil Artı Efekti
                 if (healParticlePrefab != null)
                 {
-                    // Askerin boyundan biraz yüksekte (Vector3.up * 2f) efekti yarat
                     GameObject fx = Instantiate(healParticlePrefab, soldier.transform.position + Vector3.up * 2f, Quaternion.identity);
-                    Destroy(fx, 1.5f); // Çöpe dönüşmesin diye 1.5 sn sonra sil
+                    Destroy(fx, 1.5f); 
                 }
             }
         }
-
-        // Opsiyonel: Biri iyileştiyse kampa ufak bir şifa sesi veya rüzgar sesi çalınabilir
-        // if (anyoneHealed && audioSource != null) audioSource.Play();
     }
 }

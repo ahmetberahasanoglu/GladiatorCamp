@@ -38,7 +38,7 @@ public class DayManager : MonoBehaviour
         HealAllSoldiers(20 * amount);
         // NotificationManager.Instance.Show($"Gün bitti. Yeni Gün: {currentDay}", NotificationType.Success);
         CheckForRandomEvent();
-        CheckForUlufe();
+        //CheckForUlufe();
       //  SaveManager.Instance.SaveGame();//Autosave ekledik
         MoneyManager.Instance.EndOfDay();   
         if (currentDay >= maxDays)
@@ -99,15 +99,7 @@ public class DayManager : MonoBehaviour
         Debug.Log($"OLAY VAR: {e.title}");
     }
 
-    void CheckForUlufe()
-    {
-        // Osmanlı'da Ulufe 3 ayda bir dağıtılırdı
-        if (currentDay % 90 == 0)
-        {
-            Debug.Log("ULUFE GÜNÜ GELDİ!");
-            // Buraya özel bir Ulufe Eventi tetiklyicez
-        }
-    }
+    
     public void RefreshUI()
     {
         // Mevcut günü UI'a zorla gönder

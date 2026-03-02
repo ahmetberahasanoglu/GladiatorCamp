@@ -78,28 +78,35 @@ public class CampSurvivalManager : MonoBehaviour
     }
 
     // Odun yakarak kampı ısıt
-    public void StokeFire()
+    // Odun yakarak kampı ısıt ve anlık bonus ver
+   // Odun yakarak kampı ısıt (CampSurvivalManager.cs içindeki StokeFire fonksiyonu)
+    public bool StokeFire() 
     {
-        // Önce odun var mı kontrol et
         if (ResourceManager.Instance.SpendWood(maxWoodPerClick))
         {
+            // Sıcaklığı artır
             int warmthGained = maxWoodPerClick * warmthPerWood;
             currentTemperature += warmthGained;
-            
-            if (currentTemperature > 100) currentTemperature = 100; // Sıcaktan da ölmeyelim
+            if (currentTemperature > 100) currentTemperature = 100; 
             
             OnTemperatureChanged?.Invoke();
             
+            // Sadece ufak bir moral ver (Can basmayı CampRestSystem'e bıraktık)
+            if (CampMoraleManager.Instance != null) 
+                CampMoraleManager.Instance.ChangeMorale(1); 
+            
             if (NotificationManager.Instance != null)
-                NotificationManager.Instance.Show($"Ateş harlandı! Sıcaklık arttı (+{warmthGained})", NotificationType.Success);
+                NotificationManager.Instance.Show($"Ateş harlandı! Kamp ısındı (+{warmthGained}°C).", NotificationType.Success);
+            
+            return true;
         }
         else
         {
             if (NotificationManager.Instance != null)
                 NotificationManager.Instance.Show("Ateşe atacak yeterli Odun yok!", NotificationType.Error);
+            return false;
         }
     }
-
     // Sıcaklık çok düşerse ne olacak? (Moral düşüşü / Hastalık)
     void CheckSurvivalStatus()
     {

@@ -45,7 +45,7 @@ public class AseviUI : MonoBehaviour
 
         // Bilgilendirme: Oyuncuya kaç askeri olduğunu ve ne kadar yediklerini hatırlat
         int soldierCount = FindObjectsOfType<Gladiator>().Length;
-        int dailyCost = soldierCount * SupplyManager.Instance.foodPerSoldier;
+        int dailyCost = soldierCount * SupplyManager.Instance.baseFoodPerSoldier;
         
         if(food < dailyCost)
             infoText.text = $"<color=red>DİKKAT: Yarına yetecek yemek yok!\nGünlük Tüketim: {dailyCost}</color>";

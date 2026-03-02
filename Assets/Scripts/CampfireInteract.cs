@@ -1,71 +1,84 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using System.Collections;
 
 public class CampfireInteract : MonoBehaviour
 {
     [Header("Ateş Ayarları")]
     public ParticleSystem sparksParticle; 
     public AudioSource flareSound;        
+    
+    // YENİ: İstersen ateşi söndürürken "tıss" diye çıkan bir ses ekleyebilirsin
+    // public AudioSource extinguishSound; 
 
-    private bool isSparking = true; // İlk açılışta yanıyor kabul edelim
-
-    void OnMouseDown()
-    {
-        if (EventSystem.current.IsPointerOverGameObject()) return;
-        
-        // Eğer zaten çok gür yanıyorsa oyuncu boşuna odun israf etmesin
-        if (isSparking)
-        {
-            if (NotificationManager.Instance != null)
-                NotificationManager.Instance.Show("Ateş zaten gür yanıyor. Daha fazla harlamaya gerek yok.", NotificationType.Info);
-            return;
-        }
-
-        // Ateşi harlamayı dene (CampSurvivalManager içinde odun kesilecek)
-        if (CampSurvivalManager.Instance != null)
-        {
-            // Eğer odun yoksa `StokeFire` zaten hata mesajı verecek ve aşağısı çalışmayacak.
-            // Ama biz sonucu bilmek için küçük bir numara yapacağız.
-            int oldTemp = CampSurvivalManager.Instance.currentTemperature;
-            CampSurvivalManager.Instance.StokeFire();
-            
-            // Sıcaklık arttıysa demek ki odun başarıyla harcanmış
-            if (CampSurvivalManager.Instance.currentTemperature > oldTemp)
-            {
-                FlareRoutine();
-            }
-        }
-    }
-
-    void FlareRoutine()
-    {
-        // Ateşi canlandır
-        sparksParticle.Play();
-        isSparking = true;
-        if (flareSound != null) flareSound.Play();
-    }
+    private bool isSparking = true; // Oyun başladığında ateş yanıyor kabul ediyoruz
+    private bool isOnCooldown = false; // Spam tıklamayı engellemek için
 
     void Start()
     {
-        // DayManager'a abone olup, her gün ateşi SÖNDÜRECEĞİZ ki oyuncu ertesi gün tekrar yaksın
-        if (DayManager.Instance != null)
-        {
-            DayManager.Instance.OnNewDay += DimFire;
-        }
+        // Gün dönümünde ateşi söndüren event
+        if (DayManager.Instance != null) DayManager.Instance.OnNewDay += DimFire;
+
+        // Oyun başlarken ateşin görselini durumuna göre ayarla
+        if (isSparking && sparksParticle != null) sparksParticle.Play();
     }
 
     void OnDestroy()
     {
-        if (DayManager.Instance != null)
+        if (DayManager.Instance != null) DayManager.Instance.OnNewDay -= DimFire;
+    }
+
+    void OnMouseDown()
+    {
+        // UI'a tıklanıyorsa veya tıklama bekleme süresindeyse (cooldown) işlem yapma
+        if (EventSystem.current.IsPointerOverGameObject() || isOnCooldown) return;
+
+        StartCoroutine(ToggleFireRoutine());
+    }
+
+    IEnumerator ToggleFireRoutine()
+    {
+        isOnCooldown = true;
+
+        if (isSparking)
         {
-            DayManager.Instance.OnNewDay -= DimFire;
+            // --- ATEŞ YANIYORDU, OYUNCU TIKLAYIP SÖNDÜRDÜ ---
+            isSparking = false;
+            
+            if (sparksParticle != null) sparksParticle.Stop();
+            // if (extinguishSound != null) extinguishSound.Play();
+
+            if (NotificationManager.Instance != null)
+                NotificationManager.Instance.Show("Ateşi söndürdün. Kamp soğumaya başlayacak.", NotificationType.Warning);
         }
+        else
+        {
+            // --- ATEŞ SÖNÜKTÜ, OYUNCU YAKMAYA ÇALIŞIYOR ---
+            if (CampSurvivalManager.Instance != null)
+            {
+                // StokeFire fonksiyonu zaten odun harcama, sıcaklık artırma ve moral verme işini yapıyor
+                bool isSuccess = CampSurvivalManager.Instance.StokeFire(); 
+                
+                if (isSuccess)
+                {
+                    isSparking = true;
+                    if (sparksParticle != null) sparksParticle.Play();
+                    if (flareSound != null) flareSound.Play();
+                }
+            }
+        }
+
+        // Tıklamalar arasına yarım saniyelik çok kısa bir bekleme koyuyoruz ki bug oluşmasın
+        yield return new WaitForSeconds(0.5f); 
+        isOnCooldown = false;
     }
 
     void DimFire()
     {
-        // Gün dönünce ateş görsel olarak cılızlaşsın
-        sparksParticle.Stop();
-        isSparking = false;
+        if (sparksParticle != null)
+        {
+            sparksParticle.Stop();
+            isSparking = false;
+        }
     }
 }

@@ -6,11 +6,10 @@ public class SupplyManager : MonoBehaviour
     public static SupplyManager Instance;
 
     [Header("Erzak Durumu")]
-    public int currentFood = 50;   // Başlangıç erzağı
-    public int foodCost = 5;       // 1 birim yemek kaç akçe?
-    public int foodPerSoldier = 1; // Her asker günde kaç birim yer?
+    public int currentFood = 50;   
+    public int foodCost = 5;       
+    public int baseFoodPerSoldier = 1; // Seviye 1 askerin yediği miktar
 
-    // UI güncellemeleri için event
     public event System.Action OnFoodChanged;
 
     void Awake()
@@ -20,11 +19,10 @@ public class SupplyManager : MonoBehaviour
 
     void Start()
     {
-        // Gün döngüsüne abone ol
         if (DayManager.Instance != null)
             DayManager.Instance.OnNewDay += ConsumeDailyFood;
         
-        UpdateUI(); // Başlangıçta UI'ı tetikle
+        UpdateUI(); 
     }
 
     void OnDestroy()
@@ -33,60 +31,67 @@ public class SupplyManager : MonoBehaviour
             DayManager.Instance.OnNewDay -= ConsumeDailyFood;
     }
 
-    // HER GÜN ÇALIŞACAK OLAN FONKSİYON
+    // --- YENİ: GİDER HESAPLAYICI (UI DA BUNU KULLANACAK) ---
+    public int GetExpectedDailyFoodCost()
+    {
+        int totalFoodNeeded = 0;
+        Gladiator[] soldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
+
+        foreach (var soldier in soldiers)
+        {
+            GladiatorAI ai = soldier.GetComponent<GladiatorAI>();
+            // Sadece bizim askerimizse ve hayattaysa hesapla
+            if (soldier.CompareTag("MySoldier") && (ai == null || !ai.isDead))
+            {
+                int lvl = (soldier.data != null) ? soldier.data.level : 1;
+                // Formül: Askerin seviyesi kadar yemek yer (Lvl 1 = 1 erzak, Lvl 5 = 5 erzak)
+                totalFoodNeeded += (baseFoodPerSoldier * lvl); 
+            }
+        }
+        return totalFoodNeeded;
+    }
+
     void ConsumeDailyFood()
     {
-        // 1. Sahnedeki askerleri say (Sadece bizimkileri)
-        // (İleride düşmanlar olursa tag kontrolü eklersin)
-        Gladiator[] soldiers = FindObjectsOfType<Gladiator>();
-        int soldierCount = soldiers.Length;
+        int neededFood = GetExpectedDailyFoodCost();
 
-        if (soldierCount == 0) return; // Asker yoksa yemek gitmez
-
-        int neededFood = soldierCount * foodPerSoldier;
+        if (neededFood == 0) return; // Asker yoksa yemek gitmez
 
         if (currentFood >= neededFood)
         {
-            // Durum İYİ: Herkes doydu
             currentFood -= neededFood;
-            NotificationManager.Instance.Show($"Bugün {neededFood} birim erzak tüketildi.", NotificationType.Info);
+            if (NotificationManager.Instance != null)
+                NotificationManager.Instance.Show($"Bugün {neededFood} birim erzak tüketildi.", NotificationType.Info);
         }
         else
         {
-            // Durum KÖTÜ: Yemek yetmedi!
-            currentFood = 0; // Kalan kırıntıları da yerler
-             NotificationManager.Instance.Show("<color=red>ERZAK BİTTİ! Askerler huzursuz!</color>", NotificationType.Warning);
+            currentFood = 0; 
+            if (NotificationManager.Instance != null)
+                NotificationManager.Instance.Show("<color=red>ERZAK BİTTİ! Askerler açlıktan bitkin düştü!</color>", NotificationType.Warning);
 
-
-            /* CEZA: Herkesin morali düşer
-            foreach (var soldier in soldiers)
-            {
-                soldier.DecreaseMorale(10); // Her gün 10 moral kaybı
-            }*/
+            // Opsiyonel Ceza (İleride açarsın): CampMoraleManager.Instance.ChangeMorale(-10);
         }
 
         UpdateUI();
     }
 
-    // Marketten Yemek Alma Fonksiyonu
     public void BuyFood(int amount)
     {
         int totalCost = amount * foodCost;
-
         if (MoneyManager.Instance.gold >= totalCost)
         {
             MoneyManager.Instance.Spend(totalCost);
             currentFood += amount;
-            NotificationManager.Instance.Show($"{amount} birim erzak alındı.", NotificationType.Info);
+            if (NotificationManager.Instance != null) NotificationManager.Instance.Show($"{amount} birim erzak alındı.", NotificationType.Info);
             UpdateUI();
         }
         else
         {
-            NotificationManager.Instance.Show("Yemek için yeterli akçe yok!", NotificationType.Error);
+            if (NotificationManager.Instance != null) NotificationManager.Instance.Show("Yemek için yeterli akçe yok!", NotificationType.Error);
         }
     }
 
-    private void UpdateUI()
+    public void UpdateUI() // UI'ı dışarıdan (Ordu değiştiğinde) tetiklemek için public yaptık
     {
         OnFoodChanged?.Invoke();
     }

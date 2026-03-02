@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MissionData
   missionName: "Terk Edilmi\u015F Maden"
   description: "Terk edilmi\u015F madende alt\u0131n arama g\xF6revi"
-  difficulty: 10
-  durationDays: 50
+  difficulty: 30
+  durationDays: 20
   goldReward: 400
+  woodReward: 0

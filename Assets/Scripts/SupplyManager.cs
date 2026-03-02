@@ -8,7 +8,7 @@ public class SupplyManager : MonoBehaviour
     [Header("Erzak Durumu")]
     public int currentFood = 50;   
     public int foodCost = 5;       
-    public int baseFoodPerSoldier = 1; // Seviye 1 askerin yediği miktar
+    public int baseFoodPerSoldier = 1; 
 
     public event System.Action OnFoodChanged;
 
@@ -19,19 +19,10 @@ public class SupplyManager : MonoBehaviour
 
     void Start()
     {
-        if (DayManager.Instance != null)
-            DayManager.Instance.OnNewDay += ConsumeDailyFood;
-        
+        // Event aboneliklerini sildik! Artık DayManager bizi doğrudan çağıracak.
         UpdateUI(); 
     }
 
-    void OnDestroy()
-    {
-        if (DayManager.Instance != null)
-            DayManager.Instance.OnNewDay -= ConsumeDailyFood;
-    }
-
-    // --- YENİ: GİDER HESAPLAYICI (UI DA BUNU KULLANACAK) ---
     public int GetExpectedDailyFoodCost()
     {
         int totalFoodNeeded = 0;
@@ -40,36 +31,36 @@ public class SupplyManager : MonoBehaviour
         foreach (var soldier in soldiers)
         {
             GladiatorAI ai = soldier.GetComponent<GladiatorAI>();
-            // Sadece bizim askerimizse ve hayattaysa hesapla
             if (soldier.CompareTag("MySoldier") && (ai == null || !ai.isDead))
             {
                 int lvl = (soldier.data != null) ? soldier.data.level : 1;
-                // Formül: Askerin seviyesi kadar yemek yer (Lvl 1 = 1 erzak, Lvl 5 = 5 erzak)
                 totalFoodNeeded += (baseFoodPerSoldier * lvl); 
             }
         }
         return totalFoodNeeded;
     }
 
-    void ConsumeDailyFood()
+    // YENİ: public yaptık ve hesaplamayı daysPassed ile çarptık
+    public void ConsumeDailyFood(int daysPassed)
     {
-        int neededFood = GetExpectedDailyFoodCost();
+        int dailyNeededFood = GetExpectedDailyFoodCost();
+        int totalNeededFood = dailyNeededFood * daysPassed;
 
-        if (neededFood == 0) return; // Asker yoksa yemek gitmez
+        if (totalNeededFood == 0) return; 
 
-        if (currentFood >= neededFood)
+        if (currentFood >= totalNeededFood)
         {
-            currentFood -= neededFood;
+            currentFood -= totalNeededFood;
             if (NotificationManager.Instance != null)
-                NotificationManager.Instance.Show($"Bugün {neededFood} birim erzak tüketildi.", NotificationType.Info);
+                NotificationManager.Instance.Show($"{daysPassed} günde toplam {totalNeededFood} birim erzak tüketildi.", NotificationType.Info);
         }
         else
         {
             currentFood = 0; 
             if (NotificationManager.Instance != null)
-                NotificationManager.Instance.Show("<color=red>ERZAK BİTTİ! Askerler açlıktan bitkin düştü!</color>", NotificationType.Warning);
+                NotificationManager.Instance.Show($"<color=red>ERZAK BİTTİ!</color> {daysPassed} günlük erzak yetmedi, askerler açlıktan bitkin düştü!", NotificationType.Warning);
 
-            // Opsiyonel Ceza (İleride açarsın): CampMoraleManager.Instance.ChangeMorale(-10);
+            if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-10);
         }
 
         UpdateUI();
@@ -91,7 +82,7 @@ public class SupplyManager : MonoBehaviour
         }
     }
 
-    public void UpdateUI() // UI'ı dışarıdan (Ordu değiştiğinde) tetiklemek için public yaptık
+    public void UpdateUI() 
     {
         OnFoodChanged?.Invoke();
     }

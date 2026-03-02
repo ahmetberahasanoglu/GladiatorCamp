@@ -16,4 +16,5 @@ MonoBehaviour:
   description: deniz seferi
   difficulty: 10
   durationDays: 20
-  goldReward: 300
+  goldReward: 100
+  woodReward: 300

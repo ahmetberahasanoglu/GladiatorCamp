@@ -28,24 +28,30 @@ public class DayManager : MonoBehaviour
     }
 
 
-    public void NextDay(int amount)
+   public void NextDay(int amount)
     {
-        currentDay+=amount;
+        currentDay += amount;
         
-        // Bir şeyler eklenebilir (Yemek yensin, askerler iyileşsin vs.)
         OnNewDay?.Invoke();
         OnDayChanged?.Invoke(currentDay);
         HealAllSoldiers(20 * amount);
-        // NotificationManager.Instance.Show($"Gün bitti. Yeni Gün: {currentDay}", NotificationType.Success);
+        
         CheckForRandomEvent();
-        //CheckForUlufe();
-      //  SaveManager.Instance.SaveGame();//Autosave ekledik
-        MoneyManager.Instance.EndOfDay();   
+        
+        // 1. Önce işçiler çalışıp parayı getirsin
+        if (WorkplaceManager.Instance != null) WorkplaceManager.Instance.EndOfDayPayment(amount);
+        
+        // 2. Sonra maaşlar kesilsin (İşçilerin getirdiği para belki maaşları kurtarır!)
+        if (MoneyManager.Instance != null) MoneyManager.Instance.EndOfDay(amount); 
+        
+        // 3. En son askerler yemeklerini yesin
+        if (SupplyManager.Instance != null) SupplyManager.Instance.ConsumeDailyFood(amount);
+        // --------------------------------------------------------------
+
         if (currentDay >= maxDays)
         {
             Debug.Log("KIŞ GELDİ! OYUN BİTTİ.");
             OnWinterArrived?.Invoke();
-            // GameOverManager.Instance.TriggerWinterDefeat();
         }
     }
     public void HealAllSoldiers(int percentageAmount)

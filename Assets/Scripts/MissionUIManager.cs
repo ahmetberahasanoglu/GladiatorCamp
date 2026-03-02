@@ -64,20 +64,30 @@ public class MissionUIManager : MonoBehaviour
         UpdateWinChance();
     }
 
-    void RefreshSoldierList()
+   void RefreshSoldierList()
     {
         foreach (Transform child in soldierListParent) Destroy(child.gameObject);
 
-        var allGladiators = FindObjectsOfType<Gladiator>();
+        var allGladiators = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
 
         foreach (var glad in allGladiators)
         {
-            // FİLTRE: Eğer asker meşgulse (Seferde veya Eğitimde) listeye ekleme!
+            // Sadece bizim askerimiz olanları kontrol et
+            if (!glad.CompareTag("MySoldier")) continue;
+
+            // 1. Asker zaten seferdeyse ekleme
             if (!glad.IsAvailable) continue;
 
+            // --- YENİ EKLENEN: ÇALIŞANLARI VE YARALILARI FİLTRELE ---
+            // 2. Asker çalışıyorsa ekleme
+            if (glad.data != null && glad.data.currentActivity == SoldierActivity.Working) continue;
+
+            // İsteğe Bağlı: Canı 0 olan ölüleri/baygınları göreve yollayamasın
+            GladiatorAI ai = glad.GetComponent<GladiatorAI>();
+            if (ai != null && ai.isDead) continue;
+            // ---------------------------------------------------------
+
             var slot = Instantiate(soldierSlotPrefab, soldierListParent);
-            
-            // Setup'a artık Component gönderiyoruz
             slot.Setup(glad, OnSoldierToggled);
         }
     }
@@ -103,6 +113,7 @@ public class MissionUIManager : MonoBehaviour
         int percentage = Mathf.Clamp(Mathf.RoundToInt(ratio * 50), 0, 100);
 
         winChanceText.text = $"Ordu Gücü: {totalPower} / {_selectedMission.difficulty}\nKazanma Şansı: %{percentage}";
+        
         startButton.interactable = _selectedSquad.Count > 0;
     }
 

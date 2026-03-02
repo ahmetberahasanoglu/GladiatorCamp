@@ -28,7 +28,7 @@ public class MapEventManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        if (eventPanel != null) eventPanel.SetActive(false); // Başlangıçta kapalı
+        if (eventPanel != null) eventPanel.SetActive(false); 
     }
 
     // MapManager'dan çağrılacak fonksiyon
@@ -301,30 +301,49 @@ public class MapEventManager : MonoBehaviour
             // Eğer askerin datası varsa ve canı 0'dan büyükse (yaşıyorsa)
             if (soldier.data != null && soldier.data.currentHealth > 0)
             {
-                return true; // Savaşa girebiliriz!
+                return GetAvailableSoldierCount() > 0;
             }
         }
         
         return false; // Kimse hayatta değil
     }
-    void SetupBattleEvent()
+   void SetupBattleEvent()
     {
         titleText.text = "Çapulcu Pusu";
         descText.text = "Yol kesen eşkıyalar! Savaşmak 3 gün sürecek ama ganimetleri iyi görünüyor.";
         if(battleSprite != null) eventImage.sprite = battleSprite;
+        
+        int readySoldiers = GetAvailableSoldierCount();
+    
+        if (readySoldiers == 0)
+        {
+            descText.text += "\n\n<color=red>SAVAŞA HAZIR ASKER YOK!</color>\nHerkes görevde, çalışıyor veya yaralı.";
+            // Not: CreateButton kısmındaki "Saldır" butonunu devre dışı bırakmalıyız.
+        }
+        else
+        {
+            descText.text += $"\n\nSavaşa Hazır Kılıç: <color=green>{readySoldiers}</color>";
+        }
 
-        CreateButton("Saldır (3 Gün Sürer)", () => {
-            if (!HasAliveSoldiers())
-            {
-                if (NotificationManager.Instance != null)
-                    NotificationManager.Instance.Show("Savaşa sokacak hiç askerin yok! Kampa dönmelisin.", NotificationType.Error);
-                return; 
-            }
-            DayManager.Instance.NextDay(3); 
-            ClosePanel();
-            BattleManager.Instance.StartBattle(3, 1); //kac kisilik savaş.
-        });
+        // Saldır Butonu (Eğer asker yoksa basılamaz)
+        GameObject atkBtnObj = Instantiate(buttonPrefab, buttonContainer);
+        atkBtnObj.GetComponentInChildren<TextMeshProUGUI>().text = "Saldır (3 Gün Sürer)";
+        Button atkBtn = atkBtnObj.GetComponent<Button>();
+        
+        if (readySoldiers == 0)
+        {
+            atkBtn.interactable = false; // Asker yoksa tuş sönük kalır!
+        }
+        else
+        {
+            atkBtn.onClick.AddListener(() => {
+                DayManager.Instance.NextDay(3); 
+                ClosePanel();
+                BattleManager.Instance.StartBattle(3, 1); 
+            });
+        }
 
+        // Kaçma Butonu (Her zaman basılabilir)
         CreateButton("Etrafından Dolaş (5 Gün Kaybet)", () => {
             DayManager.Instance.NextDay(5);
             NotificationManager.Instance.Show("Güvenli ama uzun yolu seçtin.", NotificationType.Info);
@@ -386,7 +405,35 @@ public class MapEventManager : MonoBehaviour
     // --------------------------------------------------------
     // YARDIMCI FONKSİYONLAR
     // --------------------------------------------------------
+    // Savaşa girebilecek durumdaki (Boşta, kampta, hayatta olan) askerleri sayar
+    public int GetAvailableSoldierCount()
+    {
+        Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
+        int availableCount = 0;
 
+        foreach (var glad in allSoldiers)
+        {
+            GladiatorAI ai = glad.GetComponent<GladiatorAI>();
+            
+            // 1. Bizim askerimiz mi ve hayatta mı?
+            if (glad.CompareTag("MySoldier") && (ai == null || !ai.isDead))
+            {
+                // 2. KESİN KONTROL: Görevde değil (isOnMission) VE İşte çalışmıyor (Activity != Working) olmalı
+                bool isWorking = (glad.data != null && glad.data.currentActivity == SoldierActivity.Working);
+                bool isOnMission = glad.isOnMission;
+
+                // Eğer asker görevde değilse ve işte çalışmıyorsa savaşa hazır demektir
+                if (!isOnMission && !isWorking)
+                {
+                    availableCount++;
+                }
+            }
+        }
+        
+        return availableCount;
+    }
+
+ 
     void CreateButton(string text, UnityEngine.Events.UnityAction action)
     {
         GameObject btnObj = Instantiate(buttonPrefab, buttonContainer);

@@ -64,32 +64,34 @@ public class MoneyManager : MonoBehaviour
     }
 
     // --- DEĞİŞEN KISIM BURASI ---
-    public void EndOfDay()
+   // Artık içine kaç gün geçtiğini alıyor (Varsayılan olarak 1)
+    public void EndOfDay(int daysPassed = 1)
     {
-        // 1. Ödememiz gereken toplam maaşı hesapla
-        int wageToPay = GetExpectedDailyWageCost();
+        // 1. Ödememiz gereken toplam maaşı hesapla ve GEÇEN GÜN İLE ÇARP
+        int dailyWage = GetExpectedDailyWageCost();
+        int totalWageToPay = dailyWage * daysPassed;
 
-        if (wageToPay == 0) return; // Asker yoksa dert de yok
+        if (totalWageToPay == 0) return; // Asker yoksa dert de yok
 
         // 2. KONTROL: KASADA YETERLİ PARA VAR MI?
-        if (gold >= wageToPay)
+        if (gold >= totalWageToPay)
         {
             // --- DURUM İYİ: MAAŞLAR ÖDENDİ ---
-            gold -= wageToPay;
+            gold -= totalWageToPay;
             
             if (NotificationManager.Instance != null)
             {
-                NotificationManager.Instance.Show($"Gün sonu: Askerlere {wageToPay} Akçe ulufe ödendi.", NotificationType.Info);
+                NotificationManager.Instance.Show($"Gün sonu: Askerlere {daysPassed} günlük toplam {totalWageToPay} Akçe ulufe ödendi.", NotificationType.Info);
             }
         }
         else
         {
-            // --- DURUM KÖTÜ: PARA YETMEDİ (İSYAN / MORAL DÜŞÜŞÜ) ---
-            gold = 0; // Kasadaki son kırıntıları da alırlar
+            // --- DURUM KÖTÜ: PARA YETMEDİ ---
+            gold = 0; 
             
             if (NotificationManager.Instance != null)
             {
-                NotificationManager.Instance.Show("<color=red>KASADA PARA YOK!</color> Ulufe ödenemedi, ordu isyankar!", NotificationType.Warning);
+                NotificationManager.Instance.Show($"<color=red>KASADA PARA YOK!</color> {daysPassed} günlük ulufe ödenemedi, ordu isyankar!", NotificationType.Warning);
             }
 
             // Asıl ceza: Moralleri ciddi şekilde düşür!

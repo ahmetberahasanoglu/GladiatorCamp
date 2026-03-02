@@ -52,27 +52,30 @@ public class GladiatorPanel : MonoBehaviour
         
         JanissaryData data = _currentGladiator.data;
         
-        // --- 1. GAZİ ÜNVANI (Daha parlak altın sarısı) ---
         string gaziTitle = data.isGazi ? "<color=#FFD700>[GAZİ]</color> " : "";
 
-        // --- 2. CAN GÖSTERİMİ VE RENKLENDİRME ---
         int currentHp = Mathf.RoundToInt(_currentGladiator.currentHealth);
         int maxHp = Mathf.RoundToInt(_currentGladiator.maxHealth);
         
-        string hpColor = "green"; // Varsayılan sağlıklı
-        if (currentHp < maxHp * 0.3f) hpColor = "red";        // %30 altı (Ağır yaralı)
-        else if (currentHp < maxHp * 0.7f) hpColor = "orange"; // %70 altı (Hafif yaralı)
+        string hpColor = "green"; 
+        if (currentHp < maxHp * 0.3f) hpColor = "red";        
+        else if (currentHp < maxHp * 0.7f) hpColor = "orange"; 
 
-        // --- 3. MEŞGULİYET (DURUM) KONTROLÜ ---
+        // --- 3. MEŞGULİYET (DURUM) KONTROLÜ (GÜNCELLENDİ) ---
         string statusText = "<color=white>Boşta</color>";
         
         if (_currentGladiator.isOnMission) 
         {
             statusText = "<color=red>Seferde</color>";
         }
+        // --- YENİ EKLENEN: ÇALIŞMA KONTROLÜ ---
+        else if (data != null && data.currentActivity == SoldierActivity.Working)
+        {
+            statusText = "<color=red>Çalışıyor</color>"; // Kahverengi/Turuncu tonu
+        }
+        // --------------------------------------
         else 
         {
-            // Eğitim ve Şifa scriptlerine bakarak ne yaptığını anlıyoruz
             var training = _currentGladiator.GetComponent<GladiatorTraining>();
             var healing = _currentGladiator.GetComponent<GladiatorHealing>();
             
@@ -84,13 +87,11 @@ public class GladiatorPanel : MonoBehaviour
 
         // --- 4. YAZIYI OLUŞTURMA ---
         infoText.text =
-          //{data.gladiatorName}
             $"DURUM: {statusText}\n" +
             $"CAN: <color={hpColor}>{currentHp} / {maxHp}</color>\n" +
-           // "-----------------\n" +
             $"STR: {data.strength}\n" +
             $"DEF: {data.defense}\n" +
-            $"SPD: {data.speed}\n" +// $"MOR: {data.morale}\n" +
+            $"SPD: {data.speed}\n" +
             $"STA: {data.stamina}\n" +
             $"Seviye: {data.level}"+  $"<size=120%>{gaziTitle}</size>" ;
     }

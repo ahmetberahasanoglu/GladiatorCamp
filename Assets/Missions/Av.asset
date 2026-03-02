@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MissionData
   missionName: 
   description: "Geyik t\xFCr\xFCn\xFC avlamakla ilgili birka\xE7 \u015Fey"
-  difficulty: 200
-  durationDays: 1
-  goldReward: 5000
+  difficulty: 30
+  durationDays: 10
+  goldReward: 500
+  woodReward: 0

@@ -40,7 +40,8 @@ public class CardTable : MonoBehaviour
     }
 
     void OnMouseDown()
-    {
+    {   
+        if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
         if (CenkGameManager.Instance != null)
         {
             // 1. KONTROL: Bugün oynanmış mı?

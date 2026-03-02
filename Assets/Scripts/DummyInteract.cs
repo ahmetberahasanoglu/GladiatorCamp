@@ -22,7 +22,7 @@ public class DummyInteract : MonoBehaviour
     void OnMouseDown()
     {
         if (EventSystem.current.IsPointerOverGameObject()) return;
-        
+        if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
         if (!isHit) StartCoroutine(WobbleRoutine());
     }
 

@@ -49,7 +49,8 @@ public class TrainingArea3D : MonoBehaviour
 
     // Fareyle objeye TIKLANDIĞINDA çalışır
     void OnMouseDown()
-    {
+    {   
+        if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
         // KONTROL: Paramız yetiyor mu?
         if (MoneyManager.Instance.gold >= cost)
         {

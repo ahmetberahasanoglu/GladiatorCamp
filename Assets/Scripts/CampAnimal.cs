@@ -77,7 +77,7 @@ public class CampAnimal : MonoBehaviour
     // Fareyle hayvana tıklandığında
     void OnMouseDown()
     {   
-       
+        if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
         if (EventSystem.current.IsPointerOverGameObject()) return;
         barkSound.Play();
         // Hayvanı sevme süresi gelmiş mi?

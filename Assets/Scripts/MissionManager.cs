@@ -108,7 +108,12 @@ public class MissionManager : MonoBehaviour
         MissionResultUI popup = Instantiate(resultPopupPrefab, canvasParent);
         popup.Setup(success, mission.originalData);
 
-        if (success) MoneyManager.Instance.Add(mission.originalData.goldReward);
+        if (success) 
+{
+    MoneyManager.Instance.Add(mission.originalData.goldReward);
+   // ResourceManager.Instance.AddWood(mission.originalData.woodReward); // YENİ
+   // NotificationManager.Instance.Show($"Keşif Başarılı! +{mission.originalData.goldReward} Altın, +{mission.originalData.woodReward} Odun", NotificationType.Success);
+}
     }
 
     [System.Serializable]

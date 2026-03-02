@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0773f154cffb1f4cb00e63ae3701dea, type: 3}
-  m_Name: Viyana
+  m_Name: Odun kesimi
   m_EditorClassIdentifier: Assembly-CSharp::MissionData
-  missionName: Viyana
-  description: Viyana herkesin hayali
-  difficulty: 200
-  durationDays: 1
-  goldReward: 5000
+  missionName: Kara Ormanda Odun Kesimi
+  description: deniz seferi
+  difficulty: 10
+  durationDays: 20
+  goldReward: 300

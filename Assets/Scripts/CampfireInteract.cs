@@ -9,7 +9,7 @@ public class CampfireInteract : MonoBehaviour
     public AudioSource flareSound;        
     
     // YENİ: İstersen ateşi söndürürken "tıss" diye çıkan bir ses ekleyebilirsin
-    // public AudioSource extinguishSound; 
+   public AudioClip extinguishSound; 
 
     private bool isSparking = true; // Oyun başladığında ateş yanıyor kabul ediyoruz
     private bool isOnCooldown = false; // Spam tıklamayı engellemek için
@@ -46,7 +46,7 @@ public class CampfireInteract : MonoBehaviour
             isSparking = false;
             
             if (sparksParticle != null) sparksParticle.Stop();
-            // if (extinguishSound != null) extinguishSound.Play();
+            if (extinguishSound != null) AudioSource.PlayClipAtPoint(extinguishSound, transform.position);
 
             if (NotificationManager.Instance != null)
                 NotificationManager.Instance.Show("Ateşi söndürdün. Kamp soğumaya başlayacak.", NotificationType.Warning);

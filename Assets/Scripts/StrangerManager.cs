@@ -1,48 +1,62 @@
 using UnityEngine;
-using System.Collections;
 
 public class StrangerManager : MonoBehaviour
 {
     [Header("Ayarlar")]
-    public GameObject strangerPrefab; // Gelen kişinin modeli
-    public Transform spawnAndExitPoint; // Kampın kapısı (Giriş/Çıkış)
-    public Transform campWaitPoint;     // Gelip ortada duracağı nokta
+    public GameObject strangerPrefab; 
+    public Transform spawnAndExitPoint; 
+    public Transform campWaitPoint;     
 
     [Header("Zamanlama (Gerçek Zaman)")]
-    public float minSpawnTime = 60f; // En az 1 dakikada bir
-    public float maxSpawnTime = 120f; // En çok 2 dakikada bir
+    public float minSpawnTime = 60f; 
+    public float maxSpawnTime = 120f; 
 
     private GameObject currentStranger;
+    
+    // YENİ: Süreyi artık Update içinde biz kontrol ediyoruz
+    private float timer = 0f;
+    private float nextSpawnTime = 0f;
 
     void Start()
     {
-        StartCoroutine(SpawnRoutine());
+        SetNewSpawnTime();
     }
 
-    IEnumerator SpawnRoutine()
+    void Update()
     {
-        while (true)
-        {
-            float waitTime = Random.Range(minSpawnTime, maxSpawnTime);
-            yield return new WaitForSeconds(waitTime);
+        // --- 1. KİLİT: OYUN DURUMU KONTROLÜ ---
+        // Eğer savaştaysak SÜREYİ DONDUR
+        if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Idle) return;
+        
+        // Eğer harita açıksa SÜREYİ DONDUR
+        if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
 
-            // Sadece savaştayken değil, kamptayken ve içeride başka yabancı yokken gelsin
-            if (currentStranger == null && BattleManager.Instance != null && BattleManager.Instance.state == BattleState.Idle)
-            {
-                SpawnStranger();
-            }
+        // --- 2. KİLİT: ZATEN BİRİ VAR MI? ---
+        // Eğer kampta zaten bir yabancı varsa yenisi için süre sayma
+        if (currentStranger != null) return;
+
+        // --- 3. SÜREYİ İŞLET ---
+        timer += Time.deltaTime;
+
+        if (timer >= nextSpawnTime)
+        {
+            SpawnStranger();
+            SetNewSpawnTime();
+            timer = 0f; // Süreyi sıfırla
         }
+    }
+
+    void SetNewSpawnTime()
+    {
+        nextSpawnTime = Random.Range(minSpawnTime, maxSpawnTime);
     }
 
     void SpawnStranger()
     {
         currentStranger = Instantiate(strangerPrefab, spawnAndExitPoint.position, Quaternion.identity);
-        
         WanderingStranger strangerScript = currentStranger.GetComponent<WanderingStranger>();
         
-        // 0 (Tüccar) ile 1 (Asker) arasında rastgele birini seç
         int randomType = Random.Range(0, 2); 
-        
         strangerScript.Setup(campWaitPoint, spawnAndExitPoint, randomType);
         
         if (NotificationManager.Instance != null)

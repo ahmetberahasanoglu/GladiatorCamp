@@ -33,7 +33,7 @@ public class MapManager : MonoBehaviour
 
     // Oturum boyunca konumu aklında tutacak statik değişken
     public static string sessionLastNode = "";
-
+public bool isMapOpen = false;
     void Awake()
     {
         Instance = this;
@@ -48,7 +48,7 @@ public class MapManager : MonoBehaviour
     public void HideMap()
     {
         mapPanel.SetActive(false);
-     
+        isMapOpen = false;
         if (LootChest.Instance != null)
         {
             LootChest.Instance.CheckForLoot();
@@ -58,6 +58,7 @@ public class MapManager : MonoBehaviour
     public void ShowMap()
     {
         mapPanel.SetActive(true);
+       isMapOpen = true;
     }
 
     void DrawAllConnections()

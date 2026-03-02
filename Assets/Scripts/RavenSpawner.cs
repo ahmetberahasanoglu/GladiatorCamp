@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 
 public class RavenSpawner : MonoBehaviour
 {
@@ -10,9 +9,13 @@ public class RavenSpawner : MonoBehaviour
     public float minSpawnTime = 30f; // En az kaç saniyede bir çıksın
     public float maxSpawnTime = 90f; // En çok kaç saniyede bir çıksın
 
-    [Header("Uçuş Notaları")]
+    [Header("Uçuş Noktaları")]
     public Transform[] startPoints; // Kuşun çıkacağı noktalar (Örn: Haritanın solu)
     public Transform[] endPoints;   // Kuşun gideceği noktalar (Örn: Haritanın sağı)
+
+    // --- YENİ EKLENEN KISIM: Kendi zamanlayıcımız ---
+    private float timer = 0f;
+    private float nextSpawnTime = 0f;
 
     void Start()
     {
@@ -22,20 +25,34 @@ public class RavenSpawner : MonoBehaviour
             return;
         }
 
-        // Üretim döngüsünü başlat
-        StartCoroutine(SpawnRoutine());
+        // İlk doğma süresini belirle
+        SetNewSpawnTime();
     }
 
-    IEnumerator SpawnRoutine()
+    void Update()
     {
-        while (true)
-        {
-            // Rastgele bir bekleme süresi seç
-            float waitTime = Random.Range(minSpawnTime, maxSpawnTime);
-            yield return new WaitForSeconds(waitTime);
+        // --- 1. ZAMAN DONDURMA KİLİTLERİ (OPTIMİZASYON) ---
+        // Savaş açıksa veya harita açıksa süreyi dondur! Arkada boşuna kuş üretilmesin.
+        if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Idle) return;
+        if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
+        // --------------------------------------------------
 
+        // Süreyi işlet
+        timer += Time.deltaTime;
+
+        // Hedef süreye ulaşıldıysa kuşu üret
+        if (timer >= nextSpawnTime)
+        {
             SpawnRaven();
+            SetNewSpawnTime();
+            timer = 0f; // Süreyi sıfırla
         }
+    }
+
+    void SetNewSpawnTime()
+    {
+        // Bir sonraki kuşun ne zaman geleceğini rastgele belirle
+        nextSpawnTime = Random.Range(minSpawnTime, maxSpawnTime);
     }
 
     void SpawnRaven()

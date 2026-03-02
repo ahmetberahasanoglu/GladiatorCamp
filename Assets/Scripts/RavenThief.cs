@@ -11,23 +11,24 @@ public class RavenThief : MonoBehaviour
     public int goldReward = 20;
 
     [Header("Efektler")]
-public GameObject featherPoofEffect;
-public AudioClip coinClip; // AudioSource yerine AudioClip
+    public GameObject featherPoofEffect;
+    public AudioClip coinClip;
 
-
-
-    // Spawner bu kuşu yarattığında hedefini belirlemek için bu fonksiyonu çağıracak
     public void SetupFlight(Vector3 startPoint, Vector3 endPoint)
     {
         transform.position = startPoint;
         destination = endPoint;
-        
-        // Kuşun yönünü hedefe doğru çevir
         transform.LookAt(destination);
     }
 
     void Update()
     {
+        // --- 1. ZAMAN DONDURMA KİLİTLERİ ---
+        // Savaş açıksa veya harita açıksa kuş havada donup beklesin (uçmasın)
+        if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Idle) return;
+        if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
+        // -----------------------------------
+
         // Hedefe doğru sürekli uç
         transform.position = Vector3.MoveTowards(transform.position, destination, speed * Time.deltaTime);
 
@@ -38,36 +39,40 @@ public AudioClip coinClip; // AudioSource yerine AudioClip
         }
     }
 
-    
     void OnMouseDown()
-{
-    if (EventSystem.current.IsPointerOverGameObject()) return;
-
-    if (MoneyManager.Instance != null)
     {
-        MoneyManager.Instance.Add(goldReward);
-    }
+        // Eğer UI (Harita vs) arkasındaysa tıklamayı engelle
+        if (EventSystem.current.IsPointerOverGameObject()) return;
+        
+        // --- 2. TIKLAMA KİLİDİ ---
+        // Harita açıkken veya savaştayken arkadaki kuşa yanlışlıkla tıklanmasını engelle
+        if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Idle) return;
+        if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
 
-    if (NotificationManager.Instance != null)
-    {
-        NotificationManager.Instance.Show(
-            $"Kuzgunu indirdin! Gagasından {goldReward} akçe düştü.", 
-            NotificationType.Success
-        );
-    }
+        if (MoneyManager.Instance != null)
+        {
+            MoneyManager.Instance.Add(goldReward);
+        }
 
-    // 🔊 SESİ OBJEYİ YOK ETMEDEN BAĞIMSIZ ÇAL
-    if (coinClip != null)
-    {
-        AudioSource.PlayClipAtPoint(coinClip, transform.position);
-    }
+        if (NotificationManager.Instance != null)
+        {
+            NotificationManager.Instance.Show(
+                $"Kuzgunu indirdin! Gagasından {goldReward} akçe düştü.", 
+                NotificationType.Success
+            );
+        }
 
-    if (featherPoofEffect != null)
-    {
-        GameObject poof = Instantiate(featherPoofEffect, transform.position, Quaternion.identity);
-        Destroy(poof, 2f);
-    }
+        if (coinClip != null)
+        {
+            AudioSource.PlayClipAtPoint(coinClip, transform.position);
+        }
 
-    Destroy(gameObject);
-}
+        if (featherPoofEffect != null)
+        {
+            GameObject poof = Instantiate(featherPoofEffect, transform.position, Quaternion.identity);
+            Destroy(poof, 2f);
+        }
+
+        Destroy(gameObject);
+    }
 }

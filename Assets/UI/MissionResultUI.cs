@@ -5,28 +5,27 @@ using TMPro;
 public class MissionResultUI : MonoBehaviour
 {
     [Header("UI Bileşenleri")]
-    public TextMeshProUGUI titleText;       // "ZAFER!" veya "BOZGUN!"
-    public TextMeshProUGUI missionNameText; // "Viyana Seferi"
-    public TextMeshProUGUI descriptionText; // "Askerlerin ganimetle döndü..."
-    public TextMeshProUGUI rewardText;      // "500 Akçe"
+    public TextMeshProUGUI titleText;      
+    public TextMeshProUGUI missionNameText;
+    public TextMeshProUGUI descriptionText;
+    public TextMeshProUGUI rewardText;     
     
-    public Image headerPanel;               // Renk değiştirmek için (Yeşil/Kırmızı)
+    public Image headerPanel;              
     public Button closeButton;
 
-    // Bu fonksiyonu MissionManager çağıracak
     public void Setup(bool isVictory, MissionData mission)
     {
         missionNameText.text = mission.missionName;
 
         if (isVictory)
         {
-            // ZAFER DURUMU
+     
             titleText.text = "GÖREV BAŞARILI!";
             descriptionText.text = "Ordun muzaffer oldu, düşman darmadağın edildi.";
             rewardText.text = $"+{mission.goldReward} Akçe\n+{mission.woodReward} Odun";
             
-            // Paneli Yeşil yap
-            headerPanel.color = new Color(0.2f, 0.6f, 0.2f); // Koyu Yeşil
+           
+           // headerPanel.color = new Color(0.2f, 0.6f, 0.2f); // Koyu Yeşil
         }
         else
         {
@@ -35,8 +34,8 @@ public class MissionResultUI : MonoBehaviour
             descriptionText.text = "Askerler eli boş döndü.";
             rewardText.text = "0 Akçe";
             
-            // Paneli Kırmızı yap
-            headerPanel.color = new Color(0.6f, 0.2f, 0.2f); // Koyu Kırmızı
+            
+           // headerPanel.color = new Color(0.6f, 0.2f, 0.2f); // Koyu Kırmızı
         }
 
         closeButton.onClick.RemoveAllListeners();
@@ -45,7 +44,6 @@ public class MissionResultUI : MonoBehaviour
 
     void ClosePanel()
     {
-        // Pencereyi yok et
         Destroy(gameObject);
     }
 }

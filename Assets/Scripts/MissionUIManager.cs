@@ -57,13 +57,13 @@ public class MissionUIManager : MonoBehaviour
 
         missionTitleText.text = mission.missionName;
         missionDescText.text = mission.description;
-        rewardText.text = $"{mission.goldReward} Akçe";
+        rewardText.text = $"{mission.goldReward} Akçe\n{mission.woodReward} Odun";
+
 
         RefreshSoldierList();
         UpdateWinChance();
     }
 
-    // --- KRİTİK DEĞİŞİKLİK BURADA ---
     void RefreshSoldierList()
     {
         foreach (Transform child in soldierListParent) Destroy(child.gameObject);

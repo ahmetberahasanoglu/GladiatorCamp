@@ -21,9 +21,9 @@ public class MissionResultUI : MonoBehaviour
         if (isVictory)
         {
             // ZAFER DURUMU
-            titleText.text = "ŞANLI ZAFER!";
+            titleText.text = "GÖREV BAŞARILI!";
             descriptionText.text = "Ordun muzaffer oldu, düşman darmadağın edildi.";
-            rewardText.text = $"+{mission.goldReward} Akçe";
+            rewardText.text = $"+{mission.goldReward} Akçe\n+{mission.woodReward} Odun";
             
             // Paneli Yeşil yap
             headerPanel.color = new Color(0.2f, 0.6f, 0.2f); // Koyu Yeşil
@@ -31,8 +31,8 @@ public class MissionResultUI : MonoBehaviour
         else
         {
             // YENİLGİ DURUMU
-            titleText.text = "ACI BOZGUN...";
-            descriptionText.text = "Askerlerin geri çekilmek zorunda kaldı.";
+            titleText.text = "GÖREV BAŞARISIZ!";
+            descriptionText.text = "Askerler eli boş döndü.";
             rewardText.text = "0 Akçe";
             
             // Paneli Kırmızı yap

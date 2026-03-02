@@ -87,7 +87,7 @@ public class MissionManager : MonoBehaviour
         NotificationManager.Instance.Show($"{data.missionName} başladı. Süre: {data.durationDays} Gün.", NotificationType.Info);
     }
 
-    void CompleteMission(OngoingMission mission)
+   void CompleteMission(OngoingMission mission)
     {
         Destroy(mission.uiReference.gameObject);
         currentMissions.Remove(mission);
@@ -98,7 +98,6 @@ public class MissionManager : MonoBehaviour
             if (soldier != null) soldier.isOnMission = false;
         }
 
-        // --- SAVAŞ SONUCU (Aynı mantık) ---
         int totalPower = 0;
         foreach (var s in mission.squadComponents) totalPower += s.data.GetTotalStats();
 
@@ -109,11 +108,16 @@ public class MissionManager : MonoBehaviour
         popup.Setup(success, mission.originalData);
 
         if (success) 
-{
-    MoneyManager.Instance.Add(mission.originalData.goldReward);
-   // ResourceManager.Instance.AddWood(mission.originalData.woodReward); // YENİ
-   // NotificationManager.Instance.Show($"Keşif Başarılı! +{mission.originalData.goldReward} Altın, +{mission.originalData.woodReward} Odun", NotificationType.Success);
-}
+        {
+            if (MoneyManager.Instance != null) 
+                MoneyManager.Instance.Add(mission.originalData.goldReward);
+                
+            if (ResourceManager.Instance != null && mission.originalData.woodReward > 0) 
+                ResourceManager.Instance.AddWood(mission.originalData.woodReward);
+                
+            if (NotificationManager.Instance != null)
+                NotificationManager.Instance.Show($"Görev Başarılı! +{mission.originalData.goldReward} Akçe, +{mission.originalData.woodReward} Odun", NotificationType.Success);
+        }
     }
 
     [System.Serializable]

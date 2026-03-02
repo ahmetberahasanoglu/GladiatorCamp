@@ -48,6 +48,7 @@ public class TrainingSpot : MonoBehaviour
     // Fareyle objeye TIKLANDIĞINDA çalışır
     void OnMouseDown()
     {
+        if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
         if (isBusy) 
         {
             if (NotificationManager.Instance != null) NotificationManager.Instance.Show("Bu alan şu an dolu!", NotificationType.Warning);

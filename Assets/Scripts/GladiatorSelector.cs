@@ -49,6 +49,7 @@ public class GladiatorSelector : MonoBehaviour
         {
             return;
         }
+        if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
         if (Input.GetMouseButtonDown(0))
         {
             if (EventSystem.current.IsPointerOverGameObject()) return;

@@ -32,7 +32,7 @@ public class CampfireInteract : MonoBehaviour
     {
         // UI'a tıklanıyorsa veya tıklama bekleme süresindeyse (cooldown) işlem yapma
         if (EventSystem.current.IsPointerOverGameObject() || isOnCooldown) return;
-
+        if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
         StartCoroutine(ToggleFireRoutine());
     }
 

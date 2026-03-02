@@ -4,28 +4,27 @@ using System.Linq;
 using System;
 
 [System.Serializable]
-
 public class Building
 {
     public string id;           
     public string displayName;  
     public int level = 1;       
+    public int maxLevel = 3;    // YENİ: Binalar sonsuza kadar gelişmesin
     public int baseCost = 200;  
     public int baseValue = 3;   
     public int increasePerLevel = 2; 
 
-    // --- YENİ: GÖRSEL SEVİYELERİ TUTACAK DİZİ ---
     [Header("Görsel Objeler")]
-    public GameObject[] stageVisuals; // Level 1, Level 2, Level 3 vb. görselleri
+    public GameObject[] stageVisuals; 
 
     public int GetCost() 
     {
-        return baseCost * level; 
+        return baseCost * level; // Lvl 1 -> 200, Lvl 2 -> 400 Akçe
     }
 
     public int GetValue()
     {
-        return baseValue + ((level - 1) * increasePerLevel); 
+        return baseValue + ((level - 1) * increasePerLevel); // Lvl 1 -> 3, Lvl 2 -> 5, Lvl 3 -> 7
     }
 
     public int GetNextValue()
@@ -33,19 +32,14 @@ public class Building
         return GetValue() + increasePerLevel;
     }
 
-    // --- YENİ: GÖRSELLERİ GÜNCELLEYEN FONKSİYON ---
     public void UpdateVisuals()
     {
-        // Eğer görsel atanmamışsa hata vermemesi için güvenlik kontrolü
         if (stageVisuals == null || stageVisuals.Length == 0) return;
 
         for (int i = 0; i < stageVisuals.Length; i++)
         {
-            // Eğer objenin sırası (i), binanın mevcut seviyesinin (level-1) indeksine eşitse objeyi aç, değilse kapat.
-            // Örn: Seviye 1'deyken 0. index açılır, diğerleri kapanır. Seviye 2'deyken 1. index açılır.
             if (stageVisuals[i] != null)
             {
-                // Son seviyeye ulaşıldığında index dışına çıkmamak için ufak bir sınırlandırma
                 int activeIndex = Mathf.Clamp(level - 1, 0, stageVisuals.Length - 1);
                 stageVisuals[i].SetActive(i == activeIndex);
             }
@@ -60,10 +54,9 @@ public class CampManager : MonoBehaviour
     
     public List<Building> buildings = new List<Building>();
 
-    // --- YENİ EKLENEN KISIM: Yöneticinin elinde tutacağı modeller ---
     [Header("Bina Görselleri (Sırayla Lvl1, Lvl2, Lvl3...)")]
     public GameObject[] kogusVisuals; 
-    // İleride Talimhane eklediğinde buraya public GameObject[] talimhaneVisuals; yazabilirsin.
+    public GameObject[] demirciVisuals; // YENİ: Demirci Çadırları/Binaları
 
     void Awake()
     {
@@ -73,40 +66,58 @@ public class CampManager : MonoBehaviour
 
     void InitializeBuildings()
     {
-        // Eğer listede Koğuş yoksa, otomatik ekle
+        // 1. KOĞUŞU EKLE
         if (!buildings.Any(b => b.id == "kogus"))
         {
-            Building kogus = new Building();
-            kogus.id = "kogus";
-            kogus.displayName = "Acemi Koğuşu";
-            kogus.baseCost = 250;  
-            kogus.baseValue = 3;   
-            kogus.increasePerLevel = 2; 
-
-            // YENİ: Editörden atadığımız modelleri, kodla yaratılan binaya teslim ediyoruz
-            kogus.stageVisuals = kogusVisuals;
-
+            Building kogus = new Building {
+                id = "kogus", displayName = "Acemi Koğuşu",
+                baseCost = 250, baseValue = 3, increasePerLevel = 2, maxLevel = 3,
+                stageVisuals = kogusVisuals
+            };
             buildings.Add(kogus);
         }
         
-        // YENİ: Oyun başladığında herkesin görselini mevcut seviyesine göre ayarla (Lvl 1 çadırı açılsın)
+        // 2. DEMİRCİYİ EKLE (Artık sistemin resmi bir parçası!)
+        if (!buildings.Any(b => b.id == "demirci"))
+        {
+            Building demirci = new Building {
+                id = "demirci", displayName = "Demirci Atölyesi",
+                baseCost = 200, baseValue = 3, increasePerLevel = 2, maxLevel = 3, // Vitrin 3 -> 5 -> 7 olacak
+                stageVisuals = demirciVisuals
+            };
+            buildings.Add(demirci);
+        }
+
+        // Görselleri güncelle
         foreach (var building in buildings)
         {
             building.UpdateVisuals();
         }
     }
 
+    // İstenilen binanın kapasitesini/değerini almak için GENEL bir fonksiyon yazdık
+    public int GetBuildingValue(string buildingId)
+    {
+        var b = buildings.FirstOrDefault(x => x.id == buildingId);
+        return b != null ? b.GetValue() : 3; 
+    }
+
     public int GetMaxSoldierCapacity()
     {
-        var b = buildings.FirstOrDefault(x => x.id == "kogus");
-        if (b != null) return b.GetValue();
-        return 3; 
+        return GetBuildingValue("kogus"); 
     }
 
     public void UpgradeBuilding(string id)
     {
         var b = buildings.FirstOrDefault(x => x.id == id);
         if (b == null) return;
+
+        // MAKSİMUM SEVİYE KONTROLÜ
+        if (b.level >= b.maxLevel)
+        {
+            if (NotificationManager.Instance != null) NotificationManager.Instance.Show($"{b.displayName} maksimum seviyede!", NotificationType.Warning);
+            return;
+        }
 
         int cost = b.GetCost();
 
@@ -115,12 +126,11 @@ public class CampManager : MonoBehaviour
             MoneyManager.Instance.Spend(cost);
             b.level++;
             
-            // YENİ: Seviye atlayınca görselleri güncelle (Örn: Lvl 1 kapansın, Lvl 2 açılsın)
             b.UpdateVisuals(); 
-
             OnCampUpdated?.Invoke();
+            
             if (NotificationManager.Instance != null)
-                NotificationManager.Instance.Show($"{b.displayName} seviye atladı! Yeni Seviye: {b.level}, Kapasite: {b.GetValue()}", NotificationType.Success);
+                NotificationManager.Instance.Show($"{b.displayName} Geliştirildi! Yeni Seviye: {b.level}", NotificationType.Success);
         }
         else
         {

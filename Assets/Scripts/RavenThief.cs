@@ -11,8 +11,10 @@ public class RavenThief : MonoBehaviour
     public int goldReward = 20;
 
     [Header("Efektler")]
-    public GameObject featherPoofEffect; // Vurulunca çıkacak tüy/altın efekti
-    public AudioSource coinSound; 
+public GameObject featherPoofEffect;
+public AudioClip coinClip; // AudioSource yerine AudioClip
+
+
 
     // Spawner bu kuşu yarattığında hedefini belirlemek için bu fonksiyonu çağıracak
     public void SetupFlight(Vector3 startPoint, Vector3 endPoint)
@@ -36,34 +38,36 @@ public class RavenThief : MonoBehaviour
         }
     }
 
-    // Fareyle üzerine tıklandığında...
+    
     void OnMouseDown()
+{
+    if (EventSystem.current.IsPointerOverGameObject()) return;
+
+    if (MoneyManager.Instance != null)
     {
-        // Eğer UI (Menü vs) açıksa tıklamayı yoksay
-        if (EventSystem.current.IsPointerOverGameObject()) return;
-          
-        // 1. Ödülü Ver
-        if (MoneyManager.Instance != null)
-        {
-            MoneyManager.Instance.Add(goldReward);
-        }
-
-        // 2. Bildirim Göster
-        if (NotificationManager.Instance != null)
-        {
-            NotificationManager.Instance.Show($"Kuzgunu indirdin! Gagasından {goldReward} akçe düştü.", NotificationType.Success);
-        }
-         coinSound.Play();
-        // 3. Efekt Yarat (Eğer atadıysan)
-        if (featherPoofEffect != null)
-        {
-            GameObject poof = Instantiate(featherPoofEffect, transform.position, Quaternion.identity);
-            Destroy(poof, 2f); // Oyunu kastırmasın diye 2 sn sonra sil
-        }
-
-        // Ses eklemek istersen buraya bir AudioSource.PlayClipAtPoint yazabilirsin
-
-        // 4. Kuşu Yok Et
-        Destroy(gameObject);
+        MoneyManager.Instance.Add(goldReward);
     }
+
+    if (NotificationManager.Instance != null)
+    {
+        NotificationManager.Instance.Show(
+            $"Kuzgunu indirdin! Gagasından {goldReward} akçe düştü.", 
+            NotificationType.Success
+        );
+    }
+
+    // 🔊 SESİ OBJEYİ YOK ETMEDEN BAĞIMSIZ ÇAL
+    if (coinClip != null)
+    {
+        AudioSource.PlayClipAtPoint(coinClip, transform.position);
+    }
+
+    if (featherPoofEffect != null)
+    {
+        GameObject poof = Instantiate(featherPoofEffect, transform.position, Quaternion.identity);
+        Destroy(poof, 2f);
+    }
+
+    Destroy(gameObject);
+}
 }

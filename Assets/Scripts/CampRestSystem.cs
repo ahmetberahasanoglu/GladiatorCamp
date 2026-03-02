@@ -29,7 +29,10 @@ public class CampRestSystem : MonoBehaviour
 
     void HealIdleSoldiers()
     {
-        // Sahnede olan tüm askerleri bul
+      if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Idle)
+        {
+            return; 
+        }
         Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
         bool anyoneHealed = false;
 

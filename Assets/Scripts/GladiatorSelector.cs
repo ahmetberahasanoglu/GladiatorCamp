@@ -45,6 +45,10 @@ public class GladiatorSelector : MonoBehaviour
 
     void Update()
     {
+        if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Idle)
+        {
+            return;
+        }
         if (Input.GetMouseButtonDown(0))
         {
             if (EventSystem.current.IsPointerOverGameObject()) return;

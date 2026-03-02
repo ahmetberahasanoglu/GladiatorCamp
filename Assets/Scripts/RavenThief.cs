@@ -41,7 +41,7 @@ public class RavenThief : MonoBehaviour
     {
         // Eğer UI (Menü vs) açıksa tıklamayı yoksay
         if (EventSystem.current.IsPointerOverGameObject()) return;
-        coinSound.Play();
+          
         // 1. Ödülü Ver
         if (MoneyManager.Instance != null)
         {
@@ -53,7 +53,7 @@ public class RavenThief : MonoBehaviour
         {
             NotificationManager.Instance.Show($"Kuzgunu indirdin! Gagasından {goldReward} akçe düştü.", NotificationType.Success);
         }
-
+         coinSound.Play();
         // 3. Efekt Yarat (Eğer atadıysan)
         if (featherPoofEffect != null)
         {

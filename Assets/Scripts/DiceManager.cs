@@ -63,7 +63,7 @@ public class DiceManager : MonoBehaviour
             if (currentTarget > 0)
             {
                 targetText.gameObject.SetActive(true);
-                targetText.text = $"{currentTarget}";
+                targetText.text = $"Minimum {currentTarget}";
             }
             else
             {

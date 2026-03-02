@@ -484,7 +484,7 @@ MonoBehaviour:
   speed: 5
   goldReward: 20
   featherPoofEffect: {fileID: 141433446842962269, guid: 9fe8f8b3288e45a44af36ff8aa04486e, type: 3}
-  coinSound: {fileID: 0}
+  coinSound: {fileID: 6435731811220529608}
 --- !u!65 &7608053102706368951
 BoxCollider:
   m_ObjectHideFlags: 0

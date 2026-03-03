@@ -25,6 +25,7 @@ public class GladiatorPanel : MonoBehaviour
         if (GladiatorSelector.Instance != null)
         {
             GladiatorSelector.Instance.OpenSelectedInventory();
+            AudioManager.Instance.PlayClick();
         }
         else
         {

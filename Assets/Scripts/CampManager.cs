@@ -128,12 +128,14 @@ public class CampManager : MonoBehaviour
             
             b.UpdateVisuals(); 
             OnCampUpdated?.Invoke();
+            AudioManager.Instance.PlayUpgrade();
             
             if (NotificationManager.Instance != null)
                 NotificationManager.Instance.Show($"{b.displayName} Geliştirildi! Yeni Seviye: {b.level}", NotificationType.Success);
         }
         else
         {
+            if (AudioManager.Instance != null) AudioManager.Instance.PlayError();
             if (NotificationManager.Instance != null)
                 NotificationManager.Instance.Show("Yetersiz Bakiye!", NotificationType.Error);
         }

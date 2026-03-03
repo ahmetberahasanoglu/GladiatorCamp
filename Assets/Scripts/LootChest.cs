@@ -10,7 +10,7 @@ public class LootChest : MonoBehaviour
     [Header("Görsel ve Ses Efektleri")]
     public GameObject chestVisuals;          // YENİ: Sandığın 3D modelini buraya sürükleyeceğiz
     public ParticleSystem coinBurstParticle; 
-    public AudioSource coinSound;            
+   // public AudioSource coinSound;            
     
     [Header("Etkileşim UI")]
     public GameObject hoverTextObj;
@@ -77,7 +77,7 @@ public class LootChest : MonoBehaviour
 
         // 2. Coşkulu Efektler!
         if (coinBurstParticle != null) coinBurstParticle.Play();
-        if (coinSound != null) coinSound.Play();
+       
 
         // 3. Bildirim
         if (NotificationManager.Instance != null)

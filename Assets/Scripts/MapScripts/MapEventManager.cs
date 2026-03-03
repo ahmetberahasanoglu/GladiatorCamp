@@ -35,7 +35,7 @@ public class MapEventManager : MonoBehaviour
     public void TriggerEvent(NodeType type)
     {
         eventPanel.SetActive(true);
-        
+        AudioManager.Instance.PlayPaper();
         // Önceki butonları temizle (Yeni event için tertemiz bir sayfa)
         foreach(Transform child in buttonContainer) 
         {
@@ -99,6 +99,7 @@ public class MapEventManager : MonoBehaviour
         // --- 1. SEÇENEK: ZARI AT ---
         CreateButton("Zarı At (Risk Al)", () => 
         {
+            AudioManager.Instance.PlayDice();
             // YENİ: Zarın hedefi 4 (Çünkü 3'ten büyük olmalı: 4, 5, 6)
             DiceManager.Instance.RollDice(4, (zarSonucu) => 
             {
@@ -224,6 +225,7 @@ public class MapEventManager : MonoBehaviour
                     NotificationManager.Instance.Show("Savaşa sokacak hiç askerin yok! Kampa dönmelisin.", NotificationType.Error);
                 return; // Kodu burada kes, savaşa GİRME!
             }
+            if (AudioManager.Instance != null) AudioManager.Instance.PlayWarHorn();
             DayManager.Instance.NextDay(1); 
             ClosePanel();
             topPanel.SetActive(true);
@@ -337,6 +339,7 @@ public class MapEventManager : MonoBehaviour
         else
         {
             atkBtn.onClick.AddListener(() => {
+                AudioManager.Instance.PlayWarHorn();
                 DayManager.Instance.NextDay(3); 
                 ClosePanel();
                 BattleManager.Instance.StartBattle(3, 1); 
@@ -371,12 +374,13 @@ public class MapEventManager : MonoBehaviour
 
         CreateButton("KUŞATMAYI BAŞLAT", () => {
             if (!HasAliveSoldiers())
-            {
+            {   
                 if (NotificationManager.Instance != null)
                     NotificationManager.Instance.Show("Savaşa sokacak hiç askerin yok! Kampa dönmelisin.", NotificationType.Error);
                 return; 
                 
             }
+            if (AudioManager.Instance != null) AudioManager.Instance.PlayWarHorn();
             Debug.Log("Final Savaşı!");
             ClosePanel();
             // Final sahnesine geçiş eklenecek

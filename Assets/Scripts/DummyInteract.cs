@@ -9,7 +9,7 @@ public class DummyInteract : MonoBehaviour
     // İsmine de Prefab ekledik ki Unity editöründe ne olduğu belli olsun.
     public GameObject hitParticlesPrefab; 
     
-    public AudioSource hitSound;          
+   // public AudioSource hitSound;          
     private Animator animator;
 
     private bool isHit = false;
@@ -37,7 +37,8 @@ public class DummyInteract : MonoBehaviour
             Destroy(fx, 2f);
         }
 
-        if (hitSound != null) hitSound.Play();
+       // if (hitSound != null) hitSound.Play();
+       AudioManager.Instance.PlayWood();
         if (animator != null) animator.SetTrigger("hit");
         
         yield return new WaitForSeconds(0.2f); 

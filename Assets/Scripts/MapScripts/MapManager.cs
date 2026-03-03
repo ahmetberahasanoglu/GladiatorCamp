@@ -179,7 +179,7 @@ public bool isMapOpen = false;
     public IEnumerator MoveIconRoutine(MapNode targetNode)
     {
         RectTransform targetRect = targetNode.GetComponent<RectTransform>();
-        
+        AudioManager.Instance.PlayMapMove();
         // UI elemanları olduğu için anchoredPosition kullanıyoruz
         Vector2 startPos = playerIcon.anchoredPosition;
         

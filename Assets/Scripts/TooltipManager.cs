@@ -1,69 +1,41 @@
 using UnityEngine;
 using TMPro;
-using UnityEngine.UI;
 
 public class TooltipManager : MonoBehaviour
 {
-    /*
     public static TooltipManager Instance;
 
-    public GameObject tooltipPanel;
-    public TextMeshProUGUI headerText; // Eşya Adı
-    public TextMeshProUGUI bodyText;   // Statlar (Güç: +5 vs)
+    [Header("UI Referansları")]
+    public GameObject tooltipPanel;       // Arka planı olan panel
+    public TextMeshProUGUI tooltipText;   // İçindeki yazı
     
-    void Awake() { Instance = this; }
+    [Header("Ayarlar")]
+    public Vector2 offset = new Vector2(15f, -15f); // Farenin tam üstünü kapatmasın diye sağ alta kaydırıyoruz
 
-    void Start() { HideTooltip(); }
+    void Awake()
+    {
+        Instance = this;
+        HideTooltip(); // Oyun başlarken gizli olsun
+    }
 
     void Update()
     {
-        // Kutucuk mouse'u takip etsin
+        // Eğer panel açıksa, farenin pozisyonunu takip et
         if (tooltipPanel.activeSelf)
         {
-            tooltipPanel.transform.position = Input.mousePosition;
+            // Farenin ekrandaki koordinatlarına offset (kayma) değerini ekleyip paneli oraya taşıyoruz
+            transform.position = Input.mousePosition + (Vector3)offset;
         }
     }
 
-    public void ShowTooltip(ItemData item, GladiatorInventory currentStats)
+    public void ShowTooltip(string text)
     {
+        tooltipText.text = text;
         tooltipPanel.SetActive(true);
-        headerText.text = item.itemID;
-        
-        // KIYASLAMA MANTIĞI
-        // Şu an üstümde ne var?
-        ItemData equipped = null;
-        if (item.type == ItemType.Weapon) equipped = currentStats.weapon;
-        else if (item.type == ItemType.Armor) equipped = currentStats.armor;
-        // ... diğer tipler ...
-
-        System.Text.StringBuilder sb = new System.Text.StringBuilder();
-        
-        sb.AppendLine($"Fiyat: {item.price}");
-        sb.AppendLine("----------------");
-        
-        // Statları kıyaslayarak yaz
-        sb.Append(GetStatLine("STR", item.bonusStrength, equipped ? equipped.bonusStrength : 0));
-        sb.Append(GetStatLine("DEF", item.bonusDefense, equipped ? equipped.bonusDefense : 0));
-        sb.Append(GetStatLine("SPD", item.bonusSpeed, equipped ? equipped.bonusSpeed : 0));
-
-        bodyText.text = sb.ToString();
     }
 
     public void HideTooltip()
     {
         tooltipPanel.SetActive(false);
     }
-
-    // Yardımcı: Renkli Kıyaslama Satırı Üretir
-    string GetStatLine(string statName, int newVal, int oldVal)
-    {
-        if (newVal == 0 && oldVal == 0) return ""; // İkisi de 0 ise yazma
-
-        int diff = newVal - oldVal;
-        string color = diff > 0 ? "green" : (diff < 0 ? "red" : "white");
-        string sign = diff > 0 ? "+" : "";
-
-        // Örnek Çıktı: STR: 15 (+5) [Yeşil]
-        return $"{statName}: {newVal} <color={color}>({sign}{diff})</color>\n";
-    }*/
 }

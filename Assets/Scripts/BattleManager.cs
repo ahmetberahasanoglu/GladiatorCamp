@@ -41,7 +41,7 @@ public GameObject skillPanel;
     public void StartBattle(int enemyCount, int difficulty)
     {
         Debug.Log("BattleManager: Savaş Başlatılıyor...");
-        
+        AudioManager.Instance.StartBattleAcoustics();
         // 1. Haritayı Kapat
         if (MapManager.Instance != null) MapManager.Instance.HideMap();
 
@@ -197,6 +197,9 @@ public void EndBattle(bool isVictory)
         lootPanel.SetActive(false);
         defeatPanel.SetActive(false);
         bgPanel.SetActive(false);
+        // Tekrar huzurlu kamp müziğine dön (Kış ise kış müziği çalar)
+    bool isWinter = DayManager.Instance.currentDay >= DayManager.Instance.maxDays;
+    AudioManager.Instance.PlayCampMusic(isWinter);
         if (skillPanel != null) skillPanel.SetActive(false);
         topPanel.SetActive(true);
         if (MapManager.Instance != null) MapManager.Instance.HideMap(); // Haritayı da kapat

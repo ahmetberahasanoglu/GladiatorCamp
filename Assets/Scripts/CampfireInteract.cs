@@ -5,34 +5,47 @@ using System.Collections;
 public class CampfireInteract : MonoBehaviour
 {
     [Header("Ateş Ayarları")]
-    public ParticleSystem sparksParticle; 
-    public AudioSource flareSound;        
-    
-    // YENİ: İstersen ateşi söndürürken "tıss" diye çıkan bir ses ekleyebilirsin
-   public AudioClip extinguishSound; 
+    public ParticleSystem sparksParticle;
 
-    private bool isSparking = true; // Oyun başladığında ateş yanıyor kabul ediyoruz
-    private bool isOnCooldown = false; // Spam tıklamayı engellemek için
+    [Header("Sesler")]
+    public AudioSource flareSound;          // Ateş yakma sesi (tek seferlik)
+    public AudioClip extinguishSound;       // Söndürme sesi (Clip olarak alıyoruz)
+    
+    [Header("Döngü (Loop) Sesleri")]
+    public AudioSource campfireLoopA;       // 1. Crossfade Kanalı
+    public AudioSource campfireLoopB;       // 2. Crossfade Kanalı
+    public float crossfadeTime = 0.3f;      // Geçiş süresi
+
+    private AudioSource activeLoop;
+    private AudioSource nextLoop;
+    private Coroutine loopCoroutine;        // Söndürdüğümüzde döngüyü durdurabilmek için
+
+    private bool isSparking = true;
+    private bool isOnCooldown = false;
 
     void Start()
     {
-        // Gün dönümünde ateşi söndüren event
-        if (DayManager.Instance != null) DayManager.Instance.OnNewDay += DimFire;
+        if (DayManager.Instance != null)
+            DayManager.Instance.OnNewDay += DimFire;
 
-        // Oyun başlarken ateşin görselini durumuna göre ayarla
-        if (isSparking && sparksParticle != null) sparksParticle.Play();
+        if (isSparking)
+        {
+            if (sparksParticle != null) sparksParticle.Play();
+            StartLoop(); // Oyun başında ateş yanıyorsa A/B döngüsünü başlat
+        }
     }
 
     void OnDestroy()
     {
-        if (DayManager.Instance != null) DayManager.Instance.OnNewDay -= DimFire;
+        if (DayManager.Instance != null)
+            DayManager.Instance.OnNewDay -= DimFire;
     }
 
     void OnMouseDown()
     {
-        // UI'a tıklanıyorsa veya tıklama bekleme süresindeyse (cooldown) işlem yapma
         if (EventSystem.current.IsPointerOverGameObject() || isOnCooldown) return;
         if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
+
         StartCoroutine(ToggleFireRoutine());
     }
 
@@ -42,43 +55,124 @@ public class CampfireInteract : MonoBehaviour
 
         if (isSparking)
         {
-            // --- ATEŞ YANIYORDU, OYUNCU TIKLAYIP SÖNDÜRDÜ ---
+            // 🔥 ATEŞİ SÖNDÜR
             isSparking = false;
-            
+
             if (sparksParticle != null) sparksParticle.Stop();
-            if (extinguishSound != null) AudioSource.PlayClipAtPoint(extinguishSound, transform.position);
+
+            StopFireLoops(); // YENİ: Hem sesleri hem Coroutine'i durdurur
+
+            if (extinguishSound != null && flareSound != null)
+                flareSound.PlayOneShot(extinguishSound);
 
             if (NotificationManager.Instance != null)
                 NotificationManager.Instance.Show("Ateşi söndürdün. Kamp soğumaya başlayacak.", NotificationType.Warning);
         }
         else
         {
-            // --- ATEŞ SÖNÜKTÜ, OYUNCU YAKMAYA ÇALIŞIYOR ---
+            // 🔥 ATEŞİ YAK
             if (CampSurvivalManager.Instance != null)
             {
-                // StokeFire fonksiyonu zaten odun harcama, sıcaklık artırma ve moral verme işini yapıyor
-                bool isSuccess = CampSurvivalManager.Instance.StokeFire(); 
-                
+                bool isSuccess = CampSurvivalManager.Instance.StokeFire();
+
                 if (isSuccess)
                 {
                     isSparking = true;
+
                     if (sparksParticle != null) sparksParticle.Play();
-                    if (flareSound != null) flareSound.Play();
+
+                    if (flareSound != null) flareSound.Play(); 
+
+                    StartLoop(); // YENİ: A/B Döngüsünü yeniden başlat
                 }
             }
         }
 
-        // Tıklamalar arasına yarım saniyelik çok kısa bir bekleme koyuyoruz ki bug oluşmasın
-        yield return new WaitForSeconds(0.5f); 
+        yield return new WaitForSeconds(0.5f);
         isOnCooldown = false;
     }
 
     void DimFire()
     {
-        if (sparksParticle != null)
+        isSparking = false;
+
+        if (sparksParticle != null) sparksParticle.Stop();
+        
+        StopFireLoops(); // Yeni gün geldiğinde de döngüyü temizle
+    }
+
+    // --- A/B CROSSFADE MANTIĞI (DÜZELTİLDİ) ---
+
+    void StartLoop()
+    {
+        if (campfireLoopA == null || campfireLoopB == null) return;
+
+        // Daha önce çalışan bir döngü varsa çakışmasın diye durdur
+        if (loopCoroutine != null) StopCoroutine(loopCoroutine);
+
+        activeLoop = campfireLoopA;
+        nextLoop = campfireLoopB;
+
+        activeLoop.volume = 1f;
+        nextLoop.volume = 0f;
+        
+        activeLoop.Play();
+        nextLoop.Stop(); // B kanalını susturarak bekle
+
+        loopCoroutine = StartCoroutine(LoopRoutine());
+    }
+
+    void StopFireLoops()
+    {
+        // Döngüyü kırmak için Coroutine'i durdur
+        if (loopCoroutine != null)
         {
-            sparksParticle.Stop();
-            isSparking = false;
+            StopCoroutine(loopCoroutine);
+            loopCoroutine = null;
+        }
+
+        // Açık olan tüm kanalları sustur
+        if (campfireLoopA != null) campfireLoopA.Stop();
+        if (campfireLoopB != null) campfireLoopB.Stop();
+    }
+
+    IEnumerator LoopRoutine()
+    {
+        while (isSparking)
+        {
+            // Eğer AudioSource içine ses dosyası konmadıysa hata vermesin
+            if (activeLoop.clip == null) yield break;
+
+            // Sesin bitimine crossfadeTime kadar süre kalana dek bekle
+            float waitTime = activeLoop.clip.length - crossfadeTime;
+            if (waitTime > 0) yield return new WaitForSeconds(waitTime);
+
+            // Eğer bekleme sırasında ateş söndürüldüyse döngüden çık
+            if (!isSparking) yield break;
+
+            // Sonraki sesi kısık sesle başlat
+            nextLoop.volume = 0f;
+            nextLoop.Play();
+
+            float t = 0f;
+            // Crossfade süresince sesi yavaşça kıs/aç
+            while (t < crossfadeTime && isSparking) 
+            {
+                t += Time.deltaTime;
+                float normalized = t / crossfadeTime;
+
+                activeLoop.volume = 1f - normalized;
+                nextLoop.volume = normalized;
+
+                yield return null;
+            }
+
+            activeLoop.Stop();
+
+            // Swap (Kanalları değiştir)
+            AudioSource temp = activeLoop;
+            activeLoop = nextLoop;
+            nextLoop = temp;
         }
     }
 }

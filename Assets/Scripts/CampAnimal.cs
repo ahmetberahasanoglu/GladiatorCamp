@@ -19,7 +19,7 @@ public class CampAnimal : MonoBehaviour
     public float interactionCooldown = 60f; // Sınırsız sevilmesin diye (Örn: 60 saniyede bir)
 
     private float nextInteractionTime = 0f;
-     public AudioSource barkSound;
+     //public AudioSource barkSound;
 
     private Animator animator;
 
@@ -79,7 +79,7 @@ public class CampAnimal : MonoBehaviour
     {   
         if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
         if (EventSystem.current.IsPointerOverGameObject()) return;
-        barkSound.Play();
+        AudioManager.Instance.PlayBark();
         // Hayvanı sevme süresi gelmiş mi?
         if (Time.time >= nextInteractionTime)
         {

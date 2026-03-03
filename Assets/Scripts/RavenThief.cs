@@ -63,7 +63,7 @@ public class RavenThief : MonoBehaviour
         }
 
        // AudioManager.Instance.PlaySFX(AudioManager.Instance.ravenPoof); // TÜY/ÖLÜM SESİ ÇAL
-        AudioManager.Instance.PlayGold();
+        //AudioManager.Instance.PlayGold();
 
         if (featherPoofEffect != null)
         {

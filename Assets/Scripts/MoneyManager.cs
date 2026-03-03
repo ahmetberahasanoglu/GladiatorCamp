@@ -47,6 +47,7 @@ public class MoneyManager : MonoBehaviour
     {
         gold += amount;
      //   SaveGold();
+     AudioManager.Instance.PlayGold();
         OnGoldChanged?.Invoke(gold);
     }
 

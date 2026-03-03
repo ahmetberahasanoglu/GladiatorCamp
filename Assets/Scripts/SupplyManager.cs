@@ -51,6 +51,7 @@ public class SupplyManager : MonoBehaviour
         if (currentFood >= totalNeededFood)
         {
             currentFood -= totalNeededFood;
+            AudioManager.Instance.PlayEat();
             if (NotificationManager.Instance != null)
                 NotificationManager.Instance.Show($"{daysPassed} günde toplam {totalNeededFood} birim erzak tüketildi.", NotificationType.Info);
         }

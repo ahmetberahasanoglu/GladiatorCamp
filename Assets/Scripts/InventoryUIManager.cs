@@ -33,6 +33,29 @@ public class InventoryUIManager : MonoBehaviour
         inventoryPanel.SetActive(false);
         detailPanel.gameObject.SetActive(false); // Başta kapalı
     }
+    public void UnequipItem(ItemType type)
+    {
+        if (_currentGladiator == null) return;
+
+        // 1. Askerin üstündeki eşyayı bul ve referansını al
+        ItemData itemToRemove = _currentGladiator.GetEquippedItem(type);
+
+        if (itemToRemove != null)
+        {
+            // 2. Eşyayı askerden tamamen çıkart (Değişkeni null yap)
+            _currentGladiator.RemoveItem(type); 
+
+            // 3. Çıkarılan eşyayı ana depoya (InventoryStorage) geri gönder
+            InventoryStorage.Instance.AddItem(itemToRemove);
+            
+            if (NotificationManager.Instance != null)
+                NotificationManager.Instance.Show($"{itemToRemove.itemID} depoya kaldırıldı.", NotificationType.Info);
+            
+            // 4. Ekrandaki slotları ve depoyu yenile
+           RefreshList();     // Depodaki eşyalar güncellensin (Çıkarılan eşya listeye eklendi)
+            RefreshEquipped();
+        }
+    }
 public void RefreshEquipped()
     {
    

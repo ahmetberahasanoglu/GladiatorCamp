@@ -104,7 +104,34 @@ public void InitializeBaseStats()
         AddBonus(shield);
         GetComponent<Gladiator>().RefreshStats();
     }
+    // 1. İstenilen slotta şu an hangi eşyanın takılı olduğunu döndürür
+    public ItemData GetEquippedItem(ItemType type)
+    {
+        switch (type)
+        {
+            case ItemType.Weapon: return weapon;
+            case ItemType.Armor:  return armor;
+            case ItemType.Helmet: return helmet;
+            case ItemType.Shield: return shield;
+            default: return null;
+        }
+    }
 
+    // 2. İstenilen slottaki eşyayı askerden tamamen çıkartır ve gücünü düşürür
+    public void RemoveItem(ItemType type)
+    {
+        switch (type)
+        {
+            case ItemType.Weapon: weapon = null; break;
+            case ItemType.Armor:  armor = null; break;
+            case ItemType.Helmet: helmet = null; break;
+            case ItemType.Shield: shield = null; break;
+        }
+
+        // KRİTİK NOKTA: Eşya üstünden çıktığı için askerin statlarını (güç, defans) yeniden hesapla!
+        // Böylece kılıcı çıkarılan askerin gücü otomatik olarak eski (base) haline döner.
+        RecalculateStats();
+    }
     void AddBonus(ItemData item)
     {
         if (item == null) return;

@@ -50,10 +50,13 @@ public class ItemDetailPanel : MonoBehaviour
         {
             InventoryUIManager.Instance.EquipItem(_selectedItem);
             // Kuşandıktan sonra detayları güncelle (Farklar 0'a dönsün)
+            if (AudioManager.Instance != null) AudioManager.Instance.PlayEquip();
             ShowDetails(_selectedItem, _currentGladiator);
           NotificationManager.Instance.Show($"{item.name} kuşanıldı!", NotificationType.Info);
        //   equipmentDetail.SetActive(false); 
-       Debug.Log("equip yapıldıgında kapatılması gerekiyor bu panelin");
+       gameObject.SetActive(false);
+       //Debug.Log("equip yapıldıgında kapatılması gerekiyor bu panelin");
+       
         });
     }
 

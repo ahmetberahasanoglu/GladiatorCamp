@@ -342,7 +342,7 @@ public class MapEventManager : MonoBehaviour
                 AudioManager.Instance.PlayWarHorn();
                 DayManager.Instance.NextDay(3); 
                 ClosePanel();
-                BattleManager.Instance.StartBattle(3, 1); 
+                BattleManager.Instance.StartBattle(1, 1); 
             });
         }
 

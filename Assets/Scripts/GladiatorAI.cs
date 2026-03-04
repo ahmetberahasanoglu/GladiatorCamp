@@ -7,7 +7,6 @@ public class GladiatorAI : MonoBehaviour
     private NavMeshAgent agent;
     private Gladiator gladiator; 
     private GladiatorTraining training; 
-
     private ActivityPoint currentPoint; 
     private float activityTimer;
 
@@ -17,7 +16,7 @@ public class GladiatorAI : MonoBehaviour
     [Header("Özellikler")]
     public string enemyTag = "Enemy"; 
     public float attackRange = 2.0f;  
-    public float attackCooldown = 1.5f; 
+    public float baseAttackCooldown = 1.5f; // Temel bekleme süresi
     public int damage = 10;
     public int health = 100;
 
@@ -27,10 +26,13 @@ public class GladiatorAI : MonoBehaviour
     private float lastAttackTime;
     public bool isDead = false;
 
-    // --- YENİ EKLENEN KISIM ---
-    // Hasar alırken animasyonun kesilmemesi için ufak bir kontrol
+    // --- YENİ: SAVAŞ KONTROLCÜLERİ ---
     private bool isGettingHit = false; 
+    private bool isAttacking = false; // Saldırı animasyonu oynarken kilitler
+    private float currentAttackSpeed = 1f; // Hız statından gelecek çarpan
 
+    private float lastHitStunTime = 0f;
+    public float stunImmunityDuration = 1.2f; // Karakter sendeledikten sonra 1.2 saniye boyunca tekrar sendelemez
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -40,19 +42,27 @@ public class GladiatorAI : MonoBehaviour
 
     void Start()
     {
-        // YENİ: Animator bileşenini sadece ana objede değil, çocuk objelerde de ara
-        // (Çünkü modeli genelde Gladiator objesinin altına sürükleriz)
         animator = GetComponentInChildren<Animator>();
         if (animator == null) Debug.LogWarning(gameObject.name + " objesinde Animator bulunamadı!");
-
+        
+        stunImmunityDuration = 0.5f + (gladiator.data.stamina * 0.04f);
+        // --- YENİ: HIZ MATEMATİĞİ VE ÇARPIŞMA KONTROLÜ ---
+        // Hız 10 ise %20 (1.2x) daha hızlı vurur, Hız 50 ise %100 (2.0x) daha hızlı vurur!
+        currentAttackSpeed = 1f + (gladiator.data.speed * 0.02f);
+      
+        // Yürüme hızı
         agent.speed = 3.5f + (gladiator.data.speed * 0.05f);
+        
+        // KAOS ENGELLEYİCİ: Askerler hedefin tam içine girmek yerine menzilin ucunda durur
+        agent.stoppingDistance = attackRange * 0.8f; 
+        
         StartCoroutine(LifeCycleRoutine());
     }
     
     void Update()
     {
-        // Eğer öldüysek, savaşmıyorsak veya hasar animasyonu oynuyorsa hareketi kes
-        if (isDead || BattleManager.Instance.state != BattleState.Fighting || isGettingHit) return;
+        // Ölüyse, savaşmıyorsa, hasar alıyorsa veya SALDIRI YAPARKEN kilitliyse hareketi kes
+        if (isDead || BattleManager.Instance.state != BattleState.Fighting || isGettingHit || isAttacking) return;
 
         if (target == null)
         {
@@ -68,18 +78,19 @@ public class GladiatorAI : MonoBehaviour
 
         if (distance <= attackRange)
         {
-            // --- SALDIRI ---
+            // --- MENZİLDEYİZ ---
             if (agent.isActiveAndEnabled) agent.isStopped = true;
             if (animator) animator.SetBool("isRunning", false);
 
+            // Hedefe Dön
             Vector3 direction = (target.position - transform.position).normalized;
             direction.y = 0;
             if(direction != Vector3.zero) transform.rotation = Quaternion.LookRotation(direction);
 
-            if (Time.time > lastAttackTime + attackCooldown)
+            // Cooldown süresini askerin Hızına (currentAttackSpeed) göre kısaltıyoruz!
+            if (Time.time > lastAttackTime + (baseAttackCooldown / currentAttackSpeed))
             {
-                Attack();
-                lastAttackTime = Time.time;
+                StartCoroutine(AttackRoutine());
             }
         }
         else
@@ -94,26 +105,49 @@ public class GladiatorAI : MonoBehaviour
         }
     }
 
-    void Attack()
+    
+// Eski AttackRoutine'i silip bunu yapıştır:
+    IEnumerator AttackRoutine()
     {
-        if (animator) animator.SetTrigger("Attack");
+        isAttacking = true;
+        lastAttackTime = Time.time;
 
-        if (target != null)
+        if (animator) 
         {
-            GladiatorAI enemyAI = target.GetComponent<GladiatorAI>();
-            if (enemyAI != null && gladiator.data != null)
+            animator.SetFloat("AttackSpeedMultiplier", currentAttackSpeed);
+            animator.SetTrigger("Attack");
+        }
+
+        // Artık burada saniye beklemiyoruz! Animasyonun bitmesini bekliyoruz.
+        // Saldırı animasyonunun uzunluğu yaklaşık 1 saniye ise, hıza bölerek bekliyoruz.
+        yield return new WaitForSeconds(1.0f / currentAttackSpeed);
+        
+        isAttacking = false;
+    }
+
+    // YENİ FONKSİYON: Animasyondaki iğne (Event) tetiklendiğinde burası çalışır
+    public void ExecuteMeleeHit()
+    {
+        if (target != null && !isDead)
+        {
+            float currentDist = Vector3.Distance(transform.position, target.position);
+            // Kılıç savrulurken adam kaçmadıysa (Menzildeyse) hasar ver
+            if (currentDist <= attackRange * 1.5f) 
             {
-                float damage = gladiator.data.strength * 1.5f;
-                damage += (gladiator.data.level * 2);
+                GladiatorAI enemyAI = target.GetComponent<GladiatorAI>();
+                if (enemyAI != null && !enemyAI.isDead && gladiator.data != null)
+                {
+                    float attackDamage = gladiator.data.strength * 1.5f;
+                    attackDamage += (gladiator.data.level * 2);
 
-                bool isCrit = Random.Range(0, 100) < gladiator.data.speed;
-                if (isCrit) damage *= 1.5f; 
+                    bool isCrit = Random.Range(0, 100) < gladiator.data.speed;
+                    if (isCrit) attackDamage *= 1.5f; 
 
-                enemyAI.TakeDamage(damage, isCrit);
+                    enemyAI.TakeDamage(attackDamage, isCrit);
+                }
             }
         }
     }
-
     public void TakeDamage(float incomingDamage, bool isCritical = false)
     {
         if (isDead || gladiator.data == null) return;
@@ -135,11 +169,17 @@ public class GladiatorAI : MonoBehaviour
             DamageTextManager.Instance.ShowDamage(transform.position, finalDamage, isCritical ? 1 : 0);
         }
 
-        // --- YENİ EKLENEN KISIM: HASAR ALMA ANİMASYONU ---
-        if (gladiator.currentHealth > 0)
+       if (gladiator.currentHealth > 0)
         {
-            if (animator) animator.SetTrigger("getHit");
-            StartCoroutine(HitStunRoutine());
+            // Sadece son sendelemenin üzerinden yeterli zaman geçtiyse VEYA yediği darbe Kritikse animasyon iptal edilsin
+            if (Time.time > lastHitStunTime + stunImmunityDuration || isCritical)
+            {
+                if (animator) animator.SetTrigger("getHit");
+                StartCoroutine(HitStunRoutine());
+                
+                lastHitStunTime = Time.time; 
+            }
+          
         }
         else
         {
@@ -147,14 +187,12 @@ public class GladiatorAI : MonoBehaviour
         }
     }
 
-    // Hasar alındığında kısa süreli (0.5s) sersemleme efekti yaratır
     IEnumerator HitStunRoutine()
     {
         isGettingHit = true;
         if (agent.isActiveAndEnabled) agent.isStopped = true;
         if (animator) animator.SetBool("isRunning", false);
         
-        // Animasyonun bitmesini bekle (Yaklaşık yarım saniye)
         yield return new WaitForSeconds(0.5f);
         
         isGettingHit = false;
@@ -165,8 +203,8 @@ public class GladiatorAI : MonoBehaviour
         if (isDead) return; 
 
         isDead = true;
+        isAttacking = false; // Ölürken saldırı döngüsünü kesin kır
         
-        // --- YENİ EKLENEN SATIR: UI'a "Ben öldüm, kapasiteyi güncelle" diye bağır ---
         if (TopInfoBarUI.Instance != null) TopInfoBarUI.Instance.UpdateCapacity();
         if (GladiatorSelector.Instance != null) GladiatorSelector.Instance.DeselectIfDead(this.gameObject);
         
@@ -189,19 +227,11 @@ public class GladiatorAI : MonoBehaviour
             Destroy(skullVFX, 3.0f);
         }
         
-        if (BattleManager.Instance != null)
-        {
-            BattleManager.Instance.CheckBattleStatus();
-        }
-
-        if (NotificationManager.Instance != null)
-        {
-            NotificationManager.Instance.Show($"{gladiator.data.gladiatorName} öldü", NotificationType.Error);
-        }
+        if (BattleManager.Instance != null) BattleManager.Instance.CheckBattleStatus();
+        if (NotificationManager.Instance != null) NotificationManager.Instance.Show($"{gladiator.data.gladiatorName} öldü", NotificationType.Error);
 
         Destroy(gameObject, 5f);
     }
-
     void FindNearestTarget()
     {
         GameObject[] enemies = GameObject.FindGameObjectsWithTag(enemyTag);

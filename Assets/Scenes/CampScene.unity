@@ -3088,6 +3088,7 @@ GameObject:
   - component: {fileID: 117752254}
   - component: {fileID: 117752253}
   - component: {fileID: 117752252}
+  - component: {fileID: 117752255}
   m_Layer: 5
   m_Name: Image
   m_TagString: Untagged
@@ -3129,6 +3130,7 @@ MonoBehaviour:
   slotType: 0
   iconImage: {fileID: 117752253}
   emptySprite: {fileID: 21300000, guid: c8fb4a68481c7c6468647dce81289816, type: 3}
+  unequipButton: {fileID: 117752255}
 --- !u!114 &117752253
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3167,6 +3169,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 117752250}
   m_CullTransparentMesh: 1
+--- !u!114 &117752255
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 117752250}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 117752253}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &119715863
 GameObject:
   m_ObjectHideFlags: 0
@@ -7983,6 +8029,7 @@ GameObject:
   - component: {fileID: 212288440}
   - component: {fileID: 212288439}
   - component: {fileID: 212288438}
+  - component: {fileID: 212288441}
   m_Layer: 5
   m_Name: Image (1)
   m_TagString: Untagged
@@ -8024,6 +8071,7 @@ MonoBehaviour:
   slotType: 1
   iconImage: {fileID: 212288439}
   emptySprite: {fileID: 21300000, guid: c8fb4a68481c7c6468647dce81289816, type: 3}
+  unequipButton: {fileID: 212288441}
 --- !u!114 &212288439
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8062,6 +8110,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 212288436}
   m_CullTransparentMesh: 1
+--- !u!114 &212288441
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 212288436}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 212288439}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &216140548
 GameObject:
   m_ObjectHideFlags: 0
@@ -8807,19 +8899,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 242211966}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1999643166}
-        m_TargetAssemblyTypeName: AudioManager, Assembly-CSharp
-        m_MethodName: PlayBlacksmith
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &242211966
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20261,7 +20341,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -87.5, y: -295}
+  m_AnchoredPosition: {x: -257, y: -295}
   m_SizeDelta: {x: 175, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &519022082
@@ -43387,8 +43467,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6730431dd9b173641af18548dba32c7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildingClickable
-  buildingName: camppanel
-  description: 
+  buildingName: "\u0130n\u015Faat Binas\u0131"
+  description: "Binalar\u0131na tadilat ve geli\u015Ftirme i\xE7in buray\u0131 kullan."
   currentState: 1
   repairCost: 500
   ruinedModel: {fileID: 1431250195}
@@ -44433,7 +44513,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 262.49994, y: -295}
+  m_AnchoredPosition: {x: 262.5, y: -295}
   m_SizeDelta: {x: 175, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1341617785
@@ -45167,8 +45247,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6730431dd9b173641af18548dba32c7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildingClickable
-  buildingName: Seferpanel
-  description: 
+  buildingName: "Ke\u015Fif Birli\u011Fi"
+  description: "Askerlerini odun veya alt\u0131n bulmak i\xE7in ke\u015Fiflere buradan
+    g\xF6nderirsin."
   currentState: 1
   repairCost: 500
   ruinedModel: {fileID: 2140089550}
@@ -51011,7 +51092,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6730431dd9b173641af18548dba32c7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildingClickable
-  buildingName: asevi
+  buildingName: "A\u015Fevi"
   description: "Bu bina erzak alman\u0131z\u0131 saglar"
   currentState: 1
   repairCost: 500
@@ -54445,8 +54526,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6730431dd9b173641af18548dba32c7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildingClickable
-  buildingName: Market
-  description: 
+  buildingName: Demirci
+  description: Buradan askerlerinize ekipmanlar edinebilirsiniz.
   currentState: 1
   repairCost: 500
   ruinedModel: {fileID: 671597417}
@@ -57753,6 +57834,7 @@ GameObject:
   - component: {fileID: 1733459557}
   - component: {fileID: 1733459556}
   - component: {fileID: 1733459555}
+  - component: {fileID: 1733459558}
   m_Layer: 5
   m_Name: Image (3)
   m_TagString: Untagged
@@ -57794,6 +57876,7 @@ MonoBehaviour:
   slotType: 3
   iconImage: {fileID: 1733459556}
   emptySprite: {fileID: 21300000, guid: c8fb4a68481c7c6468647dce81289816, type: 3}
+  unequipButton: {fileID: 1733459558}
 --- !u!114 &1733459556
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -57832,6 +57915,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1733459553}
   m_CullTransparentMesh: 1
+--- !u!114 &1733459558
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1733459553}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 1733459556}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &1733522332
 GameObject:
   m_ObjectHideFlags: 0
@@ -60760,6 +60887,7 @@ GameObject:
   - component: {fileID: 1816655615}
   - component: {fileID: 1816655614}
   - component: {fileID: 1816655613}
+  - component: {fileID: 1816655616}
   m_Layer: 5
   m_Name: Image (2)
   m_TagString: Untagged
@@ -60801,6 +60929,7 @@ MonoBehaviour:
   slotType: 2
   iconImage: {fileID: 1816655614}
   emptySprite: {fileID: 21300000, guid: c8fb4a68481c7c6468647dce81289816, type: 3}
+  unequipButton: {fileID: 1816655616}
 --- !u!114 &1816655614
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -60839,6 +60968,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1816655611}
   m_CullTransparentMesh: 1
+--- !u!114 &1816655616
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1816655611}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 1816655614}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!4 &1817395712 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8199249045260833029, guid: 4b21e533c871dba4bb5c56ba22947be8, type: 3}
@@ -67378,6 +67551,7 @@ MonoBehaviour:
   eventVolume: 1
   upgradeBuilding: {fileID: 8300000, guid: 0c8beecd1b5bf0f40b25dd76a3bc9055, type: 3}
   blacksmithOpen: {fileID: 8300000, guid: 4c7b9ad76ed459440a2d3a2e77b13232, type: 3}
+  equipSound: {fileID: 8300000, guid: 51ebfd13b6ffd82449de21488af659a7, type: 3}
   barkSound: {fileID: 8300000, guid: 906236df93d4c044891d082883851f1b, type: 3}
   woodSound: {fileID: 8300000, guid: 55f9a63e2b2e28c4b8f824dc8ccd39d7, type: 3}
   trainHitSound: {fileID: 8300000, guid: 55f9a63e2b2e28c4b8f824dc8ccd39d7, type: 3}
@@ -69773,7 +69947,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -262.5, y: -295}
+  m_AnchoredPosition: {x: -87.5, y: -295}
   m_SizeDelta: {x: 175, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2085589905

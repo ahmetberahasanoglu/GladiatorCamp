@@ -87,6 +87,20 @@ public class CampManager : MonoBehaviour
             };
             buildings.Add(demirci);
         }
+        // 3. TALİMHANEYİ EKLE
+        if (!buildings.Any(b => b.id == "talimhane"))
+        {
+            Building talimhane = new Building {
+                id = "talimhane", 
+                displayName = "Enderun Talimhanesi",
+                baseCost = 300, 
+                baseValue = 15, // Lvl 1'de maksimum 15 stata kadar eğitir
+                increasePerLevel = 10, // Lvl 2'de 25, Lvl 3'te 35 olur
+                maxLevel = 3
+                // Varsa stageVisuals = talimhaneVisuals ataması yapabilirsin
+            };
+            buildings.Add(talimhane);
+        }
 
         // Görselleri güncelle
         foreach (var building in buildings)

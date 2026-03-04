@@ -30,9 +30,10 @@ public class AudioManager : MonoBehaviour
 
     [Header("Kamp İçi Eylem Sesleri (Her Şey İçin)")]
     public AudioClip upgradeBuilding;
-    public AudioClip blacksmithOpen;
+    public AudioClip blacksmithOpen;    
     public AudioClip equipSound;
     public AudioClip barkSound;
+    public AudioClip swordSwoosh;
     public AudioClip woodSound;
     public AudioClip trainHitSound; // Talimhanede kılıç/odun vurma sesi
     public AudioClip eatFoodSound;  // Gün sonu erzak yendiğinde tok bir ses
@@ -150,5 +151,6 @@ public class AudioManager : MonoBehaviour
     public void PlayEat() => PlaySFX(eatFoodSound, actionVolume);
     public void PlayBark() => PlaySFX(barkSound, actionVolume);
     public void PlayWood() => PlaySFX(woodSound, actionVolume);
+    public void PlaySword() => PlaySFX(swordSwoosh, 0.8f);
     public void PlayMapMove() => PlaySFX(mapMoveSound, actionVolume);
 }

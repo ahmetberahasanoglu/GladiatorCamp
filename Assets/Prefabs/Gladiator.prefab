@@ -684,12 +684,9 @@ MonoBehaviour:
   deathEffectPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
   enemyTag: EnemySoldier
   attackRange: 2
-  baseAttackCooldown: 1.5
-  damage: 10
-  health: 100
+  baseAttackAnimLength: 1.733
   target: {fileID: 0}
   isDead: 0
-  stunImmunityDuration: 1.2
 --- !u!114 &8161922304838044321
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11472,7 +11469,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 292}
-  m_SizeDelta: {x: 293, y: 0}
+  m_SizeDelta: {x: 293, y: 180}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1482052842098115248
 CanvasRenderer:
@@ -11496,7 +11493,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 0.5176471}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -11525,7 +11522,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
   m_HorizontalFit: 0
-  m_VerticalFit: 2
+  m_VerticalFit: 0
 --- !u!114 &7820501046790636054
 MonoBehaviour:
   m_ObjectHideFlags: 0

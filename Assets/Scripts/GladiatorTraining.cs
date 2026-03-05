@@ -28,7 +28,6 @@ public ParticleSystem levelUpParticle;
     }
     void OnMouseDown()
     {
-        // Asker eğitimdeyse seçilemesin
         if (IsTraining)
         {
             if (NotificationManager.Instance != null) 
@@ -49,8 +48,6 @@ public ParticleSystem levelUpParticle;
             selectionRing.SetActive(isSelected);
         }
     }
-
-    // 3D Obje (TrainingSpot) tıklandığında çağrılır
     public void StartTraining(TrainingSpot spot)
     {
         if (IsTraining) return;
@@ -61,30 +58,17 @@ public ParticleSystem levelUpParticle;
 
         currentTrainingType = spot.trainingType;
         remainingDays = GetRequiredDays(gladiator.data.level);
-
-        // Eğitim yerine yürüsün
         agent.SetDestination(spot.trainingPoint.position);
-
-        // Noktaya varışın takibi
         StartCoroutine(WalkAndBeginTraining());
     }
 
     IEnumerator WalkAndBeginTraining()
     {
-        // 1. NavMesh yolunu hesaplayana kadar bekle
         while (agent.pathPending) yield return null;
-        
-        // 2. Noktaya varana kadar bekle
         while (agent.remainingDistance > agent.stoppingDistance)
         {
             yield return null;
         }
-
-        // Hedefe vardı! Animasyonu başlatabilirsin
-        // GetComponent<Animator>().SetBool("IsTraining", true);
-
-        // GÜN BAZLI eğitim başlıyor (Tıkladığın an gün GEÇMEZ)
-       // UITrainingProgress.Instance.StartProgress(remainingDays);
 
         DayManager.Instance.OnNewDay += OnNewDay;
     }
@@ -114,13 +98,11 @@ public ParticleSystem levelUpParticle;
 
         DayManager.Instance.OnNewDay -= OnNewDay;
         gladiator.RefreshStats();
-        //UITrainingProgress.Instance.Hide();
-        // Eğitim bitince coşkulu bir partikül patlat!
+
 if (levelUpParticle != null)
 {
     levelUpParticle.Play();
 }
-        // Eğitim bitti animasyonunu kapatabilirsin
         // GetComponent<Animator>().SetBool("IsTraining", false);
     }
 
@@ -133,8 +115,6 @@ if (levelUpParticle != null)
 
     private void ApplyStatGain(TrainingType type, int amount)
     {
-        // GÜNCEL KISIM: Statı direkt data'ya yazarsak kılıç çıkardığında silinir.
-        // O yüzden Inventory'deki Base (Ham) statları güncelleyen o yeni fonksiyonu çağırıyoruz!
         GladiatorInventory inv = GetComponent<GladiatorInventory>();
         if (inv != null)
         {
@@ -142,7 +122,7 @@ if (levelUpParticle != null)
         }
         else
         {
-            // Eğer bir sebeple Inventory yoksa (ki olmalı), yine de güvenli liman olarak data'ya yazsın
+       
             switch (type)
             {
                 case TrainingType.Strength: gladiator.data.strength += amount; break;

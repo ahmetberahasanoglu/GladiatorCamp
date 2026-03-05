@@ -36,12 +36,10 @@ public class GladiatorBark : MonoBehaviour
         Invoke(nameof(TriggerRandomBark), Random.Range(minTimeBetweenBarks, maxTimeBetweenBarks));
     }
 
-    // YENİ: Savaş başladığı an açık olan balonları anında gizlemek için
     void Update()
     {
         if (BattleManager.Instance != null && BattleManager.Instance.state == BattleState.Fighting)
         {
-            // Eğer balon açıksa hemen kapat ve Coroutine'i durdur
             if (bubbleBackground != null && bubbleBackground.gameObject.activeSelf)
             {
                 if (_barkRoutine != null) StopCoroutine(_barkRoutine);
@@ -54,12 +52,10 @@ public class GladiatorBark : MonoBehaviour
     void TriggerRandomBark()
     {
         GladiatorAI ai = GetComponent<GladiatorAI>();
-        
-        // GÜNCELLEME: Asker seferdeyse, ölüyse VEYA SAVAŞTAYSA konuşmayı iptal et!
+
         if (_gladiator.isOnMission || (ai != null && ai.isDead) || 
            (BattleManager.Instance != null && BattleManager.Instance.state == BattleState.Fighting)) 
         {
-            // Konuşmadı ama döngünün devam etmesi için yeniden Invoke çağırıyoruz
             Invoke(nameof(TriggerRandomBark), Random.Range(minTimeBetweenBarks, maxTimeBetweenBarks));
             return;
         }

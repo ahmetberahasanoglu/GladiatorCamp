@@ -9,7 +9,7 @@ public class Building
     public string id;           
     public string displayName;  
     public int level = 1;       
-    public int maxLevel = 3;    // YENİ: Binalar sonsuza kadar gelişmesin
+    public int maxLevel = 3;    
     public int baseCost = 200;  
     public int baseValue = 3;   
     public int increasePerLevel = 2; 
@@ -19,12 +19,12 @@ public class Building
 
     public int GetCost() 
     {
-        return baseCost * level; // Lvl 1 -> 200, Lvl 2 -> 400 Akçe
+        return baseCost * level; 
     }
 
     public int GetValue()
     {
-        return baseValue + ((level - 1) * increasePerLevel); // Lvl 1 -> 3, Lvl 2 -> 5, Lvl 3 -> 7
+        return baseValue + ((level - 1) * increasePerLevel);
     }
 
     public int GetNextValue()
@@ -56,7 +56,7 @@ public class CampManager : MonoBehaviour
 
     [Header("Bina Görselleri (Sırayla Lvl1, Lvl2, Lvl3...)")]
     public GameObject[] kogusVisuals; 
-    public GameObject[] demirciVisuals; // YENİ: Demirci Çadırları/Binaları
+    public GameObject[] demirciVisuals;
 
     void Awake()
     {
@@ -77,39 +77,36 @@ public class CampManager : MonoBehaviour
             buildings.Add(kogus);
         }
         
-        // 2. DEMİRCİYİ EKLE (Artık sistemin resmi bir parçası!)
         if (!buildings.Any(b => b.id == "demirci"))
         {
             Building demirci = new Building {
                 id = "demirci", displayName = "Demirci Atölyesi",
-                baseCost = 200, baseValue = 3, increasePerLevel = 2, maxLevel = 3, // Vitrin 3 -> 5 -> 7 olacak
+                baseCost = 200, baseValue = 3, increasePerLevel = 2, maxLevel = 3, 
                 stageVisuals = demirciVisuals
             };
             buildings.Add(demirci);
         }
-        // 3. TALİMHANEYİ EKLE
+
         if (!buildings.Any(b => b.id == "talimhane"))
         {
             Building talimhane = new Building {
                 id = "talimhane", 
                 displayName = "Enderun Talimhanesi",
                 baseCost = 300, 
-                baseValue = 15, // Lvl 1'de maksimum 15 stata kadar eğitir
-                increasePerLevel = 10, // Lvl 2'de 25, Lvl 3'te 35 olur
+                baseValue = 15, 
+                increasePerLevel = 10, 
                 maxLevel = 3
-                // Varsa stageVisuals = talimhaneVisuals ataması yapabilirsin
+               
             };
             buildings.Add(talimhane);
         }
 
-        // Görselleri güncelle
         foreach (var building in buildings)
         {
             building.UpdateVisuals();
         }
     }
 
-    // İstenilen binanın kapasitesini/değerini almak için GENEL bir fonksiyon yazdık
     public int GetBuildingValue(string buildingId)
     {
         var b = buildings.FirstOrDefault(x => x.id == buildingId);
@@ -126,7 +123,6 @@ public class CampManager : MonoBehaviour
         var b = buildings.FirstOrDefault(x => x.id == id);
         if (b == null) return;
 
-        // MAKSİMUM SEVİYE KONTROLÜ
         if (b.level >= b.maxLevel)
         {
             if (NotificationManager.Instance != null) NotificationManager.Instance.Show($"{b.displayName} maksimum seviyede!", NotificationType.Warning);

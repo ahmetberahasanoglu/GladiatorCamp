@@ -10,28 +10,25 @@ public class MapManager : MonoBehaviour
     [Header("UI")]
     public GameObject mapPanel;
     public RectTransform playerIcon;
-    public float moveDuration = 1.2f; // Gitme süresi (Saniye)
-    
-    // YENİ EKLENEN: İkonun merkezden ne kadar uzakta duracağı (Örn: X'te -30 sol demek)
+    public float moveDuration = 1.2f; 
+
     [Header("Hiza Ayarı")]
     public Vector2 iconOffset = new Vector2(-40f, 0f); 
 
     [Header("Sallanma (Cartoon Efekt)")]
-    public float wiggleSpeed = 6f; // Ne kadar hızlı sallanacak
-    public float wiggleAngle = 12f; // Kaç derece sağa/sola yatacak
+    public float wiggleSpeed = 6f; 
+    public float wiggleAngle = 12f; 
 
     [Header("Ayarlar")]
     public List<MapNode> startingNodes; 
-    public MapNode currentNode; // Şu an neredeyiz?
+    public MapNode currentNode;
     [Header("Geri Çekilme (Retreat) Hafızası")]
-    public MapNode previousNode; // Bir önceki düğüm
-    public static string sessionPreviousNode = ""; // Oturumda kalan eski düğüm
+    public MapNode previousNode;
+    public static string sessionPreviousNode = ""; 
 
     [Header("Çizgi Ayarları")]
     public GameObject linePrefab; 
     public Transform lineContainer; 
-
-    // Oturum boyunca konumu aklında tutacak statik değişken
     public static string sessionLastNode = "";
 public bool isMapOpen = false;
     void Awake()
@@ -106,7 +103,6 @@ public bool isMapOpen = false;
 
     void LoadPlayerPosition()
     {
-        // 1. Hafızada (O anki oturumda) kayıtlı bir düğüm var mı?
         if (!string.IsNullOrEmpty(sessionLastNode))
         {
             GameObject savedNodeObj = GameObject.Find(sessionLastNode);
@@ -118,11 +114,10 @@ public bool isMapOpen = false;
                 {
                     currentNode = savedNode;
                     
-                    // DEĞİŞEN KISIM: Yüklemede de Offset'i ekliyoruz
                     playerIcon.anchoredPosition = savedNode.GetComponent<RectTransform>().anchoredPosition + iconOffset;
                     
                     Debug.Log("Sahneler arası dönüş: " + sessionLastNode + " noktasına dönüldü.");
-                    return; // İşlem bitti
+                    return;
                 }
             }
         }
@@ -130,22 +125,17 @@ public bool isMapOpen = false;
 
    public void SelectNode(MapNode targetNode)
     {
-        // KONTROL: Oraya gitmeye iznimiz var mı?
         if (!IsMoveValid(targetNode))
         {
             Debug.Log("Oraya gidemezsin! Bağlantı yok.");
             return;
         }
 
-        // --- YENİ EKLENEN: Harekete başlamadan önce eski konumu hafızaya al ---
         if (currentNode != null)
         {
             previousNode = currentNode;
             sessionPreviousNode = previousNode.gameObject.name;
         }
-        // ------------------------------------------------------------------------
-
-        // HAREKET ONAYLANDI
         currentNode = targetNode;
         StartCoroutine(MoveIconRoutine(targetNode));
     }
@@ -158,19 +148,16 @@ public bool isMapOpen = false;
         }
         return currentNode.outgoingPaths.Contains(target);
     }
-
-    // Savaşi kaybedince BattleManager veya UI tarafından çağrılacak
     public void RetreatToPreviousNode()
     {
         if (previousNode != null)
         {
             Debug.Log($"Savaş Kaybedildi! Geri çekiliniyor: {previousNode.nodeType}");
             
-            // Konumları geri al
             currentNode = previousNode;
             sessionLastNode = sessionPreviousNode;
 
-            // İkonu anında eski düğüme ışınla (Zaten harita o an kapalı olduğu için oyuncu ışınlanmayı görmez)
+
             playerIcon.anchoredPosition = previousNode.GetComponent<RectTransform>().anchoredPosition + iconOffset;
         }
         else
@@ -178,7 +165,6 @@ public bool isMapOpen = false;
             Debug.LogWarning("Geri dönülecek bir önceki konum bulunamadı!");
         }
     }
-    // Bu fonksiyonu savaşa girildiği an veya harita açıldığı an çağıracağız
     public void CloseAllOpenPanels()
     {
      
@@ -199,19 +185,14 @@ public bool isMapOpen = false;
             TrainingUIManager.Instance.SetCurrentGladiator(null);
         }
 
-        // Varsa kamp arayüzünü (Top Bar vs.) savaşta gizlemek istersen onları da buraya ekleyebilirsin.
     }
     public IEnumerator MoveIconRoutine(MapNode targetNode)
     {
         RectTransform targetRect = targetNode.GetComponent<RectTransform>();
         AudioManager.Instance.PlayMapMove();
-        // UI elemanları olduğu için anchoredPosition kullanıyoruz
         Vector2 startPos = playerIcon.anchoredPosition;
-        
-        // DEĞİŞEN KISIM: Hedef pozisyona Offset'i ekliyoruz
         Vector2 targetPos = targetRect.anchoredPosition + iconOffset;
 
-        // 1. ADIM: YÜZÜNÜ DÖN (FLIP) - Yüzünü dönerken asıl Node'un pozisyonunu baz alıyoruz ki kayma şaşırtmasın
         Vector3 currentScale = playerIcon.localScale;
         if (targetRect.anchoredPosition.x > startPos.x)
         {
@@ -222,7 +203,6 @@ public bool isMapOpen = false;
             playerIcon.localScale = new Vector3(-Mathf.Abs(currentScale.x), currentScale.y, currentScale.z);
         }
 
-        // 2. ADIM: SMOOTH HAREKET VE SALLANMA
         float t = 0;
         
         while (t < 1f)
@@ -238,17 +218,15 @@ public bool isMapOpen = false;
             yield return null;
         }
 
-        // 3. ADIM: TAMAMLAMA
+
         playerIcon.anchoredPosition = targetPos;
         playerIcon.rotation = Quaternion.Euler(0, 0, 0); 
         
         Debug.Log($"Yolculuk Tamamlandı! Gidilen yer: {targetNode.nodeType}");
         
-        // --- SADECE OTURUMA (STATE) KAYDET ---
-        sessionLastNode = targetNode.gameObject.name;
-        // -------------------------------------
 
-        // 4. ADIM: EVENT BURADA TETİKLENİYOR
+        sessionLastNode = targetNode.gameObject.name;
+  
         TriggerEvent(targetNode);
     }
 

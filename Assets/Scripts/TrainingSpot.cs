@@ -11,7 +11,7 @@ public class TrainingSpot : MonoBehaviour
     public bool isBusy = false;
 
     [Header("Görsel Geri Bildirim")]
-    public GameObject hoverTextObj; // Üzerine gelince çıkacak olan yazı
+    public GameObject hoverTextObj; 
     public Vector3 hoverScale = new Vector3(1.1f, 1.1f, 1.1f); 
     private Vector3 originalScale;
 
@@ -51,7 +51,6 @@ public class TrainingSpot : MonoBehaviour
             return;
         }
 
-        // 1. KONTROL: Seçili bir gladyatör var mı?
         GladiatorTraining currentGladiator = TrainingUIManager.Instance.current;
         
         if (currentGladiator == null)
@@ -75,7 +74,6 @@ public class TrainingSpot : MonoBehaviour
             return;
         }
 
-        // --- GÜNCELLENEN KISIM: HAM STAT (BASE STAT) HESAPLAMA ---
         int maxAllowedStat = CampManager.Instance != null ? CampManager.Instance.GetBuildingValue("talimhane") : 15;
         
         JanissaryData data = currentGladiator.GetComponent<Gladiator>().data;
@@ -86,7 +84,6 @@ public class TrainingSpot : MonoBehaviour
             int currentTotalStat = 0;
             int equipmentBonus = 0;
 
-            // Önce toplam statı ve o statı etkileyen ekipmanların bonuslarını topluyoruz
             switch (trainingType)
             {
                 case TrainingType.Strength: 
@@ -119,7 +116,6 @@ public class TrainingSpot : MonoBehaviour
                     break;
             }
 
-            // Toplam stattan, eşyalardan gelen sahte gücü çıkartıyoruz!
             int baseStatValue = currentTotalStat - equipmentBonus;
 
             if (baseStatValue >= maxAllowedStat)
@@ -128,12 +124,10 @@ public class TrainingSpot : MonoBehaviour
                     NotificationManager.Instance.Show($"Askerin saf yeteneği sınırda! (Maks: {maxAllowedStat}). Daha fazlası için Talimhaneyi geliştirin.", NotificationType.Warning);
                 
                 if (AudioManager.Instance != null) AudioManager.Instance.PlayError();
-                return; // Eğitime gönderme, işlemi iptal et!
+                return; 
             }
         }
-        // -----------------------------------------------------------
 
-        // 2. KONTROL: Paramız yetiyor mu?
         if (MoneyManager.Instance.Spend(MoneyManager.Instance.trainingCost))
         {
             currentGladiator.StartTraining(this);

@@ -46,7 +46,6 @@ public void InitializeBaseStats()
         
       
     }
-   // GladiatorInventory.cs içindeki Equip fonksiyonunu bununla değiştir:
 
     public void Equip(ItemData newItem)
     {
@@ -104,7 +103,7 @@ public void InitializeBaseStats()
         AddBonus(shield);
         GetComponent<Gladiator>().RefreshStats();
     }
-    // 1. İstenilen slotta şu an hangi eşyanın takılı olduğunu döndürür
+
     public ItemData GetEquippedItem(ItemType type)
     {
         switch (type)
@@ -117,7 +116,6 @@ public void InitializeBaseStats()
         }
     }
 
-    // 2. İstenilen slottaki eşyayı askerden tamamen çıkartır ve gücünü düşürür
     public void RemoveItem(ItemType type)
     {
         switch (type)
@@ -127,9 +125,6 @@ public void InitializeBaseStats()
             case ItemType.Helmet: helmet = null; break;
             case ItemType.Shield: shield = null; break;
         }
-
-        // KRİTİK NOKTA: Eşya üstünden çıktığı için askerin statlarını (güç, defans) yeniden hesapla!
-        // Böylece kılıcı çıkarılan askerin gücü otomatik olarak eski (base) haline döner.
         RecalculateStats();
     }
     void AddBonus(ItemData item)

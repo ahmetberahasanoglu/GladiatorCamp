@@ -104,7 +104,7 @@ public class GladiatorSelector : MonoBehaviour
     }
 
     // Kod tekrarını önlemek için temizlik işini tek bir fonksiyona topladık
-    private void ClearSelection()
+    public void ClearSelection()
     {
         selectedInventory = null;
 

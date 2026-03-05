@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI; // Image kullanacağımız için eklendi
+using UnityEngine.UI; 
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,14 +7,14 @@ using System.Collections.Generic;
 public class GladiatorBark : MonoBehaviour
 {
     [Header("UI Referansları")]
-    public TextMeshProUGUI barkText;      // Artık UGUI kullanıyoruz
-    public Image bubbleBackground;        // Konuşma balonunun arka planı
+    public TextMeshProUGUI barkText;      
+    public Image bubbleBackground;        
 
     [Header("Zaman Ayarları")]
     public float minTimeBetweenBarks = 10f; 
     public float maxTimeBetweenBarks = 25f; 
     public float displayDuration = 3.5f;    
-    public float typeDelay = 0.04f;       // YENİ: Daktilo hızı (Harf başı geçen süre)
+    public float typeDelay = 0.04f;       
 
     [Header("Replikler (Aklından Geçenler)")]
     public List<string> idleBarks;       
@@ -30,27 +30,39 @@ public class GladiatorBark : MonoBehaviour
     {
         _gladiator = GetComponent<Gladiator>();
         
-        // Başlangıçta yazıyı ve balonu tamamen kapat ki havada boş balon durmasın
         if (bubbleBackground != null) bubbleBackground.gameObject.SetActive(false);
         barkText.text = "";
 
         Invoke(nameof(TriggerRandomBark), Random.Range(minTimeBetweenBarks, maxTimeBetweenBarks));
     }
-/*
-    void LateUpdate()
+
+    // YENİ: Savaş başladığı an açık olan balonları anında gizlemek için
+    void Update()
     {
-        // Yazı (ve balon) açıksa, Canvas'ın her zaman kameraya bakmasını (Billboard) sağla
-        if (barkText != null && Camera.main != null && bubbleBackground.gameObject.activeSelf)
+        if (BattleManager.Instance != null && BattleManager.Instance.state == BattleState.Fighting)
         {
-            // Text'in bağlı olduğu ana Canvas'ı döndürüyoruz
-            barkText.canvas.transform.rotation = Camera.main.transform.rotation;
+            // Eğer balon açıksa hemen kapat ve Coroutine'i durdur
+            if (bubbleBackground != null && bubbleBackground.gameObject.activeSelf)
+            {
+                if (_barkRoutine != null) StopCoroutine(_barkRoutine);
+                barkText.text = "";
+                bubbleBackground.gameObject.SetActive(false);
+            }
         }
-    }*/
+    }
 
     void TriggerRandomBark()
     {
         GladiatorAI ai = GetComponent<GladiatorAI>();
-        if (_gladiator.isOnMission || (ai != null && ai.isDead)) return;
+        
+        // GÜNCELLEME: Asker seferdeyse, ölüyse VEYA SAVAŞTAYSA konuşmayı iptal et!
+        if (_gladiator.isOnMission || (ai != null && ai.isDead) || 
+           (BattleManager.Instance != null && BattleManager.Instance.state == BattleState.Fighting)) 
+        {
+            // Konuşmadı ama döngünün devam etmesi için yeniden Invoke çağırıyoruz
+            Invoke(nameof(TriggerRandomBark), Random.Range(minTimeBetweenBarks, maxTimeBetweenBarks));
+            return;
+        }
 
         string selectedLine = DetermineBarkLine();
 
@@ -65,8 +77,6 @@ public class GladiatorBark : MonoBehaviour
 
     string DetermineBarkLine()
     {
-        // ... (Bir önceki mesajdaki mantık tamamen aynı kalacak, sadece ne diyeceğini seçiyor)
-        
         if (DayManager.Instance != null && DayManager.Instance.currentDay >= DayManager.Instance.maxDays - 5)
             if (Random.value > 0.5f && winterBarks.Count > 0) return winterBarks[Random.Range(0, winterBarks.Count)];
 
@@ -89,30 +99,21 @@ public class GladiatorBark : MonoBehaviour
         return "";
     }
 
-    // YENİ: Daktilo (Typewriter) Efektli Gösterme Rutini
     IEnumerator ShowBarkRoutine(string text)
     {
-        // 1. Yazıyı yerleştir ve baloncuğu aç (Kutu olması gereken boyuta hemen ulaşır)
         barkText.text = text;
-        barkText.maxVisibleCharacters = 0; // Ama harfleri görünmez yap!
+        barkText.maxVisibleCharacters = 0; 
         if (bubbleBackground != null) bubbleBackground.gameObject.SetActive(true);
 
-        // 2. Daktilo efekti ile harfleri tek tek görünür yap
         int totalCharacters = text.Length;
         for (int i = 0; i <= totalCharacters; i++)
         {
             barkText.maxVisibleCharacters = i;
-            
-            // Eğer istersen buraya çok kısık bir tık sesi (UI click) koyabilirsin:
-            // if (i % 3 == 0 && AudioManager.Instance != null) AudioManager.Instance.PlaySFX(AudioManager.Instance.paperSound, 0.1f);
-            
             yield return new WaitForSeconds(typeDelay);
         }
 
-        // 3. Yazı tamamlandıktan sonra oyuncunun okuması için bekle
         yield return new WaitForSeconds(displayDuration);
 
-        // 4. Konuşma bitti, balonu ve yazıyı kapat
         barkText.text = "";
         if (bubbleBackground != null) bubbleBackground.gameObject.SetActive(false);
     }

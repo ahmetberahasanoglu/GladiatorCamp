@@ -33,7 +33,11 @@ public class AudioManager : MonoBehaviour
     public AudioClip blacksmithOpen;    
     public AudioClip equipSound;
     public AudioClip barkSound;
-    public AudioClip swordSwoosh;
+    [Header("Savaş Sesleri")]
+    public AudioClip swordSwoosh; // Bu zaten vardı
+    public AudioClip hitSound;    // Kılıcın ete/zırha çarpma sesi
+    public AudioClip gruntSound;  // Askerin acı çekme/inleme sesi
+    public AudioClip deathSound;  // Ölüm çığlığı/yere yığılma sesi
     public AudioClip woodSound;
     public AudioClip trainHitSound; // Talimhanede kılıç/odun vurma sesi
     public AudioClip eatFoodSound;  // Gün sonu erzak yendiğinde tok bir ses

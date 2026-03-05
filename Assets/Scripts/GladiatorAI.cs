@@ -175,7 +175,7 @@ if (target != null)
         if (gladiator.healthBar != null) gladiator.healthBar.UpdateBar(gladiator.currentHealth, gladiator.maxHealth);
 
         if (DamageTextManager.Instance != null) DamageTextManager.Instance.ShowDamage(transform.position, finalDamage, isCritical ? 1 : 0);
-
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.hitSound, isCritical ? 1.0f : 0.6f);
         if (gladiator.currentHealth > 0)
         {
             // 1. Kural: Son sendelemenin üzerinden yeterli zaman (Stamina'ya bağlı Poise) geçmiş olmalı.
@@ -193,7 +193,7 @@ if (target != null)
                     isAttacking = false;
                     if (animator) animator.ResetTrigger("Attack"); // Kılıç savurmayı çöpe at
                 }
-
+                AudioManager.Instance.PlaySFX(AudioManager.Instance.gruntSound, 0.8f);
                 if (animator) 
                 {
                     animator.ResetTrigger("getHit"); 
@@ -237,7 +237,7 @@ if (target != null)
     void Die()
     {
         if (isDead) return; 
-
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.deathSound, 1.0f);
         isDead = true;
         isAttacking = false; 
         

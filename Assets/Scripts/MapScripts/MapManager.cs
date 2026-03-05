@@ -57,8 +57,10 @@ public bool isMapOpen = false;
     
     public void ShowMap()
     {
+        CloseAllOpenPanels();
         mapPanel.SetActive(true);
        isMapOpen = true;
+       
        AudioManager.Instance.PlayPaper();
     }
 
@@ -176,6 +178,29 @@ public bool isMapOpen = false;
             Debug.LogWarning("Geri dönülecek bir önceki konum bulunamadı!");
         }
     }
+    // Bu fonksiyonu savaşa girildiği an veya harita açıldığı an çağıracağız
+    public void CloseAllOpenPanels()
+    {
+     
+        if (InventoryUIManager.Instance != null) 
+        {
+            InventoryUIManager.Instance.CloseInventory();
+        }
+
+     
+        if (GladiatorSelector.Instance != null) 
+        {
+            GladiatorSelector.Instance.ClearSelection();
+        }
+
+       
+        if (TrainingUIManager.Instance != null)
+        {
+            TrainingUIManager.Instance.SetCurrentGladiator(null);
+        }
+
+        // Varsa kamp arayüzünü (Top Bar vs.) savaşta gizlemek istersen onları da buraya ekleyebilirsin.
+    }
     public IEnumerator MoveIconRoutine(MapNode targetNode)
     {
         RectTransform targetRect = targetNode.GetComponent<RectTransform>();
@@ -193,7 +218,7 @@ public bool isMapOpen = false;
             playerIcon.localScale = new Vector3(Mathf.Abs(currentScale.x), currentScale.y, currentScale.z);
         }
         else if (targetRect.anchoredPosition.x < startPos.x)
-        {
+        {   
             playerIcon.localScale = new Vector3(-Mathf.Abs(currentScale.x), currentScale.y, currentScale.z);
         }
 

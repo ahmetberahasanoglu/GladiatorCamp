@@ -11,34 +11,30 @@ public class TrainingSpot : MonoBehaviour
     public bool isBusy = false;
 
     [Header("Görsel Geri Bildirim")]
-    public GameObject hoverTextObj; // Üzerine gelince çıkacak olan yazı ("Strength Talimi (30 Akçe)")
-    public Vector3 hoverScale = new Vector3(1.1f, 1.1f, 1.1f); // Fareyle üzerine gelince ne kadar büyüsün?
+    public GameObject hoverTextObj; // Üzerine gelince çıkacak olan yazı
+    public Vector3 hoverScale = new Vector3(1.1f, 1.1f, 1.1f); 
     private Vector3 originalScale;
 
     void Start()
     {
         originalScale = transform.localScale;
         
-        // Başlangıçta bilgi yazısını gizle
         if (hoverTextObj != null) hoverTextObj.SetActive(false);
     }
 
-    // Fare objenin ÜZERİNE GELDİĞİNDE çalışır
     void OnMouseEnter()
     {
-        if (isBusy) return; // Obje doluysa büyümesin
+        if (isBusy) return; 
 
         transform.localScale = hoverScale;
 
         if (hoverTextObj != null) 
         {
             hoverTextObj.SetActive(true);
-            // Parayı sistemden çekip yazdırıyoruz
             hoverTextObj.GetComponentInChildren<TextMeshPro>().text = $"{trainingType} Eğitimi\n({MoneyManager.Instance.trainingCost} Akçe)";
         }
     }
 
-    // Fare objenin ÜZERİNDEN ÇIKTIĞINDA çalışır
     void OnMouseExit()
     {
         transform.localScale = originalScale;
@@ -79,27 +75,57 @@ public class TrainingSpot : MonoBehaviour
             return;
         }
 
-        // --- YENİ: BİNA SEVİYESİNE GÖRE MAKSİMUM STAT KONTROLÜ ---
+        // --- GÜNCELLENEN KISIM: HAM STAT (BASE STAT) HESAPLAMA ---
         int maxAllowedStat = CampManager.Instance != null ? CampManager.Instance.GetBuildingValue("talimhane") : 15;
-        int currentStatValue = 0;
         
-        // Askerin mevcut stat değerini bul
         JanissaryData data = currentGladiator.GetComponent<Gladiator>().data;
+        GladiatorInventory inv = currentGladiator.GetComponent<GladiatorInventory>();
+
         if (data != null)
         {
+            int currentTotalStat = 0;
+            int equipmentBonus = 0;
+
+            // Önce toplam statı ve o statı etkileyen ekipmanların bonuslarını topluyoruz
             switch (trainingType)
             {
-                case TrainingType.Strength: currentStatValue = data.strength; break;
-                case TrainingType.Defense: currentStatValue = data.defense; break;
-                case TrainingType.Speed: currentStatValue = data.speed; break;
-                case TrainingType.Stamina: currentStatValue = data.stamina; break;
-                // Moral genellikle başka yollarla artar ama istersen onu da ekleyebilirsin
+                case TrainingType.Strength: 
+                    currentTotalStat = data.strength; 
+                    if (inv != null && inv.weapon != null) equipmentBonus += inv.weapon.bonusStrength;
+                    break;
+                case TrainingType.Defense: 
+                    currentTotalStat = data.defense; 
+                    if (inv != null) {
+                        if (inv.armor != null) equipmentBonus += inv.armor.bonusDefense;
+                        if (inv.helmet != null) equipmentBonus += inv.helmet.bonusDefense;
+                        if (inv.shield != null) equipmentBonus += inv.shield.bonusDefense;
+                    }
+                    break;
+                case TrainingType.Speed: 
+                    currentTotalStat = data.speed; 
+                    if (inv != null) {
+                        if (inv.armor != null) equipmentBonus += inv.armor.bonusSpeed;
+                        if (inv.helmet != null) equipmentBonus += inv.helmet.bonusSpeed;
+                        if (inv.shield != null) equipmentBonus += inv.shield.bonusSpeed;
+                    }
+                    break;
+                case TrainingType.Stamina: 
+                    currentTotalStat = data.stamina; 
+                    if (inv != null) {
+                        if (inv.armor != null) equipmentBonus += inv.armor.bonusStamina;
+                        if (inv.helmet != null) equipmentBonus += inv.helmet.bonusStamina;
+                        if (inv.shield != null) equipmentBonus += inv.shield.bonusStamina;
+                    }
+                    break;
             }
 
-            if (currentStatValue >= maxAllowedStat)
+            // Toplam stattan, eşyalardan gelen sahte gücü çıkartıyoruz!
+            int baseStatValue = currentTotalStat - equipmentBonus;
+
+            if (baseStatValue >= maxAllowedStat)
             {
                 if (NotificationManager.Instance != null) 
-                    NotificationManager.Instance.Show($"Asker sınırda! (Maks: {maxAllowedStat}). Daha fazlası için Talimhaneyi geliştirin.", NotificationType.Warning);
+                    NotificationManager.Instance.Show($"Askerin saf yeteneği sınırda! (Maks: {maxAllowedStat}). Daha fazlası için Talimhaneyi geliştirin.", NotificationType.Warning);
                 
                 if (AudioManager.Instance != null) AudioManager.Instance.PlayError();
                 return; // Eğitime gönderme, işlemi iptal et!
@@ -110,10 +136,8 @@ public class TrainingSpot : MonoBehaviour
         // 2. KONTROL: Paramız yetiyor mu?
         if (MoneyManager.Instance.Spend(MoneyManager.Instance.trainingCost))
         {
-            // Askeri hedefe gönder
             currentGladiator.StartTraining(this);
             
-            // Eğitim başlama sesini çal
             if (AudioManager.Instance != null) AudioManager.Instance.PlayClick();
             
             TrainingUIManager.Instance.SetCurrentGladiator(null);

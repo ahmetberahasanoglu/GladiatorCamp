@@ -18,5 +18,5 @@ MonoBehaviour:
   price: 100
   bonusStrength: 0
   bonusDefense: 12
-  bonusSpeed: -2
-  bonusStamina: -1
+  bonusSpeed: 30
+  bonusStamina: 30

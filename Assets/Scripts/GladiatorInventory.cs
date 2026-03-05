@@ -140,4 +140,18 @@ public void InitializeBaseStats()
         data.speed += item.bonusSpeed;
         data.stamina += item.bonusStamina;
     }
+
+    public void PermanentlyIncreaseStat(TrainingType type, int amount)
+    {
+        switch (type)
+        {
+            case TrainingType.Strength: baseStr += amount; break;
+            case TrainingType.Defense:  baseDef += amount; break;
+            case TrainingType.Speed:    baseSpd += amount; break;
+            case TrainingType.Stamina:  baseSta += amount; break;
+        }
+
+      
+        RecalculateStats(); 
+    }
 }

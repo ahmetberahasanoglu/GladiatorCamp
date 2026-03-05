@@ -133,16 +133,25 @@ if (levelUpParticle != null)
 
     private void ApplyStatGain(TrainingType type, int amount)
     {
-        var d = gladiator.data;
-
-        switch (type)
+        // GÜNCEL KISIM: Statı direkt data'ya yazarsak kılıç çıkardığında silinir.
+        // O yüzden Inventory'deki Base (Ham) statları güncelleyen o yeni fonksiyonu çağırıyoruz!
+        GladiatorInventory inv = GetComponent<GladiatorInventory>();
+        if (inv != null)
         {
-            case TrainingType.Strength: d.strength += amount; break;
-            case TrainingType.Speed: d.speed += amount; break;
-            case TrainingType.Defense: d.defense += amount; break;
-            //case TrainingType.Morale: d.morale += amount; break;
-            case TrainingType.Stamina: d.stamina += amount; break;
+            inv.PermanentlyIncreaseStat(type, amount);
         }
+        else
+        {
+            // Eğer bir sebeple Inventory yoksa (ki olmalı), yine de güvenli liman olarak data'ya yazsın
+            switch (type)
+            {
+                case TrainingType.Strength: gladiator.data.strength += amount; break;
+                case TrainingType.Speed: gladiator.data.speed += amount; break;
+                case TrainingType.Defense: gladiator.data.defense += amount; break;
+                case TrainingType.Stamina: gladiator.data.stamina += amount; break;
+            }
+        }
+
         if (NotificationManager.Instance != null)
             NotificationManager.Instance.Show($"Eğitim Tamamlandı! {type} +{amount}", NotificationType.Success);
     }

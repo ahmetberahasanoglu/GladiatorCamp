@@ -83,10 +83,10 @@ public void RefreshEquipped()
         if(_currentGladiator.helmet) totalStamina += _currentGladiator.helmet.bonusStamina;
     
 
-        totalArmorText.text = "Total Armor: " + totalDef;
-        totalStrengthText.text = "Total Strength: " + totalStr;
-        totalSpeedText.text = "Total Speed: " + totalSpeed;
-        totalStaminaText.text = "Total Stamina: " + totalStamina;
+        totalArmorText.text = "Armor: " + totalDef;
+        totalStrengthText.text = "Strength: " + totalStr;
+        totalSpeedText.text = "Speed: " + totalSpeed;
+        totalStaminaText.text = "Stamina: " + totalStamina;
    
     }
     public void OpenInventoryFor(GladiatorInventory gladiator)

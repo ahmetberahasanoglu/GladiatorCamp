@@ -750,8 +750,9 @@ MonoBehaviour:
   - "Al\u0131n teri d\xF6kmeden alt\u0131n kazan\u0131lmaz."
   lowMoraleBarks:
   - "Bu gidi\u015Fle sonumuz pek hay\u0131rl\u0131 de\u011Fil..."
-  - "Maa\u015Flar da yatmazsa bu kadar emek niye!"
-  - "Ulufe nerede beyim! \xC7oluk \xE7ocuk a\xE7!"
+  - Bu kadar emek niye!
+  - "\xC7oluk \xE7ocuk a\xE7!"
+  - "A\u015F ve ate\u015F yokken maa\u015F\u0131 neyleyim!"
   winterBarks:
   - "K\u0131\u015F kap\u0131ya dayand\u0131, erzaklar yetecek mi acaba?"
   - "Ayaz kemiklerime i\u015Fliyor..."
@@ -11469,7 +11470,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 292}
-  m_SizeDelta: {x: 293, y: 180}
+  m_SizeDelta: {x: 293, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1482052842098115248
 CanvasRenderer:

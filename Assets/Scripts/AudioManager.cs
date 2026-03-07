@@ -35,6 +35,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip barkSound;
     [Header("Savaş Sesleri")]
     public AudioClip swordSwoosh; // Bu zaten vardı
+    public AudioClip swordHit; // Bu zaten vardı
     public AudioClip hitSound;    // Kılıcın ete/zırha çarpma sesi
     public AudioClip gruntSound;  // Askerin acı çekme/inleme sesi
     public AudioClip deathSound;  // Ölüm çığlığı/yere yığılma sesi
@@ -156,7 +157,7 @@ public class AudioManager : MonoBehaviour
     public void PlayTrainHit() => PlaySFX(trainHitSound, actionVolume * 0.7f); // Talim sesi biraz daha kısık olsun
     public void PlayEat() => PlaySFX(eatFoodSound, actionVolume);
     public void PlayBark() => PlaySFX(barkSound, actionVolume);
-    public void PlayWood() => PlaySFX(woodSound, actionVolume);
+    public void PlayWood() => PlaySFX(woodSound, actionVolume*0.1f);
     public void PlaySword() => PlaySFX(swordSwoosh, 0.8f);
     public void PlayMapMove() => PlaySFX(mapMoveSound, actionVolume);
 }

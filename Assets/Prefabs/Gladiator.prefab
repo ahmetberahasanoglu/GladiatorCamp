@@ -22158,6 +22158,7 @@ GameObject:
   - component: {fileID: 5540182355816052731}
   - component: {fileID: 7367093791317704841}
   - component: {fileID: 3600248405022526228}
+  - component: {fileID: 7470931737115884889}
   m_Layer: 0
   m_Name: Paladin WProp J Nordstrom
   m_TagString: Untagged
@@ -22219,6 +22220,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a64bd32f5c738244a41a464f465ff89, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GladiatorAnimEvents
+--- !u!114 &7470931737115884889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5163797893667958081}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7402e35c695f8e43835291bac389c83, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimationEventReceiver
 --- !u!1 &5293758680861856342
 GameObject:
   m_ObjectHideFlags: 0

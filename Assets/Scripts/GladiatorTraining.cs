@@ -69,10 +69,47 @@ public ParticleSystem levelUpParticle;
         {
             yield return null;
         }
+        if (currentSpot != null)
+        {
+            // Askeri kuklaya doğru çevir
+            transform.LookAt(new Vector3(currentSpot.transform.position.x, transform.position.y, currentSpot.transform.position.z));
+            
+            // Sürekli antrenman yapmasını sağlayan döngüyü başlat
+            StartCoroutine(TrainingAnimationRoutine());
+        }
 
         DayManager.Instance.OnNewDay += OnNewDay;
     }
+IEnumerator TrainingAnimationRoutine()
+    {
+        Animator anim = GetComponentInChildren<Animator>();
+        
+        while (IsTraining)
+        {
+            // Eğer "Train" adında özel bir animasyonun yoksa, normal "Attack" animasyonunu da kullanabilirsin
+            if (anim != null) anim.SetTrigger("Train"); 
+            
+            // 2 saniyede bir vur (Hızı gözüne göre ayarlarsın)
+            yield return new WaitForSeconds(4.0f); 
+        }
+    }
 
+    // --- 3. EKLENTİ: ANIMATION EVENT (Kılıcın Değdiği An Çalışır) ---
+    // Bunu Unity'de animasyonun o "Vurma" karesine (Frame) ekleyeceğiz
+    public void OnTrainingHitDummy()
+    {
+        if (currentSpot != null)
+        {
+            // TrainingSpot'un üzerinde veya içinde duran DummyInteract'i bul ve ona vur!
+            DummyInteract dummy = currentSpot.GetComponentInChildren<DummyInteract>();
+            if (dummy == null) dummy = currentSpot.GetComponentInParent<DummyInteract>();
+
+            if (dummy != null)
+            {
+                dummy.ReceiveHit(); // Kukla sarsılsın, partikül patlasın!
+            }
+        }
+    }
     void OnNewDay()
     {
         if (!IsTraining) return;

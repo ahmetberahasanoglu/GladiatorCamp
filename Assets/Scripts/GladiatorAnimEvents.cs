@@ -20,6 +20,7 @@ public class GladiatorAnimEvents : MonoBehaviour
     // Animasyonda kılıcın düşmana tam "GÜM" diye çarptığı an tetiklenecek
     public void DealDamage()
     {
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.swordHit, 0.8f);
         if (_ai != null) 
             _ai.ExecuteMeleeHit(); // Ana koda "VUR" emri gönderir
     }

@@ -25,7 +25,10 @@ public class DummyInteract : MonoBehaviour
         if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
         if (!isHit) StartCoroutine(WobbleRoutine());
     }
-
+public void ReceiveHit()
+    {
+        if (!isHit) StartCoroutine(WobbleRoutine());
+    }
     IEnumerator WobbleRoutine()
     {
         isHit = true; 

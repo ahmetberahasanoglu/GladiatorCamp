@@ -4,9 +4,35 @@ using System.Collections.Generic;
 using TMPro;
 
 public enum BattleState { Idle, Fighting, Won, Lost }
+public enum BattleEnvironment { Forest, Cave, Tower, Winter }
+[System.Serializable]
+public class EnvironmentProfile
+{
+    public string profileName;
+    public BattleEnvironment envType;
+    
+    [Header("Objeler")]
+    public GameObject environmentProps; // Ağaçlar, kayalar (Prop grubu)
+    public GameObject volumeObject;     // Bu ortama özel Box Volume objesi
 
+    [Header("Işıklandırma")]
+    public Color sunColor = Color.white; // Güneşin rengi
+    public float sunIntensity = 1.0f;    // Güneşin gücü
+    public bool enableShadows = true;    // Mağarada gölgeleri kapatmak isteyebilirsin
+
+
+}
 public class BattleManager : MonoBehaviour
 {
+
+    [Header("Arena Ortamları (Prop Swapping)")]
+    public GameObject forestEnv;
+    public GameObject caveEnv;
+    public GameObject towerEnv;
+    public GameObject winterEnv;
+[Header("Atmosfer ve Ortam (AAA)")]
+    public Light mainDirectionalLight; // Sahnendeki asıl güneş
+    public List<EnvironmentProfile> environments; // Tüm ortamlarımızın listesi
     public static BattleManager Instance;
     
     [Header("Kamp Dizilimi")]
@@ -16,7 +42,9 @@ public class BattleManager : MonoBehaviour
     public Transform playerSpawnPoint; 
     public Transform enemySpawnPoint;  
     public Camera mainCamera;          
-    public GameObject enemyPrefab;     
+    public GameObject enemyPrefab;    
+    [Header("Boss Savaşı")]
+    public GameObject bossPrefab; 
 
     [Header("Kamera Pozisyonları")]
     public Transform campCameraPos;    
@@ -39,7 +67,10 @@ public class BattleManager : MonoBehaviour
 
     // YENİ: Savaşın zorluğunu hafızada tutuyoruz ki ödülü ona göre dağıtalım
     private int _currentDifficulty = 1;
+
     private int _currentEnemyCount = 1;
+        [Header("Sinematik Geçiş")]
+    public CanvasGroup fadeGroup;
 
     void Awake()
     {
@@ -49,13 +80,15 @@ public class BattleManager : MonoBehaviour
     void Start()
     {
         if (skillPanel != null) skillPanel.SetActive(false);
+        
     }
 
-    public void StartBattle(int enemyCount, int difficulty)
+    public void StartBattle(int enemyCount, int difficulty,BattleEnvironment envType)
     {
         Debug.Log("BattleManager: Savaş Başlatılıyor...");
-        
+        ChangeEnvironment(envType);
         // Zorluk ve sayıyı hafızaya al
+        
         _currentEnemyCount = enemyCount;
         _currentDifficulty = difficulty;
 
@@ -63,7 +96,7 @@ public class BattleManager : MonoBehaviour
         
         if (MapManager.Instance != null) MapManager.Instance.HideMap();
 
-        StartCoroutine(MoveCameraRoutine(battleCameraPos));
+        StartCoroutine(CinematicTransitionRoutine(battleCameraPos));
 
         SpawnPlayerArmy();
         SpawnEnemyArmy(enemyCount);
@@ -73,7 +106,52 @@ public class BattleManager : MonoBehaviour
         topPanel.SetActive(false);
         bgPanel.SetActive(false);
     }
+// YENİ: Normal ordular yerine tek bir Devasa Boss çağırır
+    public void StartBossBattle(int difficulty, BattleEnvironment envType)
+    {
+        Debug.Log($"BattleManager: {envType} ortamında BOSS SAVAŞI başlatılıyor!");
+        
+        _currentDifficulty = difficulty;
+        // Boss tek kişi ama ganimet hesaplaması için onu 5 düşman gücünde sayıyoruz!
+        _currentEnemyCount = 5; 
 
+        AudioManager.Instance.StartBattleAcoustics();
+        // Eğer ileride Boss'a özel müzik eklersen tam buraya yazarsın.
+        
+        if (MapManager.Instance != null) MapManager.Instance.HideMap();
+
+        ChangeEnvironment(envType);
+        StartCoroutine(CinematicTransitionRoutine(battleCameraPos));
+
+        SpawnPlayerArmy();
+        SpawnBoss(); // Ordular yerine sadece Boss'u sahanın ortasına indir!
+
+        state = BattleState.Fighting;
+        if (skillPanel != null) skillPanel.SetActive(true);
+        topPanel.SetActive(false);
+        bgPanel.SetActive(false);
+    }
+    void SpawnBoss()
+    {
+        if (bossPrefab == null) 
+        {
+            Debug.LogError("HATA: Boss Prefab'ı atanmamış!");
+            return;
+        }
+
+        // Boss'u düşmanların normalde dizildiği yerin tam merkezinde (biraz daha önde) çıkartalım
+        Vector3 spawnPos = enemySpawnPoint.position;
+        // İstersen Boss'u biraz daha oyuncuya yakın başlatmak için: spawnPos.z -= 2f; 
+
+        GameObject boss = Instantiate(bossPrefab, spawnPos, enemySpawnPoint.rotation);
+        
+        var agent = boss.GetComponent<UnityEngine.AI.NavMeshAgent>();
+        if (agent != null)
+        {
+            agent.Warp(spawnPos); 
+            agent.isStopped = true; 
+        }
+    }
     void SpawnPlayerArmy()
     {
         var soldiers = FindObjectsOfType<Gladiator>();
@@ -111,7 +189,39 @@ public class BattleManager : MonoBehaviour
             }
         }
     }
+private void ChangeEnvironment(BattleEnvironment envType)
+    {
+        // 1. Önce sahnedeki TÜM ortamları ve Volume'ları kapat (Temizlik)
+        foreach (var env in environments)
+        {
+            if (env.environmentProps != null) env.environmentProps.SetActive(false);
+            if (env.volumeObject != null) env.volumeObject.SetActive(false);
+        }
 
+        // 2. İstenilen ortamı bul ve aktifleştir
+        EnvironmentProfile activeEnv = environments.Find(x => x.envType == envType);
+
+        if (activeEnv != null)
+        {
+            // Propları ve o ortama özel Box Volume'u aç
+            if (activeEnv.environmentProps != null) activeEnv.environmentProps.SetActive(true);
+            if (activeEnv.volumeObject != null) activeEnv.volumeObject.SetActive(true);
+
+            // Güneşi manipüle et!
+            if (mainDirectionalLight != null)
+            {
+                mainDirectionalLight.color = activeEnv.sunColor;
+                mainDirectionalLight.intensity = activeEnv.sunIntensity;
+                
+                // Mağaraya girince gölgeleri kapatıp performansı artırabilirsin
+                mainDirectionalLight.shadows = activeEnv.enableShadows ? LightShadows.Soft : LightShadows.None;
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"DİKKAT: {envType} için bir Environment Profile bulunamadı!");
+        }
+    }
     void SpawnEnemyArmy(int count)
     {
         if (enemyPrefab == null) return;
@@ -268,27 +378,53 @@ public class BattleManager : MonoBehaviour
             }
         }
 
-        StartCoroutine(MoveCameraRoutine(campCameraPos));
+        StartCoroutine(CinematicTransitionRoutine(campCameraPos));
         
         state = BattleState.Idle;
     }
 
-    IEnumerator MoveCameraRoutine(Transform target)
+    IEnumerator CinematicTransitionRoutine(Transform targetCameraPos)
     {
-        float duration = 1.5f; 
+        // 1. EKRANI KARART (0.5 Saniyede)
         float t = 0;
-        Vector3 startPos = mainCamera.transform.position;
-        Quaternion startRot = mainCamera.transform.rotation;
+        float fadeDuration = 0.5f;
 
-        while(t < duration)
+        // Ekrana dokunmayı engelle ki geçiş anında oyuncu bir şeye basamasın
+        if (fadeGroup != null) fadeGroup.blocksRaycasts = true;
+
+        while(t < fadeDuration)
         {
-            t += Time.unscaledDeltaTime; 
-            mainCamera.transform.position = Vector3.Lerp(startPos, target.position, t / duration);
-            mainCamera.transform.rotation = Quaternion.Lerp(startRot, target.rotation, t / duration);
+            t += Time.unscaledDeltaTime;
+            if (fadeGroup != null) fadeGroup.alpha = Mathf.Lerp(0, 1, t / fadeDuration);
             yield return null;
         }
+
+        if (fadeGroup != null) fadeGroup.alpha = 1;
+
+        // 2. SİHİR ANI: EKRAN SİMSİYAHKEN HER ŞEYİ ANINDA IŞINLA
+        // Kamera boşlukta süzülmez, direkt hedefe yapışır
+        mainCamera.transform.position = targetCameraPos.position;
+        mainCamera.transform.rotation = targetCameraPos.rotation;
+
+        // İstersen burada karanlıkta savaş naraları/kılıç çekme sesleri patlatabilirsin
+        // AudioManager.Instance.PlaySwordDraw();
         
-        mainCamera.transform.position = target.position;
-        mainCamera.transform.rotation = target.rotation;
+        // Seyircinin (Oyuncunun) zihninde sahnenin değiştiğini algılaması için çok ufak bir es (0.2s)
+        yield return new WaitForSecondsRealtime(0.2f);
+
+        // 3. EKRANI AYDINLAT (Savaş başlasın!)
+        t = 0;
+        while(t < fadeDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            if (fadeGroup != null) fadeGroup.alpha = Mathf.Lerp(1, 0, t / fadeDuration);
+            yield return null;
+        }
+
+        if (fadeGroup != null) 
+        {
+            fadeGroup.alpha = 0;
+            fadeGroup.blocksRaycasts = false; // Tıklama engelini kaldır
+        }
     }
 }

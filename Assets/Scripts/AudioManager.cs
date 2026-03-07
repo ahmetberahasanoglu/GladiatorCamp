@@ -39,6 +39,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip gruntSound;  // Askerin acı çekme/inleme sesi
     public AudioClip deathSound;  // Ölüm çığlığı/yere yığılma sesi
     public AudioClip woodSound;
+    public AudioClip cheerSound;
     public AudioClip trainHitSound; // Talimhanede kılıç/odun vurma sesi
     public AudioClip eatFoodSound;  // Gün sonu erzak yendiğinde tok bir ses
     public AudioClip mapMoveSound;  // Haritada ikon hareket ederken (At toynağı vs.)
@@ -150,6 +151,7 @@ public class AudioManager : MonoBehaviour
 
     public void PlayUpgrade() => PlaySFX(upgradeBuilding, actionVolume);
     public void PlayBlacksmith() => PlaySFX(blacksmithOpen, actionVolume);
+    public void PlayCheer() => PlaySFX(cheerSound, actionVolume);
     public void PlayEquip() => PlaySFX(equipSound, actionVolume);
     public void PlayTrainHit() => PlaySFX(trainHitSound, actionVolume * 0.7f); // Talim sesi biraz daha kısık olsun
     public void PlayEat() => PlaySFX(eatFoodSound, actionVolume);

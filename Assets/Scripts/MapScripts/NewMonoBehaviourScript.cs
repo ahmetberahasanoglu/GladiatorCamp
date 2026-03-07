@@ -15,5 +15,6 @@ public enum NodeType
     Kalkan,
     
     Archery,
-    Dice
+    Dice,
+    YagliGures
 }

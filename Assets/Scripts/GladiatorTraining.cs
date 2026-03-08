@@ -64,11 +64,14 @@ public ParticleSystem levelUpParticle;
 
     IEnumerator WalkAndBeginTraining()
     {
+        Animator anim = GetComponentInChildren<Animator>();
+        if (anim != null) anim.SetBool("isRunning", true);
         while (agent.pathPending) yield return null;
         while (agent.remainingDistance > agent.stoppingDistance)
         {
             yield return null;
         }
+        if (anim != null) anim.SetBool("isRunning", false);
         if (currentSpot != null)
         {
             // Askeri kuklaya doğru çevir

@@ -19,10 +19,22 @@ public class MapEventManager : MonoBehaviour
     public GameObject buttonPrefab;     
 
     [Header("Olay Görselleri")]
-    public Sprite villageSprite;
+    public Sprite villageSprite;  
     public Sprite battleSprite;
+    public Sprite treasureSprite;
     public Sprite bossSprite;
-    public Sprite merchant;
+    public Sprite archerySprite;
+    public Sprite horseSprite;
+    public Sprite towerSprite;
+    public Sprite tuccarSprite;
+    public Sprite shieldSprite;
+    public Sprite dungeonSprite;
+    public Sprite wildSprite;
+    public Sprite merchant; 
+  
+    public Sprite diceSprite; 
+    public Sprite wrestlingSprite; 
+  
 
     // --- YENİ: RAKİP AYARLARI (INSPECTOR'DAN DEĞİŞTİREBİLİRSİN) ---
     [Header("Mini Oyun Rakipleri")]
@@ -114,8 +126,8 @@ public class MapEventManager : MonoBehaviour
     public void SetupMysteriousDiceEvent()
     {
         titleText.text = "Gizemli Yabancı";
-        descText.text = "Karanlık bir pelerin giymiş bir adam yolunu kesti. Avucundan kemikten yapılma bir zar çıkardı.\n\n<color=yellow>\"Şu zarı at bakalım Uç Beyi... Eğer 3'ten büyük atarsan sana bir sırrımı (ve altınlarımı) vereceğim.\"</color>";
-
+        descText.text = "Karanlık bir pelerin giymiş bir adam yolunu kesti. Avucundan kemikten yapılma bir zar çıkardı.\n\n<color=#66001D>\"Şu zarı at bakalım Uç Beyi... Eğer 3'ten büyük atarsan sana bir sırrımı (ve altınlarımı) vereceğim.\"</color>";
+          if(villageSprite != null) eventImage.sprite = diceSprite;
         CreateButton("Zarı At (Risk Al)", () => 
         {
             
@@ -149,7 +161,7 @@ public class MapEventManager : MonoBehaviour
     {
         titleText.text = "Karanlık Mağara";
         descText.text = "İçeriden garip sesler geliyor. Büyük bir tehlike ama aynı zamanda büyük bir ganimet yatıyor olabilir.";
-        
+          if(villageSprite != null) eventImage.sprite = dungeonSprite;
         CreateButton("İçeri Gir (Savaş)", () => {
             
             DayManager.Instance.NextDay(1);
@@ -378,7 +390,7 @@ public class MapEventManager : MonoBehaviour
     {
         titleText.text = "Okçuluk Müsabakası";
         descText.text = "Bir Türkmen beyi senin yiğitliğini ölçmek için okçuluk müsabakasına davet etti. Gidecek misin?";
-        if(bossSprite != null) eventImage.sprite = bossSprite; 
+        if(bossSprite != null) eventImage.sprite = archerySprite; 
 
         CreateButton("Git (1 Gün)", () => {
             
@@ -402,10 +414,10 @@ public class MapEventManager : MonoBehaviour
     void SetupAtYarisi()
     {
         titleText.text = "Büyük At Yarışı";
-        
+          if(villageSprite != null) eventImage.sprite = horseSprite;
         // Rakibin adını ve hızını açıkça yazıyoruz
         descText.text = $"Şehrin ileri gelenlerinden Mustafa Bey seni at yarışına davet etti. (Giriş: 30 Akçe)\n\n" +
-                        $"<color=orange>Rakip: {atYarisiRakipIsim} (Hızı: {atYarisiRakipHiz})</color>\n\n" +
+                        $"<color=#66001D>Rakip: {atYarisiRakipIsim} (Hızı: {atYarisiRakipHiz})</color>\n\n" +
                         $"<color=yellow>Hangi yiğidi göndereceksin? (Askerinin hızı üzerine 6'lık zar atılacaktır.)</color>";
 
         Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
@@ -448,11 +460,11 @@ public class MapEventManager : MonoBehaviour
     void SetupYagliGures()
     {
         titleText.text = "Yağlı Güreş!";
-        
+          if(villageSprite != null) eventImage.sprite = wrestlingSprite;
         // Rakibin adını ve gücünü açıkça yazıyoruz
         descText.text = $"Meydanda davullar çalıyor. Başpehlivanlık için er meydanına bir yiğidini sal. (Giriş: 50 Akçe)\n\n" +
-                        $"<color=orange>Rakip Pehlivan: {guresRakipIsim} (Gücü: {guresRakipGuc})</color>\n\n" +
-                        $"<color=yellow>Kimi yollayacaksın? (Askerinin gücü üzerine 6'lık zar atılacaktır.)</color>";
+                        $"<color=#66001D>Rakip Pehlivan: {guresRakipIsim} (Gücü: {guresRakipGuc})</color>\n\n" +
+                        $"<color=#66001D>Kimi yollayacaksın? (Askerinin gücü üzerine 6'lık zar atılacaktır.)</color>";
         
         Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
         bool hasValidSoldier = false;

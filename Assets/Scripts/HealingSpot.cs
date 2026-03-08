@@ -30,7 +30,7 @@ public class HealingSpot : MonoBehaviour
         if (hoverTextObj != null) 
         {
             hoverTextObj.SetActive(true);
-            hoverTextObj.GetComponentInChildren<TextMeshPro>().text = $"Şifahane\n({cost} Akçe)";
+            hoverTextObj.GetComponentInChildren<TextMeshPro>().text = $"Şifacı\n({cost} Akçe)";
         }
     }
 

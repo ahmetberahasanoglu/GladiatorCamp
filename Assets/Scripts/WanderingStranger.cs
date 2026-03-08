@@ -6,11 +6,13 @@ using System.Collections;
 [RequireComponent(typeof(NavMeshAgent))]
 public class WanderingStranger : MonoBehaviour
 {
-    private NavMeshAgent agent;
+   private NavMeshAgent agent;
+    private Animator anim; // YENİ: Animator referansı
     private Transform exitPoint;
     
     [Header("Durum")]
-    public float waitTimeInCamp = 30f; // Kampta kaç saniye bekleyecek?
+    public float waitTimeInCamp = 30f; 
+    public float standUpTime = 2.0f; // YENİ: Ayağa kalkma animasyonu kaç saniye sürüyor?
     private bool isInteracting = false;
     private bool isLeaving = false;
 
@@ -18,21 +20,20 @@ public class WanderingStranger : MonoBehaviour
     public string strangerName;
     [TextArea] public string offerText;
     public int cost;
-    public int eventType; // 0: Tüccar (Eşya/Güç satar), 1: Yaralı (Orduya katılır)
+    public int eventType; 
 
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
-        agent.speed = 2.5f; // Askerlerden biraz daha rahat yürüsün
+        agent.speed = 2.5f; 
+        anim = GetComponentInChildren<Animator>(); // Animator'ı bul (Alt objede olma ihtimaline karşı)
     }
 
-    // Spawner bu adamı yarattığında bu fonksiyonu çağırıp ona kim olduğunu söyleyecek
     public void Setup(Transform campPoint, Transform exit, int randomType)
     {
         exitPoint = exit;
         eventType = randomType;
 
-        // Rastgele gelen kişinin tipine göre teklifini ayarla
         if (eventType == 0)
         {
             strangerName = "Gizemli Tüccar";
@@ -46,24 +47,30 @@ public class WanderingStranger : MonoBehaviour
             cost = 100;
         }
 
-        // Kampa doğru yürümeye başla
+        // --- 1. YÜRÜYÜŞ BAŞLIYOR ---
+        if (anim != null) anim.SetBool("isWalking", true);
         agent.SetDestination(campPoint.position);
         StartCoroutine(CampRoutine());
     }
 
     IEnumerator CampRoutine()
     {
-        // 1. Kamp noktasına varana kadar bekle
         while (agent.pathPending || agent.remainingDistance > 0.5f) yield return null;
 
-        // 2. Belirlenen süre kadar kampta bekle (Konuşulmazsa çeker gider)
+        // --- 2. KAMPA VARDI, OTURMA SEKANSINA GEÇ ---
+        agent.isStopped = true; // Kaymayı engellemek için ajanı çivile!
+        
+        if (anim != null)
+        {
+            anim.SetBool("isWalking", false);
+            anim.SetBool("isSitting", true);
+        }
+
         float timer = 0;
         while (timer < waitTimeInCamp)
         {
-            // Eğer oyuncu adamla konuşuyorsa süreyi durdur (Nezaketen beklesin)
             if (!isInteracting) timer += Time.deltaTime;
             
-            // Eğer aniden savaşa girilirse korkup kaçsın!
             if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Idle)
             {
                 LeaveCamp();
@@ -72,7 +79,6 @@ public class WanderingStranger : MonoBehaviour
             yield return null;
         }
 
-        // 3. Süre doldu, kimse yüzüne bakmadı, gidiyor.
         LeaveCamp();
     }
 
@@ -85,8 +91,24 @@ public class WanderingStranger : MonoBehaviour
         if (NotificationManager.Instance != null) 
             NotificationManager.Instance.Show($"{strangerName} kamptan ayrıldı.", NotificationType.Info);
 
-        // Kapıya doğru yürü ve kaybol
+        // Gitme işlemini direkt yapmak yerine, önce ayağa kalkması için Coroutine başlatıyoruz
+        StartCoroutine(LeaveRoutine());
+    }
+
+    // --- YENİ: AYAĞA KALKMA VE GİTME SEKANSINI YÖNETEN COROUTINE ---
+    IEnumerator LeaveRoutine()
+    {
+        // 1. Oturmayı bırak, "Sit to Stand" animasyonu başlasın
+        if (anim != null) anim.SetBool("isSitting", false);
+
+        // 2. Animasyonun bitmesini bekle (Eğer adam çok yavaş kalkıyorsa standUpTime süresini Inspector'dan artır)
+        yield return new WaitForSeconds(standUpTime);
+
+        // 3. Artık ayakta! Yürümeye başla ve kapıya yönel
+        if (anim != null) anim.SetBool("isWalking", true);
+        agent.isStopped = false; // Çivileri sök
         agent.SetDestination(exitPoint.position);
+        
         StartCoroutine(DestroyWhenArrived());
     }
 
@@ -102,8 +124,6 @@ public class WanderingStranger : MonoBehaviour
         if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Idle) return;
 
         isInteracting = true;
-        
-        // UI Menüsünü aç ve bu yabancıyı (kendini) referans olarak gönder
         StrangerUIManager.Instance.OpenOfferPanel(this);
     }
 

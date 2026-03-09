@@ -1,6 +1,8 @@
 using UnityEngine;
-using UnityEngine.UI; // Fill bar (Image) kullanacağımız için eklendi
+using UnityEngine.UI; 
 using TMPro;
+using System.Collections;
+using System.Collections.Generic;
 
 public class TopInfoBarUI : MonoBehaviour
 {
@@ -10,13 +12,20 @@ public class TopInfoBarUI : MonoBehaviour
     public TextMeshProUGUI dayText;
     public TextMeshProUGUI goldText;
     public TextMeshProUGUI foodText;
-    public TextMeshProUGUI capacityText; // "Asker: 3/5"
+    public TextMeshProUGUI capacityText; 
+    public TextMeshProUGUI nasipText; 
 
-    [Header("YENİ: Hayatta Kalma UI Textleri")]
+    [Header("Hayatta Kalma UI Textleri")]
     public TextMeshProUGUI woodText;
     public TextMeshProUGUI tempText;
-    public Image tempFillBar; // Opsiyonel: Sıcaklık Barı
-    public Gradient tempGradient; // Mavi(0) -> Kırmızı(1) renk geçişi
+    public Image tempFillBar; 
+    public Gradient tempGradient; 
+
+    // --- PARLAMA (FLASH) EFEKTİ İÇİN ---
+    private Dictionary<TextMeshProUGUI, Coroutine> activeFlashes = new Dictionary<TextMeshProUGUI, Coroutine>();
+    public Color flashColor = new Color(0.1f, 1f, 0.2f); // Altın Sarısı / Parlak bir renk
+    private bool isInitialized = false; // Başlangıçtaki toplu parlamayı engellemek için
+    // -----------------------------------
 
     void Awake()
     {
@@ -25,45 +34,29 @@ public class TopInfoBarUI : MonoBehaviour
 
     void Start()
     {
-        // 1. EVENTLERE ABONE OL (Eskiler)
-        if (DayManager.Instance != null) 
-            DayManager.Instance.OnDayChanged += UpdateDay;
+        if (DayManager.Instance != null) DayManager.Instance.OnDayChanged += UpdateDay;
+        if (MoneyManager.Instance != null) MoneyManager.Instance.OnGoldChanged += UpdateGold;
+        if (SupplyManager.Instance != null) SupplyManager.Instance.OnFoodChanged += UpdateFood;
+        if (RecruitManager.Instance != null) RecruitManager.Instance.OnSoldierCountChanged += UpdateCapacity;
+        if (CampManager.Instance != null) CampManager.Instance.OnCampUpdated += UpdateCapacity;
+        if (ResourceManager.Instance != null) ResourceManager.Instance.OnResourcesChanged += UpdateWood;
+        if (CampSurvivalManager.Instance != null) CampSurvivalManager.Instance.OnTemperatureChanged += UpdateTemp;
+        if (NasipManager.Instance != null) NasipManager.Instance.OnNasipChanged += UpdateNasipFromEvent;
 
-        if (MoneyManager.Instance != null) 
-            MoneyManager.Instance.OnGoldChanged += UpdateGold;
-        
-        if (SupplyManager.Instance != null) 
-            SupplyManager.Instance.OnFoodChanged += UpdateFood;
-
-        if (RecruitManager.Instance != null)
-            RecruitManager.Instance.OnSoldierCountChanged += UpdateCapacity;
-
-        if (CampManager.Instance != null)
-            CampManager.Instance.OnCampUpdated += UpdateCapacity;
-
-        // --- YENİ EVENT ABONELİKLERİ ---
-        if (ResourceManager.Instance != null)
-            ResourceManager.Instance.OnResourcesChanged += UpdateWood;
-
-        if (CampSurvivalManager.Instance != null)
-            CampSurvivalManager.Instance.OnTemperatureChanged += UpdateTemp;
-
-        // 2. BAŞLANGIÇTA GÜNCELLE
         ForceUpdateAll();
+        isInitialized = true; // İlk yükleme bitti, artık tetiklenen her şey parlayabilir!
     }
 
     void OnDestroy()
     {
-        // ABONELİKLERİ İPTAL ET (Eskiler)
         if (DayManager.Instance != null) DayManager.Instance.OnDayChanged -= UpdateDay;
         if (MoneyManager.Instance != null) MoneyManager.Instance.OnGoldChanged -= UpdateGold;
         if (SupplyManager.Instance != null) SupplyManager.Instance.OnFoodChanged -= UpdateFood;
         if (RecruitManager.Instance != null) RecruitManager.Instance.OnSoldierCountChanged -= UpdateCapacity;
         if (CampManager.Instance != null) CampManager.Instance.OnCampUpdated -= UpdateCapacity;
-
-        // --- YENİ ABONELİK İPTALLERİ ---
         if (ResourceManager.Instance != null) ResourceManager.Instance.OnResourcesChanged -= UpdateWood;
         if (CampSurvivalManager.Instance != null) CampSurvivalManager.Instance.OnTemperatureChanged -= UpdateTemp;
+        if (NasipManager.Instance != null) NasipManager.Instance.OnNasipChanged -= UpdateNasipFromEvent;
     }
 
     // --- GÜNCELLEME FONKSİYONLARI ---
@@ -84,32 +77,45 @@ public class TopInfoBarUI : MonoBehaviour
             int cost = MoneyManager.Instance.GetExpectedDailyWageCost();
 
             goldText.text = $"{current} <size=70%><color=#ff6666>(-{cost})</color></size>";
+            if (isInitialized) FlashUI(goldText);
         }
     }
 
     void UpdateFood()
     {
-     if(SupplyManager.Instance != null && foodText != null)
+        if(SupplyManager.Instance != null && foodText != null)
         {
             int current = SupplyManager.Instance.currentFood;
             int cost = SupplyManager.Instance.GetExpectedDailyFoodCost();
             
-            // Çıktı Örneği: 50 (-3)
-            // Kırmızı ve %70 küçültülmüş font ile gideri yanına ekliyoruz
             foodText.text = $"{current} <size=70%><color=#ff6666>(-{cost})</color></size>";
+            if (isInitialized) FlashUI(foodText);
         }
     }
 
-    // --- YENİ: ODUN GÜNCELLEMESİ ---
     void UpdateWood()
     {
         if (ResourceManager.Instance != null && woodText != null)
         {
             woodText.text = $"{ResourceManager.Instance.wood}";
+            if (isInitialized) FlashUI(woodText);
         }
     }
 
-    // --- YENİ: SICAKLIK GÜNCELLEMESİ ---
+    void UpdateNasipFromEvent(int nasip)
+    {
+        UpdateNasip();
+    }
+
+    void UpdateNasip()
+    {
+        if(NasipManager.Instance != null && nasipText != null)
+        {
+            nasipText.text = $"{NasipManager.Instance.currentNasip}";
+            if (isInitialized) FlashUI(nasipText);
+        }
+    }
+
     void UpdateTemp()
     {
         if (CampSurvivalManager.Instance == null) return;
@@ -119,16 +125,17 @@ public class TopInfoBarUI : MonoBehaviour
         if (tempText != null)
         {
             tempText.text = $"{currentTemp}°C";
+            if (isInitialized) FlashUI(tempText);
         }
 
         if (tempFillBar != null)
         {
-            float fillAmount = currentTemp / 100f; // 0 ile 1 arasına al
+            float fillAmount = currentTemp / 100f; 
             tempFillBar.fillAmount = fillAmount;
-            tempFillBar.color = tempGradient.Evaluate(fillAmount); // Rengi gradyandan seç
+            tempFillBar.color = tempGradient.Evaluate(fillAmount); 
         }
     }
-
+   
     public void UpdateCapacity() 
     {
         if (CampManager.Instance == null) return;
@@ -139,7 +146,6 @@ public class TopInfoBarUI : MonoBehaviour
         foreach (var soldier in allSoldiers)
         {
             GladiatorAI ai = soldier.GetComponent<GladiatorAI>();
-            
             if (soldier.CompareTag("MySoldier") && (ai == null || !ai.isDead))
             {
                 currentCount++;
@@ -152,9 +158,10 @@ public class TopInfoBarUI : MonoBehaviour
         if (capacityText != null)
             capacityText.text = $"<color={color}>{currentCount} / {maxCap}</color>";
 
-       
-    UpdateFood(); 
-    if (MoneyManager.Instance != null) UpdateGold(MoneyManager.Instance.gold);
+        if (isInitialized) FlashUI(capacityText);
+
+        UpdateFood(); 
+        if (MoneyManager.Instance != null) UpdateGold(MoneyManager.Instance.gold);
     }
 
     public void ForceUpdateAll()
@@ -163,7 +170,67 @@ public class TopInfoBarUI : MonoBehaviour
         if(MoneyManager.Instance) UpdateGold(MoneyManager.Instance.gold);
         UpdateFood();
         UpdateCapacity();
-        UpdateWood(); // YENİ
-        UpdateTemp(); // YENİ
+        UpdateWood(); 
+        UpdateTemp(); 
+        UpdateNasip(); 
+    }
+
+    // =========================================================
+    // SİHİRLİ PARLAMA (FLASH) SİSTEMİ
+    // =========================================================
+    public void FlashUI(TextMeshProUGUI uiText)
+    {
+        if (uiText == null) return;
+
+        // Eski animasyon devam ediyorsa durdur
+        if (activeFlashes.ContainsKey(uiText))
+        {
+            if (activeFlashes[uiText] != null) StopCoroutine(activeFlashes[uiText]);
+            activeFlashes.Remove(uiText);
+        }
+
+        // Yeni parlamayı başlat
+        Coroutine newFlash = StartCoroutine(FlashRoutine(uiText));
+        activeFlashes.Add(uiText, newFlash);
+    }
+
+    private IEnumerator FlashRoutine(TextMeshProUGUI uiText)
+    {
+        Color originalColor = Color.white; 
+       // Color originalColor = uiText.color;
+        Vector3 originalScale = Vector3.one;
+        Vector3 targetScale = new Vector3(1.3f, 1.3f, 1.3f); 
+
+        float duration = 0.15f; 
+        float t = 0;
+
+        // 1. AŞAMA: Büyü ve Renk Değiştir
+        while (t < duration)
+        {
+            t += Time.unscaledDeltaTime;
+            float normalizedTime = t / duration;
+            
+            uiText.color = Color.Lerp(originalColor, flashColor, normalizedTime);
+            uiText.transform.localScale = Vector3.Lerp(originalScale, targetScale, normalizedTime);
+            yield return null;
+        }
+
+        // 2. AŞAMA: Yavaşça Sön
+        t = 0;
+        duration = 0.35f; 
+        
+        while (t < duration)
+        {
+            t += Time.unscaledDeltaTime;
+            float normalizedTime = t / duration;
+            
+            uiText.color = Color.Lerp(flashColor, originalColor, normalizedTime);
+            uiText.transform.localScale = Vector3.Lerp(targetScale, originalScale, normalizedTime);
+            yield return null;
+        }
+
+        uiText.color = originalColor;
+        uiText.transform.localScale = originalScale;
+        activeFlashes.Remove(uiText);
     }
 }

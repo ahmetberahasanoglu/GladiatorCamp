@@ -74,6 +74,10 @@ public class GladiatorPanel : MonoBehaviour
         {
             statusText = "<color=red>Çalışıyor</color>"; // Kahverengi/Turuncu tonu
         }
+        else if (data != null && data.currentActivity == SoldierActivity.Praying)
+        {
+             statusText = "<color=green>Dua ediyor</color>";
+        }
         // --------------------------------------
         else 
         {

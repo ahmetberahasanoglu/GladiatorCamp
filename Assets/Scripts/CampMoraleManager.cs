@@ -12,6 +12,8 @@ public class CampMoraleManager : MonoBehaviour
     [Range(0, 100)]
     public int currentMorale = 80; // Oyuna %80 moralle başlasınlar
 
+    private bool isInitialized = false;
+
     void Awake()
     {
         Instance = this;
@@ -20,19 +22,25 @@ public class CampMoraleManager : MonoBehaviour
     void Start()
     {
         UpdateUI();
+        isInitialized = true;
     }
 
     // Morali artırmak veya azaltmak için her yerden çağrılabilir
     public void ChangeMorale(int amount)
     {
+        if (amount == 0) return;
         currentMorale += amount;
-        
-        // Moral 0 ile 100 arasında kalmalı
+    
         currentMorale = Mathf.Clamp(currentMorale, 0, 100);
         
         UpdateUI();
 
-        // Görsel Geri Bildirim
+        if (isInitialized && TopInfoBarUI.Instance != null && moraleText != null)
+        {
+            TopInfoBarUI.Instance.FlashUI(moraleText);
+        }
+
+
         if (NotificationManager.Instance != null)
         {
             if (amount > 0)

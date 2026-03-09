@@ -3,7 +3,7 @@ using UnityEngine.AI;
 using System;
 using TMPro;
 
-public enum SoldierActivity { Training, Working, Idling }
+public enum SoldierActivity { Training, Working, Idling,Praying }
 
 public class Gladiator : MonoBehaviour
 {

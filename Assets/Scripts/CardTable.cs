@@ -41,6 +41,7 @@ public class CardTable : MonoBehaviour
 
     void OnMouseDown()
     {   
+        if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) return;
         if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
         if (CenkGameManager.Instance != null)
         {

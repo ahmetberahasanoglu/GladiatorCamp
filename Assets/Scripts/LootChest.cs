@@ -67,7 +67,7 @@ public class LootChest : MonoBehaviour
 
     void OnMouseDown()
     {
-        // Çift tıklamayı önle
+        if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) return;
         GetComponent<Collider>().enabled = false;
         OnMouseExit(); 
 

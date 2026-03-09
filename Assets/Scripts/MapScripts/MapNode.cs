@@ -38,6 +38,25 @@ public class MapNode : MonoBehaviour
 
     public void OnNodeClicked()
     {
+        if (TutorialManager.Instance != null && TutorialManager.Instance.isTutorialActive)
+        {
+            // Eğer sıra Kamp Node'una tıklamaksa
+            if (TutorialManager.Instance.currentStep == TutorialStep.Intro_CampNode)
+            {
+                if (gameObject != TutorialManager.Instance.firstCampNodeUI) return; // Başka yere tıkladıysa iptal!
+                TutorialManager.Instance.AdvanceTutorial(); // Doğru yere tıkladı, Tour'a geç!
+            }
+            // Eğer sıra İlk Savaşa tıklamaksa
+            else if (TutorialManager.Instance.currentStep == TutorialStep.Map_FirstBattle)
+            {
+                if (gameObject != TutorialManager.Instance.firstBattleNodeUI) return; // Başka yere tıkladıysa iptal!
+                TutorialManager.Instance.AdvanceTutorial(); // Savaşa gir!
+            }
+            else
+            {
+                return; // Eğitimdeyken başka hiçbir node'a tıklanamaz!
+            }
+        }
         // Tıklanınca Manager'a haber ver
         if (MapManager.Instance != null)
         {

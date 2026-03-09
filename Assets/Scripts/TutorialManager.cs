@@ -1,98 +1,172 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System.Collections;
 using System;
 
-// Eğitim aşamalarımızı tanımlayan Enum listesi
+// --- GÜNCELLENMİŞ EĞİTİM ADIMLARI ---
 public enum TutorialStep
 {
-    None,               // Eğitim bitti veya yok
-    Intro_Map,          // Adım 1: Haritaya ilk bakış ve Kampa tıklama zorunluluğu
-    Camp_Tour,          // Adım 2: Kampa giriş, kaynakların (Altın, Odun, Nasip vb.) tanıtımı
-    Camp_GoToWar,       // Adım 3: Savaş masasına/haritaya tıklayıp ilk sefere çıkış
-    Battle_ScriptedLoss,// Adım 4: Haritadaki tek açık node'a tıklama ve kaybedilecek savaş
-    Camp_Rebirth,       // Adım 5: Kampa dönüş, bozgun sonrası Demirci, Talimhane ve Cami tanıtımı
-    Completed           // Eğitim Tamamlandı (Serbest Oyun)
+    None, Intro_Target, Intro_CampNode, Intro_CampPanel, 
+    Camp_Tour, Camp_GoToWar, Map_FirstBattle, Map_FirstBattlePanel, 
+    Battle_ScriptedLoss, 
+    Rebirth_Intro,      // Savaştan dönüldü, asker yok
+    Rebirth_Recruit,    // Devşirme Binası
+    Rebirth_Blacksmith, // Demirci
+    Rebirth_Equip,      // Asker Eşya Takma
+    Rebirth_Training,   // Talimhane
+    Rebirth_Cenk,       // Cenk Oyunu
+    Rebirth_TempUI,     // Sıcaklık Arayüzü
+    Rebirth_Campfire,   // Kamp Ateşi ve Moral
+    Completed           // Bitiş
 }
 
 public class TutorialManager : MonoBehaviour
 {
     public static TutorialManager Instance;
 
+    [Header("Test Ayarları")]
+    public bool testModu_EgitimiSifirla = false; 
+
     [Header("Eğitim Durumu")]
     public TutorialStep currentStep = TutorialStep.None;
     public bool isTutorialActive = false;
 
-    // Şimdilik sadece konsola veya basit bir UI textine basacağız, 
-    // bir sonraki adımda o sinematik diyalog panelini buraya bağlayacağız.
-    [Header("Görsel/UI Referansları (Şimdilik Boş Bırakılabilir)")]
-    public GameObject tutorialDialoguePanel;
-    public TextMeshProUGUI tutorialText;
-    public Button nextButton;
+    [Header("Arayüz (UI) Referansları")]
+    public GameObject topBarGoldUI;    
+    public GameObject kizilKaleNodeUI; 
+    public GameObject firstCampNodeUI; 
+    public GameObject firstBattleNodeUI; 
+    public GameObject topBarTempUI; // YENİ: TopBar'daki Sıcaklık (°C) göstergesi
+
+    [Header("3D Obje Referansları ve Çember Boyutları")]
+    public Transform warTable3D; 
+    [Range(0.5f, 5f)] public float warTableMarkerScale = 1.2f; 
+
+    // YENİ UYANIŞ (REBIRTH) BİNALARI
+    public Transform devsirme3D;
+    [Range(0.5f, 5f)] public float devsirmeMarkerScale = 2.0f;
+
+    public Transform blacksmith3D;
+    [Range(0.5f, 5f)] public float blacksmithMarkerScale = 2.0f;
+
+    public Transform talimhane3D;
+    [Range(0.5f, 5f)] public float talimhaneMarkerScale = 2.5f;
+
+    public Transform cenkOyunu3D;
+    [Range(0.5f, 5f)] public float cenkOyunuMarkerScale = 1.5f;
+
+    public Transform campfire3D;
+    [Range(0.5f, 5f)] public float campfireMarkerScale = 1.8f;
 
     void Awake()
     {
-        // Singleton yapısı
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject); // Harita ve Kamp sahneleri arasında silinmesin
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        Instance = this;
     }
 
     void Start()
     {
-        // Oyuncu daha önce eğitimi tamamlamış mı kontrol et
-        int tutFinished = PlayerPrefs.GetInt("TutorialCompleted", 0);
-        
-        if (tutFinished == 0)
+        if (testModu_EgitimiSifirla)
         {
-            // Eğitim tamamlanmamış, baştan başlat!
-            StartTutorial();
+            PlayerPrefs.DeleteKey("TutorialCompleted");
+            PlayerPrefs.Save();
         }
+
+        int tutFinished = PlayerPrefs.GetInt("TutorialCompleted", 0);
+        if (tutFinished == 0) StartTutorial();
     }
 
     public void StartTutorial()
     {
         isTutorialActive = true;
-        SetStep(TutorialStep.Intro_Map);
+        SetStep(TutorialStep.Intro_Target);
     }
 
-    // Aşamayı değiştiren ve o aşamaya özel olayları tetikleyen ana fonksiyon
     public void SetStep(TutorialStep newStep)
     {
         currentStep = newStep;
-        Debug.Log($"<color=cyan>TUTORIAL ADIMI: {currentStep}</color>");
+        if (TutorialHighlighter.Instance != null) TutorialHighlighter.Instance.RemoveHighlight();
 
         switch (currentStep)
         {
-            case TutorialStep.Intro_Map:
-                // TODO: Haritadaki tüm node'ları kilitle, sadece Kamp Node'unu açık ve parlak yap.
-                ShowDialogue("Uç Beyim, sınır boylarına hoş geldin. Kış bastırmadan, 100 gün içinde şu lanet Kızıl Kale'yi düşürmeliyiz. Önce otağımızı kuralım. (Kampa Tıkla)");
+            case TutorialStep.Intro_Target:
+                StartCoroutine(HighlightUIDelayed(kizilKaleNodeUI));
+                ShowDialogue("Sınır boylarına hoş geldin. Sen bir uç beyisin, paşadan aldığın emre göre kış bastırmadan Kızıl Kale'yi düşürmelisin.", false);
+                break;
+
+            case TutorialStep.Intro_CampNode:
+                StartCoroutine(HighlightUIDelayed(firstCampNodeUI));
+                ShowDialogue("Fakat ordu aç, kılıçlar paslı. Önce şu düzlüğe otağımızı kuralım. (Haritadaki Kampa Tıkla)", true);
+                break;
+
+            case TutorialStep.Intro_CampPanel:
+                ShowDialogue("Otağımıza girmek için paneldeki 'Kampa Geç' butonuna tıkla.", true);
                 break;
 
             case TutorialStep.Camp_Tour:
-                // TODO: Kamp açıldığında TopBar'ı maskele, kaynakları parlatarak anlat.
-                ShowDialogue("Burası merkezimiz. Yukarıda Altınımız, Erzağımız ve Askerlerimizin durumu var. Savaşmak için paraya ve yemeğe ihtiyacımız olacak.");
+                StartCoroutine(HighlightUIDelayed(topBarGoldUI));
+                ShowDialogue("Burası merkezimiz. Yukarıda Altınımız, Erzağımız ve Asker kapasitemiz var.", false);
                 break;
 
             case TutorialStep.Camp_GoToWar:
-                // TODO: Kampın ortasındaki savaş masasını parlat.
-                ShowDialogue("Şimdi gücümüzü sınama vakti. Harita masasına tıkla ve ilk çapulcu grubunun üzerine yürüyelim.");
+                StartCoroutine(Highlight3DDelayed(warTable3D, warTableMarkerScale));
+                ShowDialogue("Şimdi gücümüzü sınama vakti. Savaş masasına tıkla ve haritayı aç.", true);
+                break;
+
+            case TutorialStep.Map_FirstBattle:
+                StartCoroutine(HighlightUIDelayed(firstBattleNodeUI));
+                ShowDialogue("İzleri burada bitiyor... İlk çapulcu grubunun üzerine yürü! (Savaş Noktasına Tıkla)", true);
+                break;
+
+            case TutorialStep.Map_FirstBattlePanel:
+                ShowDialogue("Düşman karşımızda! Tereddüt etme, 'Saldır' emrini ver!", true);
                 break;
 
             case TutorialStep.Battle_ScriptedLoss:
-                // TODO: Haritada sadece savaş node'unu açık tut. Savaşı garantili kaybettir.
-                ShowDialogue("İzleri burada bitiyor... Kılıçları çekin!");
+                ShowDialogue("Kılıçları çekin!", true); 
                 break;
 
-            case TutorialStep.Camp_Rebirth:
-                // TODO: Savaştan yenik dönüldü. Demirciyi, Talimhaneyi ve Camiyi sırayla parlat.
-                ShowDialogue("Ağır bir yara aldık Beyim... Kuru cesaretle Kızıl Kale alınmazmış. Kılıçlarımız kör, yüreklerimiz daralmış. Demirciyi onar, askerleri talime sok ve sefere çıkmadan önce camide Nasibimizi ara.");
+            // ==========================================
+            // YENİ: UYANIŞ VE KAMP TANITIMI (REBIRTH)
+            // ==========================================
+            case TutorialStep.Rebirth_Intro:
+                // Karanlık ekran, vurgu yok
+                ShowDialogue("Ağır bir yara aldık... Tek bir askerimiz bile sağ kalmadı. Ama uç beyliği pes etmez, otağı yeniden ayağa kaldıracağız.", false);
+                break;
+
+            case TutorialStep.Rebirth_Recruit:
+                StartCoroutine(Highlight3DDelayed(devsirme3D, devsirmeMarkerScale));
+                ShowDialogue("İlk işimiz yeni yiğitler bulmak. Devşirme çadırından altın karşılığı ordunu baştan kurabilirsin.", false);
+                break;
+
+            case TutorialStep.Rebirth_Blacksmith:
+                StartCoroutine(Highlight3DDelayed(blacksmith3D, blacksmithMarkerScale));
+                ShowDialogue("Fakat askerleri kuru kılıçla ölüme gönderemeyiz. Demircide onlara sağlam zırhlar ve silahlar dövdürmelisin.", false);
+                break;
+
+            case TutorialStep.Rebirth_Equip:
+                // Burada sadece metin veriyoruz, ekranın ortasında okuyacak
+                ShowDialogue("Silahları ürettikten sonra, askerinin üzerine tıklayarak envanterini açmalı ve eşyaları bizzat kuşandırmalısın.", false);
+                break;
+
+            case TutorialStep.Rebirth_Training:
+                StartCoroutine(Highlight3DDelayed(talimhane3D, talimhaneMarkerScale));
+                ShowDialogue("Tecrübesiz erler savaşta çabuk düşer. Onları Talimhane'de eğiterek güçlendirmeyi ihmal etme.", false);
+                break;
+
+            case TutorialStep.Rebirth_Cenk:
+                StartCoroutine(Highlight3DDelayed(cenkOyunu3D, cenkOyunuMarkerScale));
+                ShowDialogue("Askerlerini boş vakitlerinde Cenk Oyunu'na sokarak hem tecrübe hem de fazladan altın kazanabilirsin.", false);
+                break;
+
+            case TutorialStep.Rebirth_TempUI:
+                StartCoroutine(HighlightUIDelayed(topBarTempUI));
+                ShowDialogue("Unutma, kış kapıda... Yukarıdaki sıcaklık göstergesini takip et. Hava soğudukça odun yakıp kampı ısıtmak zorundasın.", false);
+                break;
+
+            case TutorialStep.Rebirth_Campfire:
+                StartCoroutine(Highlight3DDelayed(campfire3D, campfireMarkerScale));
+                ShowDialogue("Son olarak, ordunun morali her şeydir. Kamp ateşi etrafında dinlenmelerini sağla ki moralleri yüksek kalsın.", false);
                 break;
 
             case TutorialStep.Completed:
@@ -101,21 +175,34 @@ public class TutorialManager : MonoBehaviour
         }
     }
 
-    // Eğitimi bir sonraki aşamaya geçirmek için dışarıdan (butonlardan vs.) çağrılır
+    private IEnumerator HighlightUIDelayed(GameObject targetUI)
+    {
+        yield return new WaitForSeconds(0.1f);
+        if (TutorialHighlighter.Instance != null && targetUI != null)
+        {
+            TutorialHighlighter.Instance.HighlightUI(targetUI);
+        }
+    }
+
+    private IEnumerator Highlight3DDelayed(Transform target3D, float scale)
+    {
+        yield return new WaitForSeconds(0.2f);
+        if (TutorialHighlighter.Instance != null && target3D != null)
+        {
+            TutorialHighlighter.Instance.Highlight3D(target3D, scale);
+        }
+    }
+
     public void AdvanceTutorial()
     {
         if (!isTutorialActive) return;
-
+        
         int nextStepIndex = (int)currentStep + 1;
         
-        if (nextStepIndex >= Enum.GetValues(typeof(TutorialStep)).Length - 1)
-        {
+        if (nextStepIndex >= Enum.GetValues(typeof(TutorialStep)).Length - 1) 
             SetStep(TutorialStep.Completed);
-        }
-        else
-        {
+        else 
             SetStep((TutorialStep)nextStepIndex);
-        }
     }
 
     private void CompleteTutorial()
@@ -125,21 +212,22 @@ public class TutorialManager : MonoBehaviour
         PlayerPrefs.SetInt("TutorialCompleted", 1);
         PlayerPrefs.Save();
         
-        if (tutorialDialoguePanel != null) tutorialDialoguePanel.SetActive(false);
-        Debug.Log("<color=green>EĞİTİM TAMAMLANDI! Serbest oyun başladı.</color>");
+        if (TutorialDialogueUI.Instance != null) TutorialDialogueUI.Instance.panelContainer.SetActive(false);
+        if (TutorialHighlighter.Instance != null) TutorialHighlighter.Instance.RemoveHighlight();
+        
+        // Final Kapanış Mesajı
+        if (NotificationManager.Instance != null) 
+            NotificationManager.Instance.Show("Eğitim Bitti! Artık kampın kontrolü sende Uç Beyim.", NotificationType.Success);
     }
 
-    // Şimdilik test amaçlı, ileride sinematik panelimizi açacak
-    private void ShowDialogue(string text)
+    private void ShowDialogue(string text, bool hideContinueBtn)
     {
-        if (tutorialDialoguePanel != null && tutorialText != null)
+        if (TutorialDialogueUI.Instance != null)
         {
-            tutorialDialoguePanel.SetActive(true);
-            tutorialText.text = text;
-        }
-        else
-        {
-            Debug.LogWarning($"DİYALOG: {text}");
+            TutorialDialogueUI.Instance.ShowDialogue(text, hideContinueBtn, () => 
+            {
+                if (!hideContinueBtn) AdvanceTutorial(); 
+            });
         }
     }
 }

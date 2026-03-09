@@ -66,6 +66,7 @@ public class TrainingSpot : MonoBehaviour
             if (AudioManager.Instance != null) AudioManager.Instance.PlayError();
             return;
         }
+        
 
         if (currentGladiator.GetComponent<GladiatorHealing>() != null && currentGladiator.GetComponent<GladiatorHealing>().IsHealing)
         {

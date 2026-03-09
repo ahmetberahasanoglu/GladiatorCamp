@@ -298,12 +298,15 @@ public class MapEventManager : MonoBehaviour
 
     void SetupStartEvent()
     {
-        titleText.text = "Kamp Ekranı";
-        descText.text = "Bir kampta dinlen ve hazırlıklarını yap.";
+        titleText.text = "Kamp";
+        descText.text = "Kampda dinlen ve hazırlıklarını yap.";
         if(villageSprite != null) eventImage.sprite = villageSprite;
         
         CreateButton("Kampa Geç", () => {
-            
+            if (TutorialManager.Instance != null && TutorialManager.Instance.currentStep == TutorialStep.Intro_CampPanel)
+            {
+                TutorialManager.Instance.AdvanceTutorial(); // Camp_Tour'a geçirir
+            }
             ClosePanel();
             topPanel.SetActive(true);
             BattleManager.Instance.ReturnToCamp();
@@ -338,6 +341,10 @@ public class MapEventManager : MonoBehaviour
         else
         {
             atkBtn.onClick.AddListener(() => {
+                if (TutorialManager.Instance != null && TutorialManager.Instance.currentStep == TutorialStep.Map_FirstBattlePanel)
+                {
+                    TutorialManager.Instance.AdvanceTutorial(); // Battle_ScriptedLoss'a geçirir
+                }
                 AudioManager.Instance.PlayWarHorn();
                 //DayManager.Instance.NextDay(3); 
                 ClosePanel();

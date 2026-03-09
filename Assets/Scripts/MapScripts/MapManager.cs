@@ -9,6 +9,7 @@ public class MapManager : MonoBehaviour
 
     [Header("UI")]
     public GameObject mapPanel;
+    public GameObject topPanel;
     public RectTransform playerIcon;
     public float moveDuration = 1.2f; 
 
@@ -45,6 +46,7 @@ public bool isMapOpen = false;
     public void HideMap()
     {
         mapPanel.SetActive(false);
+        topPanel.SetActive(true);
         isMapOpen = false;
         if (LootChest.Instance != null)
         {
@@ -56,6 +58,7 @@ public bool isMapOpen = false;
     {
         CloseAllOpenPanels();
         mapPanel.SetActive(true);
+        topPanel.SetActive(false);
        isMapOpen = true;
        
        AudioManager.Instance.PlayPaper();

@@ -43,6 +43,7 @@ public class GladiatorSelector : MonoBehaviour
         }
     }
 
+ 
     void Update()
     {
         if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Idle)
@@ -102,8 +103,15 @@ public class GladiatorSelector : MonoBehaviour
             }
         }
     }
+   public Gladiator GetSelectedGladiator()
+    {
+        if (selectedInventory != null)
+        {
+            return selectedInventory.GetComponent<Gladiator>();
+        }
+        return null;
+    }
 
-    // Kod tekrarını önlemek için temizlik işini tek bir fonksiyona topladık
     public void ClearSelection()
     {
         selectedInventory = null;

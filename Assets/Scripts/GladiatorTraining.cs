@@ -48,10 +48,23 @@ public ParticleSystem levelUpParticle;
             selectionRing.SetActive(isSelected);
         }
     }
-    public void StartTraining(TrainingSpot spot)
+   public void StartTraining(TrainingSpot spot)
     {
         if (IsTraining) return;
         if (spot == null || spot.isBusy) return;
+
+        // --- YENİ BARRİYER: Asker camideyse eğitime GİDEMEZ ---
+        var praying = gladiator.GetComponent<GladiatorPraying>();
+        if (praying != null && praying.isPraying)
+        {
+            if (NotificationManager.Instance != null)
+                NotificationManager.Instance.Show("Bu asker şu an ibadette! Önce duasını bitirmeli.", NotificationType.Warning);
+            
+            if (GladiatorSelector.Instance != null)
+                GladiatorSelector.Instance.ClearSelection();
+                
+            return; // Kodu durdur, eğitime başlatma!
+        }
 
         currentSpot = spot;
         spot.isBusy = true;
@@ -111,6 +124,37 @@ IEnumerator TrainingAnimationRoutine()
             {
                 dummy.ReceiveHit(); // Kukla sarsılsın, partikül patlasın!
             }
+        }
+    }
+    public void StopTraining()
+    {
+        if (!IsTraining) return;
+
+        remainingDays = 0; // IsTraining değerini anında false yapar
+
+        if (currentSpot != null)
+        {
+            currentSpot.isBusy = false;
+            currentSpot = null;
+        }
+
+        // Gün geçiş aboneliğini ve yürüyüş/vurma döngülerini iptal et
+        DayManager.Instance.OnNewDay -= OnNewDay;
+        StopAllCoroutines(); 
+        
+        // Ajanı olduğu yerde durdur
+        if (agent != null && agent.isOnNavMesh)
+        {
+            agent.isStopped = true;
+            agent.ResetPath();
+        }
+
+        // Animasyonu sıfırla
+        Animator anim = GetComponentInChildren<Animator>();
+        if (anim != null)
+        {
+            anim.SetBool("isRunning", false);
+            anim.Play("Idle"); // Vurmayı bırakıp direkt duruşa geçsin
         }
     }
     void OnNewDay()

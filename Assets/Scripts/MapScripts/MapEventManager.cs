@@ -310,10 +310,10 @@ public class MapEventManager : MonoBehaviour
         });
     }
 
-    void SetupBattleEvent()
+   void SetupBattleEvent()
     {
         titleText.text = "Çapulcu Pusu";
-        descText.text = "Yol kesen eşkıyalar! Savaşmak 3 gün sürecek ama ganimetleri iyi görünüyor.";
+        descText.text = "Yol kesen eşkıyalar! Savaşmak zor olacak ama ganimetleri iyi görünüyor.";
         if(battleSprite != null) eventImage.sprite = battleSprite;
         
         int readySoldiers = GetAvailableSoldierCount();
@@ -328,7 +328,7 @@ public class MapEventManager : MonoBehaviour
         }
 
         GameObject atkBtnObj = Instantiate(buttonPrefab, buttonContainer);
-        atkBtnObj.GetComponentInChildren<TextMeshProUGUI>().text = "Saldır (3 Gün Sürer)";
+        atkBtnObj.GetComponentInChildren<TextMeshProUGUI>().text = "Saldır";
         Button atkBtn = atkBtnObj.GetComponent<Button>();
         
         if (readySoldiers == 0)
@@ -339,17 +339,64 @@ public class MapEventManager : MonoBehaviour
         {
             atkBtn.onClick.AddListener(() => {
                 AudioManager.Instance.PlayWarHorn();
-                DayManager.Instance.NextDay(3); 
+                //DayManager.Instance.NextDay(3); 
                 ClosePanel();
                 BattleManager.Instance.StartBattle(2, 1, BattleEnvironment.Tower); 
             });
         }
 
-        CreateButton("Etrafından Dolaş (5 Gün Kaybet)", () => {
+        // --- YENİ: NASİP SİSTEMİ İLE KAÇMAYI DENEME ---
+        int mevcutNasip = NasipManager.Instance != null ? NasipManager.Instance.currentNasip : 0;
+        
+        CreateButton($"Kaçmayı Dene (Nasip: {mevcutNasip})", () => {
+            // Kaçmayı denerken zar atacağız, eğer kaybedersek savaş ortamı Tower olacak şekilde gönderiyoruz
+            ResolveEscapeContest(BattleEnvironment.Tower, 2, 1); 
+        });
+    }
+
+    // --- YENİ: NASİP VE ZAR ÇÖZÜMLEME EKRANI ---
+    private void ResolveEscapeContest(BattleEnvironment failEnv, int failEnemyCount, int failDifficulty)
+    {
+        // Önceki butonları temizle
+        foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+
+        AudioManager.Instance.PlayDice();
+
+        // 6'lık Zar atıyoruz
+        DiceManager.Instance.RollDice(6, (zarSonucu) => 
+        {
+            int mevcutNasip = NasipManager.Instance != null ? NasipManager.Instance.currentNasip : 0;
+            int totalScore = mevcutNasip + zarSonucu;
             
-            DayManager.Instance.NextDay(5);
-            NotificationManager.Instance.Show("Güvenli ama uzun yolu seçtin.", NotificationType.Info);
-            ClosePanel();
+            // Baraj Puanı (Örn: Kaçmak için toplam 6 veya üzeri gelmeli. İstersen bunu inspector'dan da alabilirsin)
+            int kacisBaraji = 6; 
+            bool isWin = totalScore >= kacisBaraji;
+
+            string mathText = $"\n\n<size=85%><color=yellow>Nasip ({mevcutNasip}) + Zar ({zarSonucu}) = {totalScore} / {kacisBaraji} (Gereken)</color></size>\n";
+
+            if (isWin)
+            {
+                descText.text = $"<color=green>YOLUMUZ AÇIKMIŞ!</color>\n\nNasibimiz yaver gitti, pusuyu fark edip sessizce etraflarından dolanmayı başardık. Kan dökülmeden izimizi kaybettirdik!\n" + mathText;
+                
+                // Başarıyla kaçarsa paneli kapatıp yola devam eder
+                CreateButton("Yola Devam Et", () => { 
+                    ClosePanel();
+                });
+            }
+            else
+            {
+                descText.text = $"<color=red>NASİP KAPALIYMIŞ!</color>\n\nKaçmaya çalışırken kuru bir dala bastık... Bizi fark ettiler! Üstelik hazırlıksız yakalandığımız için moraller bozuldu(-10).\n" + mathText;
+                
+                if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-10); // Kaçarken yakalanma cezası
+
+                // Başarısız olursa kılıçları çekmek zorunda kalır!
+                CreateButton("Kılıçları Çekin! (Savaş)", () => { 
+                    AudioManager.Instance.PlayWarHorn();
+                   // DayManager.Instance.NextDay(3); 
+                    ClosePanel();
+                    BattleManager.Instance.StartBattle(failEnemyCount, failDifficulty, failEnv); 
+                });
+            }
         });
     }
 
@@ -502,7 +549,7 @@ public class MapEventManager : MonoBehaviour
         });
     }
 
-    // --- SENİN İSTEDİĞİN ZARLI VE AÇIKLAYICI MÜSABAKA ÇÖZÜMLEMESİ ---
+   
     private void ResolveContest(Gladiator selectedSoldier, NodeType eventType, int askerStat, int rakipStat, string rakipAd)
     {
         // Önceki butonları temizle

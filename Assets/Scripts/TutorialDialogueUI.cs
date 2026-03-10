@@ -9,36 +9,58 @@ public class TutorialDialogueUI : MonoBehaviour
     public static TutorialDialogueUI Instance;
 
     [Header("UI Elemanları")]
-    public GameObject panelContainer; // Panel objesinin kendisi
+    public GameObject panelContainer; 
     public TextMeshProUGUI dialogueText;
-    public Button continueButton;
-    public TextMeshProUGUI buttonText; // Butonun içindeki Text objesi
+    
+    [Header("Yeni: Görünmez Buton ve İşaretçi")]
+    public Button fullScreenButton; // Ekranı kaplayan şeffaf buton
+    public GameObject continueIndicator; // Yazı bitince çıkacak zıplayan ok (▼)
+
+    [Header("Karakter (Opsiyonel)")]
+    public Image characterPortrait; 
+    public Sprite defaultCharacterSprite; 
 
     [Header("Daktilo Ayarları")]
-    public float typeSpeed = 0.03f; // Harflerin ekrana gelme hızı
+    public float typeSpeed = 0.03f; 
 
     private Coroutine typingCoroutine;
+    private Coroutine bounceCoroutine; // Zıplama animasyonunu tutan döngü
     private string fullText;
     private bool isTyping = false;
-    private Action onDialogueFinished; // Diyalog bitince çalışacak komut
+    private Action onDialogueFinished;
+    
+    private Vector3 indicatorStartPos;
 
     void Awake()
     {
         Instance = this;
         if (panelContainer != null) panelContainer.SetActive(false);
-        if (continueButton != null) continueButton.onClick.AddListener(OnContinueClicked);
+        if (fullScreenButton != null) fullScreenButton.onClick.AddListener(OnContinueClicked);
+        
+        // Okun başlangıç pozisyonunu hafızaya al (zıplama için lazım)
+        if (continueIndicator != null) 
+        {
+            continueIndicator.SetActive(false);
+            indicatorStartPos = continueIndicator.GetComponent<RectTransform>().anchoredPosition;
+        }
     }
 
-   
-    public void ShowDialogue(string text, bool hideContinueBtn = false, Action onComplete = null)
+    public void ShowDialogue(string text, bool hideContinueBtn = false, Action onComplete = null, Sprite speakerSprite = null)
     {
         panelContainer.SetActive(true);
         fullText = text;
         onDialogueFinished = onComplete;
         
-        // --- YENİ: Eğitimin o anki durumuna göre butonu gizle veya göster ---
-        if (continueButton != null) 
-            continueButton.gameObject.SetActive(!hideContinueBtn); 
+        // Eğer oyuncunun mecburen bir binaya/node'a tıklaması gerekiyorsa, ekrana tıklamayı tamamen kapat!
+        if (fullScreenButton != null) 
+            fullScreenButton.gameObject.SetActive(!hideContinueBtn); 
+            
+        if (characterPortrait != null)
+            characterPortrait.sprite = speakerSprite != null ? speakerSprite : defaultCharacterSprite;
+        
+        // Yeni yazı başlarken oku gizle ve zıplamayı durdur
+        if (continueIndicator != null) continueIndicator.SetActive(false);
+        if (bounceCoroutine != null) StopCoroutine(bounceCoroutine);
         
         if (typingCoroutine != null) StopCoroutine(typingCoroutine);
         typingCoroutine = StartCoroutine(TypeTextRoutine());
@@ -48,16 +70,11 @@ public class TutorialDialogueUI : MonoBehaviour
     {
         isTyping = true;
         dialogueText.text = "";
-        buttonText.text = "Geç (>>)"; // Yazı akarken butonun metni değişir
 
         foreach (char c in fullText.ToCharArray())
         {
             dialogueText.text += c;
-            
-            // Eğer daktilo veya tüy kalem sesin varsa buraya ekleyebilirsin:
-            // AudioManager.Instance.PlayTypewriterSound(); 
-            
-            // Time.timeScale 0 olsa bile yazının akması için Realtime kullanıyoruz
+            // AudioManager.Instance.PlayTypewriterSound(); // Daktilo sesi
             yield return new WaitForSecondsRealtime(typeSpeed); 
         }
 
@@ -68,24 +85,44 @@ public class TutorialDialogueUI : MonoBehaviour
     {
         isTyping = false;
         dialogueText.text = fullText;
-        buttonText.text = "Devam Et";
+        
+        // Yazı akması bittiyse ve bu aşamada "Devam Etme" hakkımız varsa oku göster!
+        if (continueIndicator != null && fullScreenButton.gameObject.activeSelf) 
+        {
+            continueIndicator.SetActive(true);
+            bounceCoroutine = StartCoroutine(BounceIndicatorRoutine());
+        }
     }
 
-    // Butona tıklandığında çalışacak mantık
+    // --- YENİ: KOD İLE ZIPLAMA ANİMASYONU (SİNÜS DALGASI) ---
+    private IEnumerator BounceIndicatorRoutine()
+    {
+        RectTransform rect = continueIndicator.GetComponent<RectTransform>();
+        float speed = 5f;   // Zıplama hızı
+        float height = 4f;  // Yukarı aşağı kaç piksel oynayacağı
+
+        while (true)
+        {
+            // Zaman aktıkça Y ekseninde yumuşak bir in-çık dalgası yaratır
+            float newY = indicatorStartPos.y + Mathf.Sin(Time.unscaledTime * speed) * height;
+            rect.anchoredPosition = new Vector2(indicatorStartPos.x, newY);
+            yield return null;
+        }
+    }
+
     public void OnContinueClicked()
     {
         if (isTyping)
         {
-            // Eğer yazı hala yazılıyorsa, yazmayı kes ve metnin tamamını zınk diye ekrana bas (Skip)
+            // Eğer yazı bitmediyse ve ekrana tıklandıysa, yazıyı anında şak diye tamamla
             if (typingCoroutine != null) StopCoroutine(typingCoroutine);
             FinishTyping();
         }
         else
         {
-            // Yazı çoktan bittiyse, paneli kapat ve TutorialManager'a "Sıradaki adıma geç" mesajı yolla
+            // Yazı çoktan bittiyse paneli kapat ve sıradaki aşamaya geç
             panelContainer.SetActive(false);
-            
-            // Eğer içine bir fonksiyon (Action) koyulmuşsa onu çalıştır
+            if (bounceCoroutine != null) StopCoroutine(bounceCoroutine);
             onDialogueFinished?.Invoke(); 
         }
     }

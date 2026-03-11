@@ -147,4 +147,39 @@ public class SeasonManager : MonoBehaviour
         sunLight.color = targetColor;
         sunLight.intensity = targetIntensity;
     }
+    
+    public void ForceCampLighting()
+    {
+        if (sunLight == null || DayManager.Instance == null) return;
+
+        int day = DayManager.Instance.currentDay;
+        
+        // Varsa yarım kalmış eski geçiş animasyonlarını durdur ki ışık bug'a girmesin
+        StopAllCoroutines();
+
+        // Gölgeleri kesinlikle aç (Mağara savaşında kapanmış olabilir)
+        sunLight.shadows = LightShadows.Soft;
+
+        if (day < 50)
+        {
+            sunLight.color = summerColor;
+            sunLight.intensity = summerIntensity;
+            RenderSettings.fogDensity = 0.005f;
+            RenderSettings.fogColor = summerColor;
+        }
+        else if (day >= 50 && day < 80)
+        {
+            sunLight.color = autumnColor;
+            sunLight.intensity = autumnIntensity;
+            RenderSettings.fogDensity = 0.01f;
+            RenderSettings.fogColor = autumnColor;
+        }
+        else
+        {
+            sunLight.color = winterColor;
+            sunLight.intensity = winterIntensity;
+            RenderSettings.fogDensity = 0.02f;
+            RenderSettings.fogColor = winterColor;
+        }
+    }
 }

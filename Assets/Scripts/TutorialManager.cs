@@ -8,7 +8,7 @@ using System;
 public enum TutorialStep
 {
     None, Intro_Target, Intro_CampNode, Intro_CampPanel, 
-    Camp_Tour, Camp_GoToWar, Map_FirstBattle, Map_FirstBattlePanel, 
+    Camp_Tour,Camp_Tour1,Camp_Tour2, Camp_GoToWar, Map_FirstBattle, Map_FirstBattlePanel, 
     Battle_ScriptedLoss, 
     Rebirth_Intro,      // Savaştan dönüldü, asker yok
     Rebirth_Recruit,    // Devşirme Binası
@@ -34,6 +34,9 @@ public class TutorialManager : MonoBehaviour
 
     [Header("Arayüz (UI) Referansları")]
     public GameObject topBarGoldUI;    
+    public GameObject itibarUI;    
+    public GameObject nasipUI;    
+    public GameObject moralUI;    
     public GameObject kizilKaleNodeUI; 
     public GameObject firstCampNodeUI; 
     public GameObject firstBattleNodeUI; 
@@ -100,12 +103,20 @@ public class TutorialManager : MonoBehaviour
                 break;
 
             case TutorialStep.Intro_CampPanel:
-                ShowDialogue("Otağımıza girmek için paneldeki 'Kampa Geç' butonuna tıkla.", true);
+                ShowDialogue("Otağımıza girmek için paneldeki 'Kampa Geç' butonuna tıkla.", true,new Vector2(0, 400f));
                 break;
 
             case TutorialStep.Camp_Tour:
                 StartCoroutine(HighlightUIDelayed(topBarGoldUI));
                 ShowDialogue("Burası merkezimiz. Yukarıda Altınımız, Erzağımız ve Asker kapasitemiz var.", false);
+                break;
+            case TutorialStep.Camp_Tour1:
+                StartCoroutine(HighlightUIDelayed(itibarUI));
+                ShowDialogue("Maaşları ödemek için altının kalmazsa borç alabilirsin ama bunun için itibarını bitirme. ", false);
+                break;
+            case TutorialStep.Camp_Tour2:
+                StartCoroutine(HighlightUIDelayed(nasipUI));
+                ShowDialogue("Adil bir bey olursan nasibin açılır. ", false);
                 break;
 
             case TutorialStep.Camp_GoToWar:
@@ -115,15 +126,16 @@ public class TutorialManager : MonoBehaviour
 
             case TutorialStep.Map_FirstBattle:
                 StartCoroutine(HighlightUIDelayed(firstBattleNodeUI));
-                ShowDialogue("İzleri burada bitiyor... İlk çapulcu grubunun üzerine yürü! (Savaş Noktasına Tıkla)", true);
+                ShowDialogue("Haydut grubunun üzerine yürü! (Savaş Noktasına Tıkla)", true);
                 break;
 
             case TutorialStep.Map_FirstBattlePanel:
-                ShowDialogue("Düşman karşımızda! Tereddüt etme, 'Saldır' emrini ver!", true);
+                ShowDialogue("Düşman karşımızda! Tereddüt etme, 'Saldır' emrini ver!", true,new Vector2(0, 350f));
                 break;
 
             case TutorialStep.Battle_ScriptedLoss:
                 ShowDialogue("Kılıçları çekin!", true); 
+                StartCoroutine(HideDialogueAfterSeconds(2f));
                 break;
 
             // ==========================================
@@ -131,12 +143,12 @@ public class TutorialManager : MonoBehaviour
             // ==========================================
             case TutorialStep.Rebirth_Intro:
                 // Karanlık ekran, vurgu yok
-                ShowDialogue("Ağır bir yara aldık... Tek bir askerimiz bile sağ kalmadı. Ama uç beyliği pes etmez, otağı yeniden ayağa kaldıracağız.", false);
+                ShowDialogue("Ağır bir yara aldık... Tek bir askerimiz bile sağ kalmadı. Ama metin ol, otağı yeniden ayağa kaldıracağız.", false);
                 break;
 
             case TutorialStep.Rebirth_Recruit:
                 StartCoroutine(Highlight3DDelayed(devsirme3D, devsirmeMarkerScale));
-                ShowDialogue("İlk işimiz yeni yiğitler bulmak. Devşirme çadırından altın karşılığı ordunu baştan kurabilirsin.", false);
+                ShowDialogue("İlk işimiz harabe binaları onarıp yeni yiğitler bulmak. Devşirme çadırından altın karşılığı ordunu baştan kurabilirsin.", false);
                 break;
 
             case TutorialStep.Rebirth_Blacksmith:
@@ -156,7 +168,7 @@ public class TutorialManager : MonoBehaviour
 
             case TutorialStep.Rebirth_Cenk:
                 StartCoroutine(Highlight3DDelayed(cenkOyunu3D, cenkOyunuMarkerScale));
-                ShowDialogue("Askerlerini boş vakitlerinde Cenk Oyunu'na sokarak hem tecrübe hem de fazladan altın kazanabilirsin.", false);
+                ShowDialogue("Boş vakitlerinde askerlerinle Cenk* oynayarak hem moral hem de fazladan altın kazanabilirsin.", false);
                 break;
 
             case TutorialStep.Rebirth_TempUI:
@@ -166,6 +178,7 @@ public class TutorialManager : MonoBehaviour
 
             case TutorialStep.Rebirth_Campfire:
                 StartCoroutine(Highlight3DDelayed(campfire3D, campfireMarkerScale));
+                StartCoroutine(HighlightUIDelayed(moralUI));
                 ShowDialogue("Son olarak, ordunun morali her şeydir. Kamp ateşi etrafında dinlenmelerini sağla ki moralleri yüksek kalsın.", false);
                 break;
 
@@ -192,7 +205,15 @@ public class TutorialManager : MonoBehaviour
             TutorialHighlighter.Instance.Highlight3D(target3D, scale);
         }
     }
-
+private IEnumerator HideDialogueAfterSeconds(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        
+        if (TutorialDialogueUI.Instance != null && TutorialDialogueUI.Instance.panelContainer != null)
+        {
+            TutorialDialogueUI.Instance.panelContainer.SetActive(false);
+        }
+    }
     public void AdvanceTutorial()
     {
         if (!isTutorialActive) return;
@@ -220,14 +241,15 @@ public class TutorialManager : MonoBehaviour
             NotificationManager.Instance.Show("Eğitim Bitti! Artık kampın kontrolü sende Uç Beyim.", NotificationType.Success);
     }
 
-    private void ShowDialogue(string text, bool hideContinueBtn)
+   
+    private void ShowDialogue(string text, bool hideContinueBtn, Vector2? offset = null)
     {
         if (TutorialDialogueUI.Instance != null)
         {
             TutorialDialogueUI.Instance.ShowDialogue(text, hideContinueBtn, () => 
             {
                 if (!hideContinueBtn) AdvanceTutorial(); 
-            });
+            }, null, offset);
         }
     }
 }

@@ -178,9 +178,12 @@ public class TopInfoBarUI : MonoBehaviour
     // =========================================================
     // SİHİRLİ PARLAMA (FLASH) SİSTEMİ
     // =========================================================
-    public void FlashUI(TextMeshProUGUI uiText)
+   public void FlashUI(TextMeshProUGUI uiText)
     {
         if (uiText == null) return;
+
+       
+        if (!gameObject.activeInHierarchy) return;
 
         // Eski animasyon devam ediyorsa durdur
         if (activeFlashes.ContainsKey(uiText))

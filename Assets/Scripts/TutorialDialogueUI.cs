@@ -11,10 +11,14 @@ public class TutorialDialogueUI : MonoBehaviour
     [Header("UI Elemanları")]
     public GameObject panelContainer; 
     public TextMeshProUGUI dialogueText;
-    
-    [Header("Yeni: Görünmez Buton ve İşaretçi")]
-    public Button fullScreenButton; // Ekranı kaplayan şeffaf buton
-    public GameObject continueIndicator; // Yazı bitince çıkacak zıplayan ok (▼)
+    public Button fullScreenButton; 
+    public GameObject continueIndicator; 
+
+    [Header("Balon Ayarı (YENİ)")]
+    public RectTransform speechBubbleRect;
+    public RectTransform speechcharRect; 
+    private Vector2 defaultBubblePos;     
+    private Vector2 defaultCharPos;      
 
     [Header("Karakter (Opsiyonel)")]
     public Image characterPortrait; 
@@ -24,11 +28,10 @@ public class TutorialDialogueUI : MonoBehaviour
     public float typeSpeed = 0.03f; 
 
     private Coroutine typingCoroutine;
-    private Coroutine bounceCoroutine; // Zıplama animasyonunu tutan döngü
+    private Coroutine bounceCoroutine;
     private string fullText;
     private bool isTyping = false;
     private Action onDialogueFinished;
-    
     private Vector3 indicatorStartPos;
 
     void Awake()
@@ -37,34 +40,48 @@ public class TutorialDialogueUI : MonoBehaviour
         if (panelContainer != null) panelContainer.SetActive(false);
         if (fullScreenButton != null) fullScreenButton.onClick.AddListener(OnContinueClicked);
         
-        // Okun başlangıç pozisyonunu hafızaya al (zıplama için lazım)
         if (continueIndicator != null) 
         {
             continueIndicator.SetActive(false);
             indicatorStartPos = continueIndicator.GetComponent<RectTransform>().anchoredPosition;
         }
+        if(speechcharRect!=null)
+        defaultCharPos= speechcharRect.anchoredPosition;
+        // YENİ: Balonun ilk (orijinal) pozisyonunu hafızaya al
+        if (speechBubbleRect != null)
+        {
+            defaultBubblePos = speechBubbleRect.anchoredPosition;
+        }
+      
     }
 
-    public void ShowDialogue(string text, bool hideContinueBtn = false, Action onComplete = null, Sprite speakerSprite = null)
+    // YENİ: Fonksiyona "bubbleOffset" (Kaydırma Miktarı) eklendi
+    public void ShowDialogue(string text, bool hideContinueBtn = false, Action onComplete = null, Sprite speakerSprite = null, Vector2? bubbleOffset = null)
     {
         panelContainer.SetActive(true);
         fullText = text;
         onDialogueFinished = onComplete;
         
-        // Eğer oyuncunun mecburen bir binaya/node'a tıklaması gerekiyorsa, ekrana tıklamayı tamamen kapat!
         if (fullScreenButton != null) 
             fullScreenButton.gameObject.SetActive(!hideContinueBtn); 
             
         if (characterPortrait != null)
             characterPortrait.sprite = speakerSprite != null ? speakerSprite : defaultCharacterSprite;
         
-        // Yeni yazı başlarken oku gizle ve zıplamayı durdur
+        // YENİ: Eğer dışarıdan bir kaydırma (Offset) istendiyse balonu kaydır, istenmediyse orijinal yerine koy
+        if (speechBubbleRect != null)
+        {
+            speechBubbleRect.anchoredPosition = bubbleOffset.HasValue ? defaultBubblePos + bubbleOffset.Value : defaultBubblePos;
+        }
+         speechcharRect.anchoredPosition = bubbleOffset.HasValue ? defaultCharPos + bubbleOffset.Value : defaultCharPos;
         if (continueIndicator != null) continueIndicator.SetActive(false);
         if (bounceCoroutine != null) StopCoroutine(bounceCoroutine);
         
         if (typingCoroutine != null) StopCoroutine(typingCoroutine);
         typingCoroutine = StartCoroutine(TypeTextRoutine());
     }
+
+    // ... (TypeTextRoutine, FinishTyping, BounceIndicatorRoutine ve OnContinueClicked fonksiyonları öncekiyle tamamen aynı kalacak, onlara dokunma) ...
 
     private IEnumerator TypeTextRoutine()
     {

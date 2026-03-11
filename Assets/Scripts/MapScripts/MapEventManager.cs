@@ -327,7 +327,7 @@ public class MapEventManager : MonoBehaviour
         }
         else
         {
-            descText.text += $"\n\nSavaşa Hazır Kılıç: <color=green>{readySoldiers}</color>";
+            descText.text += $"\n\nSavaşa Hazır Asker: <color=green>{readySoldiers}</color>";
         }
 
         GameObject atkBtnObj = Instantiate(buttonPrefab, buttonContainer);

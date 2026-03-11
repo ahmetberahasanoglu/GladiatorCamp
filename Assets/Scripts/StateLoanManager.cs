@@ -11,13 +11,15 @@ public class StateLoanManager : MonoBehaviour
     public int loanDueDay = 0;         
     public int paymentPeriod = 7;      
     
-    [Header("Limitler ve Cezalar")]
+  [Header("Limitler ve Cezalar")]
     public int minRepToBorrow = 50;    
     public int defaultLoanAmount = 2000; 
+    public int repaymentAmount = 2400; 
     public int latePenaltyRep = 15;    
 
-    // --- YENİ EKLENEN EVENT ---
-    // UI'ın dinlemesi için "Borç Durumu Değişti" sinyali
+
+    private int dayLoanTaken = 0;
+
     public event Action OnLoanStateChanged;
 
     void Awake()
@@ -51,19 +53,18 @@ public class StateLoanManager : MonoBehaviour
             return;
         }
 
-        // DİKKAT: MoneyManager'daki fonksiyonun adı AddGold ise burayı düzelt
         MoneyManager.Instance.Add(defaultLoanAmount); 
         
         hasActiveLoan = true;
-        loanAmount = defaultLoanAmount;
-        loanDueDay = DayManager.Instance.currentDay + paymentPeriod;
-        NotificationManager.Instance.Show($"Devletten {loanAmount} Akçe borç alındı. Son ödeme: Gün {loanDueDay}", NotificationType.Info);
+        loanAmount = repaymentAmount; 
         
-        // HATA ÇÖZÜLDÜ: UIManager yerine kendi eventimizi tetikliyoruz
+        loanDueDay = DayManager.Instance.currentDay + paymentPeriod;
+        dayLoanTaken = DayManager.Instance.currentDay; 
+
+        NotificationManager.Instance.Show($"Devletten {defaultLoanAmount} Akçe alındı. Geri Ödeme: {loanAmount} Akçe", NotificationType.Info);
+        
         OnLoanStateChanged?.Invoke(); 
     }
-
-    // StateLoanManager.cs içindeki RepayLoan fonksiyonu:
 
     public void RepayLoan()
     {
@@ -73,27 +74,40 @@ public class StateLoanManager : MonoBehaviour
         {
             MoneyManager.Instance.Spend(loanAmount);
             
-      
-            // Eğer borcu gününden önce veya gününde ödediysek ödül verelim
             int currentDay = DayManager.Instance.currentDay;
-            
+
             if (currentDay <= loanDueDay) 
             {
-                // Örnek: Borç ödenince +10 İtibar kazanılsın
-                ReputationManager.Instance.ChangeReputation(10);
-                NotificationManager.Instance.Show("Borç zamanında ödendi! Padişah memnun oldu (+10 İtibar).", NotificationType.Success);
-            }
-            // ----------------------------------------------
 
+                if (currentDay > dayLoanTaken)
+                {
+
+                    ReputationManager.Instance.ChangeReputation(10);
+
+                    if (NasipManager.Instance != null)
+                    {
+                        NasipManager.Instance.AddNasip(1); 
+                    }
+
+                    NotificationManager.Instance.Show("Borç zamanında ödendi! (+10 İtibar, +1 Nasip)", NotificationType.Success);
+                }
+                else
+                {
+                    NotificationManager.Instance.Show("Borç erkenden kapatıldı. Devlet masrafı kesti.", NotificationType.Info);
+                }
+            }
+
+            // Borcu sıfırla
             hasActiveLoan = false;
             loanAmount = 0;
             loanDueDay = 0;
+            dayLoanTaken = 0;
 
             OnLoanStateChanged?.Invoke();
         }
         else
         {
-            NotificationManager.Instance.Show("Borcu ödeyecek paran yok!", NotificationType.Warning);
+            NotificationManager.Instance.Show("Borcu tamamen kapatacak paran yok!", NotificationType.Warning);
         }
     }
 

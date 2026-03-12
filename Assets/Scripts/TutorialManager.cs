@@ -35,6 +35,7 @@ public class TutorialManager : MonoBehaviour
     [Header("Arayüz (UI) Referansları")]
     public GameObject topBarGoldUI;    
     public GameObject itibarUI;    
+    public GameObject borcUI;    
     public GameObject nasipUI;    
     public GameObject moralUI;    
     public GameObject kizilKaleNodeUI; 
@@ -112,7 +113,8 @@ public class TutorialManager : MonoBehaviour
                 break;
             case TutorialStep.Camp_Tour1:
                 StartCoroutine(HighlightUIDelayed(itibarUI));
-                ShowDialogue("Maaşları ödemek için altının kalmazsa borç alabilirsin ama bunun için itibarını bitirme. ", false);
+                StartCoroutine(HighlightUIDelayed(borcUI));
+                ShowDialogue("Maaşları ödemek için altının kalmazsa borç alabilirsin ama itibarına dikkat et. ", false);
                 break;
             case TutorialStep.Camp_Tour2:
                 StartCoroutine(HighlightUIDelayed(nasipUI));
@@ -153,12 +155,12 @@ public class TutorialManager : MonoBehaviour
 
             case TutorialStep.Rebirth_Blacksmith:
                 StartCoroutine(Highlight3DDelayed(blacksmith3D, blacksmithMarkerScale));
-                ShowDialogue("Fakat askerleri kuru kılıçla ölüme gönderemeyiz. Demircide onlara sağlam zırhlar ve silahlar dövdürmelisin.", false);
+                ShowDialogue("Fakat askerleri ekipmansız ölüme gönderemeyiz. Demircide onlara sağlam zırhlar ve kılıçlar dövdürmelisin.", false);
                 break;
 
             case TutorialStep.Rebirth_Equip:
                 // Burada sadece metin veriyoruz, ekranın ortasında okuyacak
-                ShowDialogue("Silahları ürettikten sonra, askerinin üzerine tıklayarak envanterini açmalı ve eşyaları bizzat kuşandırmalısın.", false);
+                ShowDialogue("Ekipmanları ürettikten sonra, askerinin üzerine tıklayarak envanterini açmalı ve eşyaları bizzat kuşandırmalısın.", false);
                 break;
 
             case TutorialStep.Rebirth_Training:
@@ -179,7 +181,7 @@ public class TutorialManager : MonoBehaviour
             case TutorialStep.Rebirth_Campfire:
                 StartCoroutine(Highlight3DDelayed(campfire3D, campfireMarkerScale));
                 StartCoroutine(HighlightUIDelayed(moralUI));
-                ShowDialogue("Son olarak, ordunun morali her şeydir. Kamp ateşi etrafında dinlenmelerini sağla ki moralleri yüksek kalsın.", false);
+                ShowDialogue("Son olarak, ordunun morali her şeydir. Kamp ateşi etrafında dinlenmelerini sağla ki canları dolsun, moralleri yüksek kalsın.", false);
                 break;
 
             case TutorialStep.Completed:

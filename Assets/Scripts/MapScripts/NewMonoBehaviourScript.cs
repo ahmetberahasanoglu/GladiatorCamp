@@ -16,5 +16,7 @@ public enum NodeType
     
     Archery,
     Dice,
-    YagliGures
+    YagliGures,
+    FirstBattle,
+    NasibEncounter
 }

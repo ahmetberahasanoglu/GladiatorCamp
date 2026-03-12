@@ -61,7 +61,7 @@ public bool isMapOpen = false;
         topPanel.SetActive(false);
        isMapOpen = true;
        
-       AudioManager.Instance.PlayPaper();
+       AudioManager.Instance.PlayMap();
     }
 
     void DrawAllConnections()

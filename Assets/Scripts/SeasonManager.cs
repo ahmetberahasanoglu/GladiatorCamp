@@ -64,7 +64,7 @@ public class SeasonManager : MonoBehaviour
         if (sunLight == null) return;
 
         // --- 1. FAZ: GÜNEŞLİ GÜNLER (1-50) ---
-        if (day < 50)
+        if (day < 5)
         {
             if (currentPhase != 1) // Sadece faza ilk geçildiğinde ayarla
             {
@@ -80,7 +80,7 @@ public class SeasonManager : MonoBehaviour
             }
         }
         // --- 2. FAZ: SONBAHAR YAPRAKLARI (50-80) ---
-        else if (day >= 50 && day < 80)
+        else if (day >= 5 && day < 10)//day >= 50 && day < 80
         {
             if (currentPhase != 2)
             {
@@ -104,7 +104,7 @@ public class SeasonManager : MonoBehaviour
             }
         }
         // --- 3. FAZ: KIŞ GELİYOR (80-100) ---
-        else if (day >= 80)
+        else if (day >= 10)
         {
             if (currentPhase != 3)
             {

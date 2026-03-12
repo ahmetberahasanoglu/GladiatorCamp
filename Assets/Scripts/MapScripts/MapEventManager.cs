@@ -80,6 +80,8 @@ public class MapEventManager : MonoBehaviour
             case NodeType.Vahsi:        SetupVahsi(); break;
             case NodeType.Dice:         SetupMysteriousDiceEvent(); break;
             case NodeType.YagliGures:   SetupYagliGures(); break;
+            case NodeType.FirstBattle:   SetupFirstBattleEvent(); break;
+            case NodeType.NasibEncounter:   SetupNasibEvent(); break;
         }
     }
 
@@ -122,41 +124,144 @@ public class MapEventManager : MonoBehaviour
             ClosePanel();
         });
     }
+    void SetupNasibEvent()
+    {
+        titleText.text = "Yoldaki Derviş";
+        descText.text = "Üstü başı yırtık, yaşlı bir derviş yol kenarında bir ağacın dibinde oturuyor. Sana doğru bakıp titreyen bir sesle mırıldandı:\n\n<color=#4E2A03>\"Yolcu... Allah rızası için bir lokma ekmek, üç beş akçe sadaka verir misin?\"</color>";
+        
+        // Eğer elinde derviş veya fakir bir adam resmi yoksa village/merchant sprite'ını kullanabilirsin
+        if(villageSprite != null) eventImage.sprite = villageSprite; 
 
-    public void SetupMysteriousDiceEvent()
+        CreateButton("Sadaka Ver (-20 Altın)", () => {
+            if (MoneyManager.Instance.gold >= 20)
+            {
+                MoneyManager.Instance.Spend(20);
+                
+                // Nasip ve İtibar artar
+                if (NasipManager.Instance != null) NasipManager.Instance.AddNasip(1);
+                if (ReputationManager.Instance != null) ReputationManager.Instance.ChangeReputation(5);
+                
+                NotificationManager.Instance.Show("Derviş sana hayır duası etti. Gönlüne bir ferahlık geldi.", NotificationType.Success);
+            }
+            else
+            {
+                NotificationManager.Instance.Show("Sadaka verecek kadar bile altının yok...", NotificationType.Error);
+            }
+            ClosePanel();
+        });
+
+        CreateButton("Görmezden Gel", () => {
+            
+            // Nasip düşer, moral bozulur
+            if (NasipManager.Instance != null) NasipManager.Instance.SpendNasip(1);
+            if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-5);
+            
+            NotificationManager.Instance.Show("Derviş arkandan sessizce baktı. İçini büyük bir sıkıntı bastı.", NotificationType.Warning);
+            ClosePanel();
+        });
+    }
+   public void SetupMysteriousDiceEvent()
     {
         titleText.text = "Gizemli Yabancı";
-        descText.text = "Karanlık bir pelerin giymiş bir adam yolunu kesti. Avucundan kemikten yapılma bir zar çıkardı.\n\n<color=#66001D>\"Şu zarı at bakalım Uç Beyi... Eğer 3'ten büyük atarsan sana bir sırrımı (ve altınlarımı) vereceğim.\"</color>";
-          if(villageSprite != null) eventImage.sprite = diceSprite;
-        CreateButton("Zarı At (Risk Al)", () => 
+        descText.text = "Karanlık bir pelerin giymiş bir adam yolunu kesti. Avucundan kemikten yapılma bir zar çıkardı.\n\n<color=#66001D>\"Şu zarı at bakalım Uç Beyi... Eğer 3'ten büyük atarsan sana tam 1000 Akçe vereceğim. Ama kaybedersen, en değerli şeylerinden birini alırım...\"</color>";
+        
+        if(diceSprite != null) eventImage.sprite = diceSprite;
+
+        CreateButton("Zarı At (Ölümcül Risk)", () => 
         {
-            
             AudioManager.Instance.PlayDice();
-            DiceManager.Instance.RollDice(4, (zarSonucu) => 
+            
+            // 6'lık Zar atıyoruz
+            DiceManager.Instance.RollDice(6, (zarSonucu) => 
             {
-                if (zarSonucu >= 4) 
+                // Önceki butonları temizle ki ekran güncellensin
+                foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+
+                if (zarSonucu > 3) 
                 {
-                    NotificationManager.Instance.Show($"Zar {zarSonucu} geldi! Adam sana kese fırlattı (+150 Akçe)", NotificationType.Success);
-                    MoneyManager.Instance.Add(150); 
-                    if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(5);
+                    descText.text = $"<color=green>ZAR: {zarSonucu}</color>\n\nAdam şaşkınlıkla sana baktı. Elindeki devasa keseyi ayaklarının dibine fırlattı ve tek kelime etmeden karanlıkta kayboldu.";
+                    
+                    MoneyManager.Instance.Add(1000); 
+                    if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(15);
+                    AudioManager.Instance.PlayCheer(); 
                 }
                 else
                 {
-                    NotificationManager.Instance.Show($"Zar {zarSonucu} geldi... Adam gülerek karanlıkta kayboldu.", NotificationType.Warning);
-                    if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-5);
+                    // KAYBETTİK! Bir askeri kurban seçiyoruz
+                    string olenAskerIsmi = KillRandomSoldier();
+
+                    if (!string.IsNullOrEmpty(olenAskerIsmi))
+                    {
+                        descText.text = $"<color=red>ZAR: {zarSonucu}</color>\n\nAdam korkunç bir kahkaha attı. O an arkadan kan donduran bir çığlık koptu... Döndüğünde yiğitlerinden <color=yellow>{olenAskerIsmi}</color>'nin cansız bedeniyle karşılaştın.";
+                        if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-25);
+                    }
+                    else
+                    {
+                        // Eğer oyuncunun hiç askeri kalmamışsa altınlarını çalalım
+                        descText.text = $"<color=red>ZAR: {zarSonucu}</color>\n\nAdam kahkaha attı ancak alacak bir can bulamadı! <color=#66001D>'Ordun zaten yok olmuş...'</color> diyerek alay etti ve hazinenden 500 Akçe çalıp kayboldu.";
+                        if (MoneyManager.Instance.gold >= 500) MoneyManager.Instance.Spend(500);
+                        else if (MoneyManager.Instance.gold > 0) MoneyManager.Instance.Spend(MoneyManager.Instance.gold);
+                    }
                 }
-                ClosePanel(); 
+
+                // Sonucu okuduktan sonra paneli kapatacak buton
+                CreateButton("Devam Et", () => {
+                    ClosePanel(); 
+                });
             });
         });
 
         CreateButton("Adamı Kov", () => 
         {
-            
-            NotificationManager.Instance.Show("Kumara ayıracak vaktim yok deyip yoluna devam ettin.", NotificationType.Info);
+            NotificationManager.Instance.Show("Şeytanla pazarlık yapmam deyip yoluna devam ettin.", NotificationType.Info);
             ClosePanel();
         });
     }
+ // Ordudaki yaşayan askerlerden rastgele birini seçip infaz eder, ismini döndürür.
+    private string KillRandomSoldier()
+    {
+        Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
+        List<Gladiator> aliveSoldiers = new List<Gladiator>();
 
+        // Sadece hayatta olan kendi askerlerimizi listeye alalım
+        foreach (var soldier in allSoldiers)
+        {
+            GladiatorAI ai = soldier.GetComponent<GladiatorAI>();
+            if (soldier.CompareTag("MySoldier") && (ai == null || !ai.isDead))
+            {
+                if (soldier.data != null && soldier.data.currentHealth > 0)
+                {
+                    aliveSoldiers.Add(soldier);
+                }
+            }
+        }
+
+        // Eğer yaşan asker varsa birini seç
+        if (aliveSoldiers.Count > 0)
+        {
+            int randomIndex = Random.Range(0, aliveSoldiers.Count);
+            Gladiator doomedSoldier = aliveSoldiers[randomIndex];
+            string doomedName = doomedSoldier.data.gladiatorName;
+
+            // Askeri öldür
+            doomedSoldier.data.currentHealth = 0;
+            
+            GladiatorAI ai = doomedSoldier.GetComponent<GladiatorAI>();
+            if (ai != null)
+            {
+                ai.Die(); // Varsa senin kendi ölüm animasyonunu tetikler
+            }
+            else
+            {
+                Destroy(doomedSoldier.gameObject); // Yoksa direkt sahneden siler
+            }
+
+            return doomedName;
+        }
+
+        // Yaşayan asker yoksa null döner
+        return null; 
+    }
     void SetupZindan()
     {
         titleText.text = "Karanlık Mağara";
@@ -245,33 +350,7 @@ public class MapEventManager : MonoBehaviour
         });
     }
 
-    void SetupKuleSavas()
-    {
-        titleText.text = "Kule Savunması";
-        descText.text = "İlerideki dost gözetleme kulesi haydutların saldırısı altında! Onlara yardım edecek misin?";
-
-        CreateButton("Savunmaya Yardım Et", () => {
-            
-            if (!HasAliveSoldiers())
-            {
-                if (NotificationManager.Instance != null)
-                    NotificationManager.Instance.Show("Savaşa sokacak hiç askerin yok! Kampa dönmelisin.", NotificationType.Error);
-                return; 
-            }
-            if (AudioManager.Instance != null) AudioManager.Instance.PlayWarHorn();
-            DayManager.Instance.NextDay(1); 
-            ClosePanel();
-            topPanel.SetActive(true);
-            NotificationManager.Instance.Show("Savaş Başlıyor!", NotificationType.Warning);
-        });
-
-        CreateButton("Beni İlgilendirmez", () => {
-            
-            ReputationManager.Instance.ChangeReputation(-5); 
-            NotificationManager.Instance.Show("Kule düştü, itibar kaybettin.", NotificationType.Error);
-            ClosePanel();
-        });
-    }
+   
 
     void SetupVillageEvent()
     {
@@ -313,7 +392,48 @@ public class MapEventManager : MonoBehaviour
         });
     }
 
-   void SetupBattleEvent()
+   void SetupFirstBattleEvent()
+    {
+        titleText.text = "Çapulcu Pusu";
+        descText.text = "Yol kesen eşkıyalar! Savaşmak zor olacak ama ganimetleri iyi görünüyor.";
+        if(battleSprite != null) eventImage.sprite = battleSprite;
+        
+        int readySoldiers = GetAvailableSoldierCount();
+    
+        if (readySoldiers == 0)
+        {
+            descText.text += "\n\n<color=red>SAVAŞA HAZIR ASKER YOK!</color>\nHerkes görevde, çalışıyor veya yaralı.";
+        }
+        else
+        {
+            descText.text += $"\n\nSavaşa Hazır Asker: <color=green>{readySoldiers}</color>";
+        }
+
+        GameObject atkBtnObj = Instantiate(buttonPrefab, buttonContainer);
+        atkBtnObj.GetComponentInChildren<TextMeshProUGUI>().text = "Saldır";
+        Button atkBtn = atkBtnObj.GetComponent<Button>();
+        
+        if (readySoldiers == 0)
+        {
+            atkBtn.interactable = false; 
+        }
+        else
+        {
+            atkBtn.onClick.AddListener(() => {
+                if (TutorialManager.Instance != null && TutorialManager.Instance.currentStep == TutorialStep.Map_FirstBattlePanel)
+                {
+                    TutorialManager.Instance.AdvanceTutorial(); // Battle_ScriptedLoss'a geçirir
+                }
+                AudioManager.Instance.PlayWarHorn();
+                //DayManager.Instance.NextDay(3); 
+                ClosePanel();
+                BattleManager.Instance.StartBattle(2, 1, BattleEnvironment.Forest); 
+            });
+        }
+
+       
+    }
+    void SetupBattleEvent()
     {
         titleText.text = "Çapulcu Pusu";
         descText.text = "Yol kesen eşkıyalar! Savaşmak zor olacak ama ganimetleri iyi görünüyor.";
@@ -352,12 +472,58 @@ public class MapEventManager : MonoBehaviour
             });
         }
 
-        // --- YENİ: NASİP SİSTEMİ İLE KAÇMAYI DENEME ---
         int mevcutNasip = NasipManager.Instance != null ? NasipManager.Instance.currentNasip : 0;
         
         CreateButton($"Kaçmayı Dene (Nasip: {mevcutNasip})", () => {
             // Kaçmayı denerken zar atacağız, eğer kaybedersek savaş ortamı Tower olacak şekilde gönderiyoruz
             ResolveEscapeContest(BattleEnvironment.Tower, 2, 1); 
+        });
+    }
+
+     void SetupKuleSavas()
+    {
+        titleText.text = "Kule Savunması";
+        descText.text = "İlerideki dost gözetleme kulesi haydutların saldırısı altında! Onlara yardım edecek misin?";
+
+         int readySoldiers = GetAvailableSoldierCount();
+    
+        if (readySoldiers == 0)
+        {
+            descText.text += "\n\n<color=red>SAVAŞA HAZIR ASKER YOK!</color>\nHerkes görevde, çalışıyor veya yaralı.";
+        }
+        else
+        {
+            descText.text += $"\n\nSavaşa Hazır Asker: <color=green>{readySoldiers}</color>";
+        }
+        
+
+       GameObject atkBtnObj = Instantiate(buttonPrefab, buttonContainer);
+        atkBtnObj.GetComponentInChildren<TextMeshProUGUI>().text = "Yardım et";
+        Button atkBtn = atkBtnObj.GetComponent<Button>();
+        
+        if (readySoldiers == 0)
+        {
+            atkBtn.interactable = false; 
+        }
+        else
+        {
+            atkBtn.onClick.AddListener(() => {
+                if (TutorialManager.Instance != null && TutorialManager.Instance.currentStep == TutorialStep.Map_FirstBattlePanel)
+                {
+                    TutorialManager.Instance.AdvanceTutorial(); // Battle_ScriptedLoss'a geçirir
+                }
+                AudioManager.Instance.PlayWarHorn();
+                //DayManager.Instance.NextDay(3); 
+                ClosePanel();
+                BattleManager.Instance.StartBattle(3, 1, BattleEnvironment.Tower); 
+            });
+        }
+
+        CreateButton("Beni İlgilendirmez", () => {
+            
+            ReputationManager.Instance.ChangeReputation(-5); 
+            NotificationManager.Instance.Show("Kule düştü, itibar kaybettin.", NotificationType.Error);
+            ClosePanel();
         });
     }
 

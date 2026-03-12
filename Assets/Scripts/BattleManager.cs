@@ -72,9 +72,7 @@ public class BattleManager : MonoBehaviour
         [Header("Sinematik Geçiş")]
     public CanvasGroup fadeGroup;
 
-    private Color _originalSunColor;
-    private float _originalSunIntensity;
-    private LightShadows _originalSunShadows;
+ 
 
     void Awake()
     {
@@ -387,13 +385,10 @@ private void ChangeEnvironment(BattleEnvironment envType)
             if (env.volumeObject != null) env.volumeObject.SetActive(false);
         }
 
-        if (mainDirectionalLight != null)
+       if (SeasonManager.Instance != null)
         {
-            mainDirectionalLight.color = _originalSunColor;
-            mainDirectionalLight.intensity = _originalSunIntensity;
-            mainDirectionalLight.shadows = _originalSunShadows;
+            SeasonManager.Instance.ForceCampLighting();
         }
-
         StartCoroutine(CinematicTransitionRoutine(campCameraPos));
         
         state = BattleState.Idle;

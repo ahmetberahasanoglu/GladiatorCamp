@@ -234,7 +234,7 @@ if (target != null)
         }
     }
 
-    void Die()
+    public void Die()
     {
         if (isDead) return; 
         AudioManager.Instance.PlaySFX(AudioManager.Instance.deathSound, 1.0f);

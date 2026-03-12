@@ -9,6 +9,7 @@ public class AudioManager : MonoBehaviour
     public AudioSource musicSource;  // Chill Kamp müzikleri için
     public AudioSource sfxSource;    // Anlık efektler (Tıklama, altın, kılıç)
     public AudioSource ambientSource;// Savaş ambiyansı veya rüzgar sesi için (Döngüsel)
+    public AudioSource dialogueSource;// Savaş ambiyansı veya rüzgar sesi için (Döngüsel)
 
     [Header("Müzikler (Kulağı Yormayan / Chill)")]
     public AudioClip summerCampMusic; // Normal günlerdeki sakin müzik
@@ -20,6 +21,9 @@ public class AudioManager : MonoBehaviour
     public AudioClip buttonClick;
     public AudioClip errorSound;
     public AudioClip paperSound;
+    public AudioClip mapOpenSound;
+    public AudioClip typewriterSound;
+
     [Range(0f, 1f)] public float uiVolume = 0.8f; 
 
     [Header("Ekonomi ve Olay Sesleri")]
@@ -45,7 +49,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip eatFoodSound;  // Gün sonu erzak yendiğinde tok bir ses
     public AudioClip mapMoveSound;  // Haritada ikon hareket ederken (At toynağı vs.)
     [Range(0f, 1f)] public float actionVolume = 0.9f;
-
+    
     void Awake()
     {
         if (Instance == null)
@@ -66,7 +70,39 @@ public class AudioManager : MonoBehaviour
         if (DayManager.Instance != null)
             DayManager.Instance.OnWinterArrived += () => PlayCampMusic(true);
     }
+public void PlayTypewriter() 
+    {
+        if (typewriterSound != null && sfxSource != null)
+        {
+            // Sese organik bir his vermek için pitch'i rastgele değiştir (0.9 ile 1.1 arası idealdır)
+            sfxSource.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
+            
+            // Sesi çal (uiVolume'un biraz daha düşüğünü kullanıyoruz ki kulak tırmalamasın)
+            sfxSource.PlayOneShot(typewriterSound, uiVolume * 0.3f);
+            
+            // Pitch ayarını normal (1.0) haline geri döndür ki diğer oyun sesleri bozulmasın!
+            sfxSource.pitch = 1.0f; 
+        }
+    }
 
+    public void StartTypewriter() 
+    {
+        if (typewriterSound != null && dialogueSource != null)
+        {
+            dialogueSource.clip = typewriterSound;
+            dialogueSource.loop = true; // 13 saniye yetmezse diye başa sarsın
+            dialogueSource.volume = uiVolume * 0.5f; // Arka planda tatlı tatlı çalsın
+            dialogueSource.Play();
+        }
+    }
+
+    public void StopTypewriter()
+    {
+        if (dialogueSource != null && dialogueSource.isPlaying)
+        {
+            dialogueSource.Stop(); // Yazı bittiği an sesi bıçak gibi keser
+        }
+    }
     // --- GELİŞMİŞ SFX ÇALICI (VOLUME DESTEKLİ) ---
     // clip: Çalınacak ses | volumeScale: Sesin yüksekliği (0 ile 1 arası)
     public void PlaySFX(AudioClip clip, float volumeScale)
@@ -145,6 +181,7 @@ public class AudioManager : MonoBehaviour
     public void PlayClick() => PlaySFX(buttonClick, uiVolume);
     public void PlayError() => PlaySFX(errorSound, uiVolume);
     public void PlayPaper() => PlaySFX(paperSound, uiVolume);
+    public void PlayMap() => PlaySFX(mapOpenSound, uiVolume);
 
     public void PlayGold() => PlaySFX(goldSound, eventVolume);
     public void PlayDice() => PlaySFX(diceRoll, eventVolume);

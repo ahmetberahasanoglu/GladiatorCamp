@@ -16,7 +16,11 @@ MonoBehaviour:
   strength: 10
   defense: 10
   speed: 10
-  morale: 10
   stamina: 10
   level: 1
-  price: 100
+  isGazi: 0
+  currentHealth: 0
+  maxHealth: 0
+  isOnMission: 0
+  currentActivity: 2
+  dailyWage: 50

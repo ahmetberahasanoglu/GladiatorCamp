@@ -64,23 +64,26 @@ public class TopInfoBarUI : MonoBehaviour
     void UpdateDay(int day)
     {
         if(dayText != null)
-            dayText.text = $"{day} / {100}";
+            dayText.text = $"{day} / {30}";//100 belki
             
         if (day > 80 && dayText != null) dayText.color = Color.red;
     }
 
-    void UpdateGold(int gold)
+ void UpdateGold(int gold)
+{
+    if (goldText != null && MoneyManager.Instance != null) 
     {
-       if (goldText != null && MoneyManager.Instance != null) 
-        {
-            int current = MoneyManager.Instance.gold;
-            int cost = MoneyManager.Instance.GetExpectedDailyWageCost();
+        int current = MoneyManager.Instance.gold;
+        int cost = MoneyManager.Instance.GetExpectedDailyWageCost();
 
-            goldText.text = $"{current} <size=70%><color=#ff6666>(-{cost})</color></size>";
-            if (isInitialized) FlashUI(goldText);
-        }
+        string formattedGold = current.ToString("N0");
+        string formattedCost = cost.ToString("N0");
+
+        goldText.text = $"{formattedGold} <size=70%><color=#ff6666>(-{formattedCost})</color></size>";
+        
+        if (isInitialized) FlashUI(goldText);
     }
-
+}
     void UpdateFood()
     {
         if(SupplyManager.Instance != null && foodText != null)
@@ -153,7 +156,7 @@ public class TopInfoBarUI : MonoBehaviour
         }
 
         int maxCap = CampManager.Instance.GetMaxSoldierCapacity();
-        string color = (currentCount >= maxCap) ? "red" : "white";
+        string color = (currentCount >= maxCap) ? "red" : "black";
 
         if (capacityText != null)
             capacityText.text = $"<color={color}>{currentCount} / {maxCap}</color>";
@@ -199,7 +202,7 @@ public class TopInfoBarUI : MonoBehaviour
 
     private IEnumerator FlashRoutine(TextMeshProUGUI uiText)
     {
-        Color originalColor = Color.white; 
+        Color originalColor = Color.black; 
        // Color originalColor = uiText.color;
         Vector3 originalScale = Vector3.one;
         Vector3 targetScale = new Vector3(1.3f, 1.3f, 1.3f); 

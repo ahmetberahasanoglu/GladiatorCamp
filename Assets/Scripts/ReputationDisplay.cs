@@ -33,12 +33,12 @@ private bool isInitialized = false;
     void UpdateText(int amount)
     {
         _textMesh.text = $" {amount}";
-
+        if (amount <= 50) _textMesh.color = Color.red;    
        // if (amount >= 80) _textMesh.color = Color.green;       
        // else if (amount >= 50) _textMesh.color = Color.white;
       //  else _textMesh.color = Color.red;         
-      if (amount <= 50) _textMesh.color = Color.red;    
-      else _textMesh.color = Color.white; 
+      
+      //else _textMesh.color = Color.white; 
 
       if (isInitialized && TopInfoBarUI.Instance != null)
         {

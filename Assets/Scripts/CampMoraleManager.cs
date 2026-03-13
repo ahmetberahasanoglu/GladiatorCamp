@@ -56,7 +56,7 @@ public class CampMoraleManager : MonoBehaviour
         {
             moraleText.text = $"{currentMorale}";
             if (currentMorale <= 40) moraleText.color = Color.red;    
-            else moraleText.color = Color.white; 
+            //else moraleText.color = Color.white; 
             // Moralin durumuna göre modeli değiştirebilirm simdi değil
            
         }

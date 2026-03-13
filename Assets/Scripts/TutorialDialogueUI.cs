@@ -26,13 +26,17 @@ public class TutorialDialogueUI : MonoBehaviour
 
     [Header("Daktilo Ayarları")]
     public float typeSpeed = 0.03f; 
-
+     [Tooltip("Ses makineli tüfek gibi oluyorsa bunu 2 veya 3 yapın")]
+    public int playSoundEveryNthChar = 2;
     private Coroutine typingCoroutine;
     private Coroutine bounceCoroutine;
     private string fullText;
     private bool isTyping = false;
     private Action onDialogueFinished;
     private Vector3 indicatorStartPos;
+
+ 
+   
 
     void Awake()
     {
@@ -83,15 +87,20 @@ public class TutorialDialogueUI : MonoBehaviour
 
     // ... (TypeTextRoutine, FinishTyping, BounceIndicatorRoutine ve OnContinueClicked fonksiyonları öncekiyle tamamen aynı kalacak, onlara dokunma) ...
 
-    private IEnumerator TypeTextRoutine()
+   private IEnumerator TypeTextRoutine()
     {
         isTyping = true;
         dialogueText.text = "";
 
+        // --- YAZI AKMAYA BAŞLARKEN SESİ BAŞLAT ---
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.StartTypewriter();
+        }
+
         foreach (char c in fullText.ToCharArray())
         {
             dialogueText.text += c;
-            // AudioManager.Instance.PlayTypewriterSound(); // Daktilo sesi
             yield return new WaitForSecondsRealtime(typeSpeed); 
         }
 
@@ -103,7 +112,13 @@ public class TutorialDialogueUI : MonoBehaviour
         isTyping = false;
         dialogueText.text = fullText;
         
-        // Yazı akması bittiyse ve bu aşamada "Devam Etme" hakkımız varsa oku göster!
+        // --- YAZI BİTTİĞİNDE (VEYA TIKLANIP GEÇİLDİĞİNDE) SESİ SUSTUR ---
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.StopTypewriter();
+        }
+        
+        // Zıplayan ok işareti çıksın
         if (continueIndicator != null && fullScreenButton.gameObject.activeSelf) 
         {
             continueIndicator.SetActive(true);

@@ -18,9 +18,24 @@ public class TopInfoBarUI : MonoBehaviour
     [Header("Hayatta Kalma UI Textleri")]
     public TextMeshProUGUI woodText;
     public TextMeshProUGUI tempText;
-    public Image tempFillBar; 
+  
     public Gradient tempGradient; 
 
+
+    [Header("Maksimum Değerler (Barlar İçin)")]
+    public float maxGold = 10000f;
+    public float maxFood = 100f;
+    public float maxWood = 100f;
+    public float maxNasip = 6f; 
+
+    [Header("Slider (Fill) İmajları")]
+    public Image goldFillBar;
+    public Image foodFillBar;
+    public Image woodFillBar;
+    public Image capacityFillBar;
+    public Image dayFillBar;
+    public Image nasipFillBar;
+  public Image tempFillBar; 
     // --- PARLAMA (FLASH) EFEKTİ İÇİN ---
     private Dictionary<TextMeshProUGUI, Coroutine> activeFlashes = new Dictionary<TextMeshProUGUI, Coroutine>();
     public Color flashColor = new Color(0.1f, 1f, 0.2f); // Altın Sarısı / Parlak bir renk
@@ -61,30 +76,38 @@ public class TopInfoBarUI : MonoBehaviour
 
     // --- GÜNCELLEME FONKSİYONLARI ---
 
-    void UpdateDay(int day)
+   void UpdateDay(int day)
     {
-        if(dayText != null)
-            dayText.text = $"{day} / {30}";//100 belki
-            
-        if (day > 80 && dayText != null) dayText.color = Color.red;
+        // ... (Eski text güncelleme kodun) ...
+        if(dayText != null) dayText.text = $" {day}/{DayManager.Instance.maxDays}";
+        if (day > 20 && dayText != null) dayText.color = Color.red;
+
+
+        if (dayFillBar != null && DayManager.Instance != null)
+        {
+          
+            dayFillBar.fillAmount = Mathf.Clamp01((float)day / DayManager.Instance.maxDays);
+        }
     }
 
  void UpdateGold(int gold)
-{
-    if (goldText != null && MoneyManager.Instance != null) 
     {
-        int current = MoneyManager.Instance.gold;
-        int cost = MoneyManager.Instance.GetExpectedDailyWageCost();
+        if (goldText != null && MoneyManager.Instance != null) 
+        {
+            int current = MoneyManager.Instance.gold;
+            int cost = MoneyManager.Instance.GetExpectedDailyWageCost();
 
-        string formattedGold = current.ToString("N0");
-        string formattedCost = cost.ToString("N0");
+            goldText.text = $"{current} <size=70%><color=#ff6666>(-{cost})</color></size>";
+            if (isInitialized) FlashUI(goldText);
 
-        goldText.text = $"{formattedGold} <size=70%><color=#ff6666>(-{formattedCost})</color></size>";
-        
-        if (isInitialized) FlashUI(goldText);
+           
+            if (goldFillBar != null)
+            {
+                goldFillBar.fillAmount = Mathf.Clamp01((float)current / maxGold);
+            }
+        }
     }
-}
-    void UpdateFood()
+   void UpdateFood()
     {
         if(SupplyManager.Instance != null && foodText != null)
         {
@@ -93,6 +116,12 @@ public class TopInfoBarUI : MonoBehaviour
             
             foodText.text = $"{current} <size=70%><color=#ff6666>(-{cost})</color></size>";
             if (isInitialized) FlashUI(foodText);
+
+            // YENİ: Erzak Barını Güncelle
+            if (foodFillBar != null)
+            {
+                foodFillBar.fillAmount = Mathf.Clamp01((float)current / maxFood);
+            }
         }
     }
 
@@ -100,8 +129,15 @@ public class TopInfoBarUI : MonoBehaviour
     {
         if (ResourceManager.Instance != null && woodText != null)
         {
-            woodText.text = $"{ResourceManager.Instance.wood}";
+            int current = ResourceManager.Instance.wood;
+            woodText.text = $"{current}";
             if (isInitialized) FlashUI(woodText);
+
+            // YENİ: Odun Barını Güncelle
+            if (woodFillBar != null)
+            {
+                woodFillBar.fillAmount = Mathf.Clamp01((float)current / maxWood);
+            }
         }
     }
 
@@ -110,36 +146,51 @@ public class TopInfoBarUI : MonoBehaviour
         UpdateNasip();
     }
 
-    void UpdateNasip()
-    {
-        if(NasipManager.Instance != null && nasipText != null)
-        {
-            nasipText.text = $"{NasipManager.Instance.currentNasip}";
-            if (isInitialized) FlashUI(nasipText);
-        }
-    }
+  
 
-    void UpdateTemp()
+  void UpdateTemp()
     {
         if (CampSurvivalManager.Instance == null) return;
 
         int currentTemp = CampSurvivalManager.Instance.currentTemperature;
+        int minTemp = CampSurvivalManager.Instance.minTemperature;
+        int maxTemp = CampSurvivalManager.Instance.maxTemperature;
 
         if (tempText != null)
         {
-            tempText.text = $"{currentTemp}°C";
+            string colorHex = currentTemp <= 0 ? "#88CCFF" : "#000000";
+            tempText.text = $"<color={colorHex}>{currentTemp}°C</color>";
             if (isInitialized) FlashUI(tempText);
         }
 
         if (tempFillBar != null)
         {
-            float fillAmount = currentTemp / 100f; 
+            // MATEMATİK DÜZELTİLDİ: Artık Integer bölmesi yapıp 1 veya 0 vermeyecek!
+            float fillAmount = Mathf.Clamp01((float)(currentTemp - minTemp) / (float)(maxTemp - minTemp)); 
+            
             tempFillBar.fillAmount = fillAmount;
             tempFillBar.color = tempGradient.Evaluate(fillAmount); 
         }
     }
-   
-    public void UpdateCapacity() 
+
+    void UpdateNasip()
+    {
+        if(NasipManager.Instance != null && nasipText != null)
+        {
+            int current = NasipManager.Instance.currentNasip;
+            nasipText.text = $"{current}";
+            if (isInitialized) FlashUI(nasipText);
+
+           
+            if (nasipFillBar != null)
+            {
+                // Nasibin maksimum değerini buraya yazmalısın (Örn: 100 varsayıyorum)
+                float maxNasip = 100f; 
+                nasipFillBar.fillAmount = Mathf.Clamp01((float)current / maxNasip);
+            }
+        }
+    }
+   public void UpdateCapacity() 
     {
         if (CampManager.Instance == null) return;
 
@@ -155,13 +206,20 @@ public class TopInfoBarUI : MonoBehaviour
             }
         }
 
-        int maxCap = CampManager.Instance.GetMaxSoldierCapacity();
+        int maxCap = CampManager.Instance.GetMaxSoldierCapacity(); // 3, 5, 7 diye değişen değer
         string color = (currentCount >= maxCap) ? "red" : "black";
 
         if (capacityText != null)
             capacityText.text = $"<color={color}>{currentCount} / {maxCap}</color>";
 
         if (isInitialized) FlashUI(capacityText);
+
+        // YENİ: Kapasite Barını Güncelle (Dinamik Max Değere Göre)
+        if (capacityFillBar != null)
+        {
+            // O anki maksimum çadır kapasiten neyse oran ona göre hesaplanır
+            capacityFillBar.fillAmount = Mathf.Clamp01((float)currentCount / maxCap);
+        }
 
         UpdateFood(); 
         if (MoneyManager.Instance != null) UpdateGold(MoneyManager.Instance.gold);

@@ -8,7 +8,7 @@ public class DayManager : MonoBehaviour
     public static DayManager Instance;
 
     public int currentDay = 1;
-    public int maxDays = 100;
+    public int maxDays = 30;
     
     [Header("Olay Sistemi")]
     public List<GameEvent> possibleEvents; 

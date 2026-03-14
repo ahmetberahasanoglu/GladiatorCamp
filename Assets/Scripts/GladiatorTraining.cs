@@ -65,6 +65,12 @@ public ParticleSystem levelUpParticle;
                 
             return; // Kodu durdur, eğitime başlatma!
         }
+        if (gladiator.data.currentActivity == SoldierActivity.Working)
+        {
+            if (NotificationManager.Instance != null)
+                NotificationManager.Instance.Show("Bu asker şu an şehirde çalışıyor! Emri yerine getiremez.", NotificationType.Error);
+            return; 
+        }
 
         currentSpot = spot;
         spot.isBusy = true;

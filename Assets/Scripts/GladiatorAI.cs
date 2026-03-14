@@ -324,11 +324,15 @@ if (target != null)
         {
             if (isDead) yield break; 
 
-            if (gladiator.isOnMission || (training != null && training.IsTraining))
+            if (gladiator.isOnMission || (training != null && training.IsTraining) || (gladiator.data != null && gladiator.data.currentActivity == SoldierActivity.Working&&gladiator.data.currentActivity==SoldierActivity.Praying))
             {
-                if (currentPoint != null) LeavePoint();
+                if (currentPoint != null) LeavePoint(); 
+                
+                // askeri kampta görünmez yapabilirim
+                // gladiator.gameObject.SetActive(false); 
+
                 yield return new WaitForSeconds(2f);
-                continue;
+                continue; // Döngüyü başa sar, hiçbir yere yürüme!
             }
 
             if (currentPoint != null)

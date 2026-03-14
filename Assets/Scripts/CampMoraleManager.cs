@@ -1,16 +1,18 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI; // YENİ: UI işlemleri için
 
 public class CampMoraleManager : MonoBehaviour
 {
     public static CampMoraleManager Instance;
 
     [Header("UI Ayarları")]
-    public TextMeshProUGUI moraleText; // Üst bardaki "Moral: %100" yazısı
+    public TextMeshProUGUI moraleText; 
+    public Image moraleFillBar; // YENİ: Moral barının imajı
 
     [Header("Durum")]
     [Range(0, 100)]
-    public int currentMorale = 80; // Oyuna %80 moralle başlasınlar
+    public int currentMorale = 80; 
 
     private bool isInitialized = false;
 
@@ -25,12 +27,10 @@ public class CampMoraleManager : MonoBehaviour
         isInitialized = true;
     }
 
-    // Morali artırmak veya azaltmak için her yerden çağrılabilir
     public void ChangeMorale(int amount)
     {
         if (amount == 0) return;
         currentMorale += amount;
-    
         currentMorale = Mathf.Clamp(currentMorale, 0, 100);
         
         UpdateUI();
@@ -39,7 +39,6 @@ public class CampMoraleManager : MonoBehaviour
         {
             TopInfoBarUI.Instance.FlashUI(moraleText);
         }
-
 
         if (NotificationManager.Instance != null)
         {
@@ -56,9 +55,14 @@ public class CampMoraleManager : MonoBehaviour
         {
             moraleText.text = $"{currentMorale}";
             if (currentMorale <= 40) moraleText.color = Color.red;    
-            //else moraleText.color = Color.white; 
-            // Moralin durumuna göre modeli değiştirebilirm simdi değil
-           
+            else moraleText.color = Color.black; 
+        }
+
+        // YENİ: Barı Güncelle
+        if (moraleFillBar != null)
+        {
+            // Moral max 100 olduğu için direkt 100'e bölüyoruz
+            moraleFillBar.fillAmount = Mathf.Clamp01((float)currentMorale / 100f);
         }
     }
 }

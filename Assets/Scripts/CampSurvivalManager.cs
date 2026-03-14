@@ -7,16 +7,20 @@ public class CampSurvivalManager : MonoBehaviour
     public event Action OnTemperatureChanged;
 
     [Header("Sıcaklık Değerleri")]
-    [Range(0, 100)] public int currentTemperature = 100; // 100 en sıcak, 0 donma noktası
+    public int minTemperature = -30;
+    public int maxTemperature = 30;
+    [Range(-30, 30)] public int currentTemperature = 25; 
     
     [Header("Mevsimsel Soğuma (Günlük)")]
-    public int summerColdDrop = 5;  // Yazın geceleri az soğur
-    public int autumnColdDrop = 15; // Sonbahar serttir
-    public int winterColdDrop = 30; // Kışın ateş yakmamak ölümcüldür
+    // AAA Dengelemesi: Soğuklar artık daha sert!
+    public int summerColdDrop = 3;  
+    public int autumnColdDrop = 8;  
+    public int winterColdDrop = 15; // Kışın dondurucu soğuk
 
     [Header("Ateş Etkisi")]
-    public int warmthPerWood = 10; // 1 birim odun kaç sıcaklık verir?
-    public int maxWoodPerClick = 5; // Ateşe tek tıklamada kaç odun atılır?
+    // AAA Dengelemesi: Odun artık çok değerli! 5 Odun sadece 5 derece ısıtır.
+    public int warmthPerWood = 1; 
+    public int maxWoodPerClick = 5; 
 
     void Awake()
     {
@@ -39,24 +43,21 @@ public class CampSurvivalManager : MonoBehaviour
         }
     }
 
-    // Her yeni günde havayı soğut ve sonuçlarına katlan
     void ApplyDailyCold()
     {
         int day = DayManager.Instance.currentDay;
         int dropAmount = summerColdDrop;
 
-        if (day >= 50 && day < 80) dropAmount = autumnColdDrop;
-        else if (day >= 80) dropAmount = winterColdDrop;
+        if (day >= 10 && day < 20) dropAmount = autumnColdDrop;
+        else if (day >= 20) dropAmount = winterColdDrop;
 
         currentTemperature -= dropAmount;
 
-        // --- KRİTİK EKLENTİ: ZEKİ ASKERLER (TIME-SKIP KORUMASI) ---
-        // Eğer sıcaklık kritik seviyeye (Örn: 30) düştüyse ve depoda odun varsa,
-        // oyuncu tıklamasa bile askerler donmamak için depodan gizlice odun yakar!
         bool autoBurned = false;
         int burnedWoodAmount = 0;
 
-        while (currentTemperature <= 30 && ResourceManager.Instance.wood >= maxWoodPerClick)
+        // Gece donma tehlikesinde otomatik odun yakma
+        while (currentTemperature <= 0 && ResourceManager.Instance.wood >= maxWoodPerClick)
         {
             ResourceManager.Instance.SpendWood(maxWoodPerClick);
             currentTemperature += (maxWoodPerClick * warmthPerWood);
@@ -64,34 +65,38 @@ public class CampSurvivalManager : MonoBehaviour
             autoBurned = true;
         }
 
-        // Eğer zaman atlamasında odun yakıldıysa oyuncuya rapor ver
         if (autoBurned && NotificationManager.Instance != null)
         {
-            NotificationManager.Instance.Show($"Sen yokken kamp çok soğudu. Askerler donmamak için depodan {burnedWoodAmount} odun yaktı.", NotificationType.Warning);
+            NotificationManager.Instance.Show($"Gece don vurdu! Askerler hayatta kalmak için depodan {burnedWoodAmount} odun yaktı.", NotificationType.Warning);
         }
-        // -----------------------------------------------------------
 
-        if (currentTemperature < 0) currentTemperature = 0; 
+        // KESİN ÇÖZÜM: Sıcaklığı ne olursa olsun -30 ile 30 arasına hapset!
+        currentTemperature = Mathf.Clamp(currentTemperature, minTemperature, maxTemperature);
 
         OnTemperatureChanged?.Invoke();
         CheckSurvivalStatus();
     }
 
-    // Odun yakarak kampı ısıt
-    // Odun yakarak kampı ısıt ve anlık bonus ver
-   // Odun yakarak kampı ısıt (CampSurvivalManager.cs içindeki StokeFire fonksiyonu)
     public bool StokeFire() 
     {
+        // YENİ MANTIK KİLİDİ: Hava zaten maksimum sıcaklıktaysa boşuna odun yakmayı engelle
+        if (currentTemperature >= maxTemperature)
+        {
+            if (NotificationManager.Instance != null)
+                NotificationManager.Instance.Show("Hava zaten yeterince sıcak, odunlarını israf etme!", NotificationType.Warning);
+            return false;
+        }
+
         if (ResourceManager.Instance.SpendWood(maxWoodPerClick))
         {
-            // Sıcaklığı artır
             int warmthGained = maxWoodPerClick * warmthPerWood;
             currentTemperature += warmthGained;
-            if (currentTemperature > 100) currentTemperature = 100; 
+            
+            // Sıcaklığı tekrar kontrol et ve kilitle
+            currentTemperature = Mathf.Clamp(currentTemperature, minTemperature, maxTemperature);
             
             OnTemperatureChanged?.Invoke();
             
-            // Sadece ufak bir moral ver (Can basmayı CampRestSystem'e bıraktık)
             if (CampMoraleManager.Instance != null) 
                 CampMoraleManager.Instance.ChangeMorale(1); 
             
@@ -107,24 +112,18 @@ public class CampSurvivalManager : MonoBehaviour
             return false;
         }
     }
-    // Sıcaklık çok düşerse ne olacak? (Moral düşüşü / Hastalık)
+
     void CheckSurvivalStatus()
     {
-        if (currentTemperature <= 20) // Donmak üzereler!
+        if (currentTemperature <= -10) 
         {
-            if (CampMoraleManager.Instance != null)
-            {
-                CampMoraleManager.Instance.ChangeMorale(-10); // Ağır moral kaybı
-            }
+            if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-10); 
             if (NotificationManager.Instance != null)
-                NotificationManager.Instance.Show("<color=blue>Kamp donuyor!</color> Askerlerin morali dibe vurdu.", NotificationType.Error);
+                NotificationManager.Instance.Show("<color=blue>İliklerimize kadar donuyoruz!</color> Moraller çöktü.", NotificationType.Error);
         }
-        else if (currentTemperature <= 50) // Üşüyorlar
+        else if (currentTemperature <= 5) 
         {
-            if (CampMoraleManager.Instance != null)
-            {
-                CampMoraleManager.Instance.ChangeMorale(-3); 
-            }
+            if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-3); 
         }
     }
 }

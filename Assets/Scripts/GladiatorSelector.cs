@@ -44,13 +44,11 @@ public class GladiatorSelector : MonoBehaviour
     }
 
  
-    void Update()
+   void Update()
     {
-        if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Idle)
-        {
-            return;
-        }
+        if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Idle) return;
         if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
+        
         if (Input.GetMouseButtonDown(0))
         {
             if (EventSystem.current.IsPointerOverGameObject()) return;
@@ -61,6 +59,17 @@ public class GladiatorSelector : MonoBehaviour
             {
                 if (hit.collider.TryGetComponent(out Gladiator gladiator))
                 {
+                    // --- 1. KORUMA KALKANI: Aynı Askere Tekrar Tıklanması ---
+                    // Eğer tıklanan asker zaten şu anki seçili askerse, UI'ı kapatıp açma (Titremeyi önle)
+                    if (selectedInventory != null && selectedInventory.gameObject == gladiator.gameObject)
+                    {
+                        return; // Kod burada durur, paneli tekrar açmaya çalışmaz
+                    }
+
+                    // --- 2. KORUMA KALKANI: Farklı Askere Geçiş ---
+                    // A askerinden B askerine geçerken, aradaki o "boşluğa tıklama" işlemini kodla ZORLA yapıyoruz!
+                    ClearSelection(); 
+
                     // 1. Eğitim yöneticisine askeri bildir
                     var training = gladiator.GetComponent<GladiatorTraining>();
                     if (TrainingUIManager.Instance != null)
@@ -71,12 +80,7 @@ public class GladiatorSelector : MonoBehaviour
                     // 2. Envanteri hafızaya al
                     selectedInventory = gladiator.GetComponent<GladiatorInventory>();
 
-                    // 3. KART SİSTEMİ
-                    if (currentlyOpenLocalUI != null)
-                    {
-                        currentlyOpenLocalUI.SetActive(false);
-                    }
-
+                    // 3. KART SİSTEMİ (Lokal Panel)
                     GladiatorPanel localPanel = gladiator.GetComponentInChildren<GladiatorPanel>(true);
                     
                     if (localPanel != null)
@@ -92,7 +96,7 @@ public class GladiatorSelector : MonoBehaviour
                 }
                 else
                 {
-                    // --- YENİ: Yere, binalara veya asker olmayan herhangi bir objeye tıklandıysa! ---
+                    // --- Yere, binalara veya asker olmayan herhangi bir objeye tıklandıysa! ---
                     ClearSelection();
                 }
             }
@@ -102,14 +106,6 @@ public class GladiatorSelector : MonoBehaviour
                 ClearSelection();
             }
         }
-    }
-   public Gladiator GetSelectedGladiator()
-    {
-        if (selectedInventory != null)
-        {
-            return selectedInventory.GetComponent<Gladiator>();
-        }
-        return null;
     }
 
     public void ClearSelection()
@@ -121,5 +117,22 @@ public class GladiatorSelector : MonoBehaviour
             currentlyOpenLocalUI.SetActive(false);
             currentlyOpenLocalUI = null;
         }
+
+        // --- 3. KORUMA KALKANI: GİZLİ REFERANSLARI TEMİZLE ---
+        // Sadece paneli kapatmak yetmez, diğer sistemlerin de (Eğitim, Şifahane vb.) aklından bu askeri silmemiz lazım!
+        if (TrainingUIManager.Instance != null)
+        {
+            TrainingUIManager.Instance.SetCurrentGladiator(null);
+        }
     }
+   public Gladiator GetSelectedGladiator()
+    {
+        if (selectedInventory != null)
+        {
+            return selectedInventory.GetComponent<Gladiator>();
+        }
+        return null;
+    }
+
+  
 }

@@ -172,6 +172,28 @@ if (target != null)
         float finalDamage = incomingDamage * reduction;
 
         gladiator.currentHealth -= finalDamage;
+        if (gladiator.currentHealth <= 0)
+        {
+            int currentNasip = NasipManager.Instance != null ? NasipManager.Instance.currentNasip : 0;
+            
+            // Eğer oyuncunun Nasip'i çok yüksekse (Örn: 5 veya 6) VE %15 şans tutarsa...
+            // (Eğer asker "MySoldier" değil de düşmansa, ona nasip işlemiememeli)
+            if (currentNasip >= 5 && gladiator.CompareTag("MySoldier") && Random.Range(0, 100) < 15)
+            {
+                // MUCİZE GERÇEKLEŞTİ! Ölümü iptal et.
+                gladiator.currentHealth = 1;
+
+                // Ekrana altın rengi yazıyı bas
+                if (DamageTextManager.Instance != null) 
+                  DamageTextManager.Instance.ShowCustomText(transform.position, "ALLAH KORUDU!", Color.yellow);
+                
+                // İsteğe bağlı: Kutsal bir ses efekti çal
+                // AudioManager.Instance.PlaySFX(AudioManager.Instance.miracleSound, 1.0f);
+
+                if (NotificationManager.Instance != null)
+                    NotificationManager.Instance.Show($"<color=yellow>MUCİZE!</color> {gladiator.data.gladiatorName} Nasibi sayesinde ölümden döndü!", NotificationType.Success);
+            }
+        }
         if (gladiator.healthBar != null) gladiator.healthBar.UpdateBar(gladiator.currentHealth, gladiator.maxHealth);
 
         if (DamageTextManager.Instance != null) DamageTextManager.Instance.ShowDamage(transform.position, finalDamage, isCritical ? 1 : 0);
@@ -197,8 +219,6 @@ if (target != null)
                 if (animator) 
                 {
                     animator.ResetTrigger("getHit"); 
-                    // animator.Play("Take Damage") yerine SetTrigger kullanmak her zaman daha güvenlidir
-                    // (Çünkü Animator'daki kutunun adı bazen TakeDamage, bazen getHit olabiliyor, isim hatasına düşmeyelim)
                     animator.SetTrigger("getHit"); 
                 }
 

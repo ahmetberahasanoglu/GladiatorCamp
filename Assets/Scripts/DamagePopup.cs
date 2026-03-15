@@ -62,8 +62,17 @@ public class DamagePopup : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    // Yazının hep kameraya bakması için (Billboard efekti)
-    void LateUpdate()
+    public void SetupCustom(string customText, Color color)
+    {
+        if (textMesh != null)
+        {
+            textMesh.text = customText;
+            textMesh.color = color;
+            textMesh.fontSize = 8; 
+        }
+        
+       StartCoroutine(AnimateRoutine());
+    }    void LateUpdate()
     {
         if (Camera.main != null)
         {

@@ -61,4 +61,22 @@ public class DamageTextManager : MonoBehaviour
         // Daha sağlam bir pool yapısı için objenin OnDisable'ında kuyruğa geri eklemek gerekir ama bu casual oyun için Queue döngüsü yeterli olacaktır.
         poolQueue.Enqueue(popup);
     }
+    // YENİ: Sadece özel yazılar ("ALLAH KORUDU", "BLOK", "ISKA") basmak için
+    public void ShowCustomText(Vector3 position, string text, Color color)
+    {
+        if (poolQueue.Count == 0)
+        {
+            CreateNewPopup();
+        }
+
+        DamagePopup popup = poolQueue.Dequeue();
+        
+        popup.transform.position = position + Vector3.up * 1.5f; 
+        popup.gameObject.SetActive(true);
+        
+        // Popup'a özel yazıyı ve rengi gönderiyoruz
+        popup.SetupCustom(text, color);
+
+        poolQueue.Enqueue(popup);
+    }
 }

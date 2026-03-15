@@ -160,7 +160,7 @@ public class MapEventManager : MonoBehaviour
             ClosePanel();
         });
     }
-   public void SetupMysteriousDiceEvent()
+ public void SetupMysteriousDiceEvent()
     {
         titleText.text = "Gizemli Yabancı";
         descText.text = "Karanlık bir pelerin giymiş bir adam yolunu kesti. Avucundan kemikten yapılma bir zar çıkardı.\n\n<color=#66001D>\"Şu zarı at bakalım Uç Beyi... Eğer 3'ten büyük atarsan sana tam 1000 Akçe vereceğim. Ama kaybedersen, en değerli şeylerinden birini... ordundan bir canı alırım.\"</color>";
@@ -175,9 +175,18 @@ public class MapEventManager : MonoBehaviour
             {
                 foreach(Transform child in buttonContainer) Destroy(child.gameObject);
 
-                if (zarSonucu > 3) 
+                // Nasip'i çekip matematiği kuruyoruz
+                int mevcutNasip = NasipManager.Instance != null ? NasipManager.Instance.currentNasip : 0;
+                int totalScore = zarSonucu + mevcutNasip;
+                int hedef = 4; // 3'ten büyük atması lazımdı (4, 5, 6 vs)
+
+                // RPG Matematik Yazısı (Baldur's Gate tarzı)
+                string mathText = $"\n\n<size=85%><b><color=#FFD700>Zar ({zarSonucu}) + Nasip ({mevcutNasip}) = {totalScore}</color></b> / Hedef ({hedef})</size>\n";
+
+                if (totalScore >= hedef) 
                 {
-                    descText.text = $"<color=green>ZAR: {zarSonucu}</color>\n\nAdam şaşkınlıkla sana baktı. Elindeki devasa keseyi ayaklarının dibine fırlattı ve tek kelime etmeden karanlıkta kayboldu.";
+                    descText.text = $"<color=green>KAZANDIN!</color>\n\nAdam şaşkınlıkla sana baktı. Elindeki devasa keseyi ayaklarının dibine fırlattı ve tek kelime etmeden karanlıkta kayboldu." + mathText;
+                    
                     MoneyManager.Instance.Add(1000); 
                     if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(15);
                     AudioManager.Instance.PlayCheer(); 
@@ -186,8 +195,7 @@ public class MapEventManager : MonoBehaviour
                 }
                 else
                 {
-                    // --- YENİ: KAYBETTİK! RASTGELE ÖLDÜRMEK YERİNE SEÇİM EKRANINI AÇ ---
-                    descText.text = $"<color=red>ZAR: {zarSonucu}</color>\n\nAdam korkunç bir kahkaha attı. <color=#66001D>\"Kaybettin Uç Beyi... Söz verdiğin gibi, şimdi bana bir can ver!\"</color>\n\n<color=yellow>(Kimi feda edeceksin?)</color>";
+                    descText.text = $"<color=red>KAYBETTİN!</color>\n\nAdam korkunç bir kahkaha attı. <color=#66001D>\"Kaybettin Uç Beyi... Söz verdiğin gibi, şimdi bana bir can ver!\"</color>\n\n<color=yellow>(Kimi feda edeceksin?)</color>" + mathText;
                     ShowSacrificeSelection();
                 }
             });
@@ -528,44 +536,35 @@ public class MapEventManager : MonoBehaviour
     }
 
     // --- YENİ: NASİP VE ZAR ÇÖZÜMLEME EKRANI ---
-    private void ResolveEscapeContest(BattleEnvironment failEnv, int failEnemyCount, int failDifficulty)
+   private void ResolveEscapeContest(BattleEnvironment failEnv, int failEnemyCount, int failDifficulty)
     {
-        // Önceki butonları temizle
         foreach(Transform child in buttonContainer) Destroy(child.gameObject);
-
         AudioManager.Instance.PlayDice();
 
-        // 6'lık Zar atıyoruz
         DiceManager.Instance.RollDice(6, (zarSonucu) => 
         {
             int mevcutNasip = NasipManager.Instance != null ? NasipManager.Instance.currentNasip : 0;
             int totalScore = mevcutNasip + zarSonucu;
-            
-            // Baraj Puanı (Örn: Kaçmak için toplam 6 veya üzeri gelmeli. İstersen bunu inspector'dan da alabilirsin)
             int kacisBaraji = 6; 
             bool isWin = totalScore >= kacisBaraji;
 
-            string mathText = $"\n\n<size=85%><color=yellow>Nasip ({mevcutNasip}) + Zar ({zarSonucu}) = {totalScore} / {kacisBaraji} (Gereken)</color></size>\n";
+            // RPG Matematik Yazısı
+            string mathText = $"\n\n<size=85%><b><color=#FFD700>Nasip ({mevcutNasip}) + Zar ({zarSonucu}) = {totalScore}</color></b> / Kaçış Barajı ({kacisBaraji})</size>\n";
 
             if (isWin)
             {
                 descText.text = $"<color=green>YOLUMUZ AÇIKMIŞ!</color>\n\nNasibimiz yaver gitti, pusuyu fark edip sessizce etraflarından dolanmayı başardık. Kan dökülmeden izimizi kaybettirdik!\n" + mathText;
                 
-                // Başarıyla kaçarsa paneli kapatıp yola devam eder
-                CreateButton("Yola Devam Et", () => { 
-                    ClosePanel();
-                });
+                CreateButton("Yola Devam Et", () => { ClosePanel(); });
             }
             else
             {
                 descText.text = $"<color=red>NASİP KAPALIYMIŞ!</color>\n\nKaçmaya çalışırken kuru bir dala bastık... Bizi fark ettiler! Üstelik hazırlıksız yakalandığımız için moraller bozuldu(-10).\n" + mathText;
                 
-                if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-10); // Kaçarken yakalanma cezası
+                if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-10); 
 
-                // Başarısız olursa kılıçları çekmek zorunda kalır!
                 CreateButton("Kılıçları Çekin! (Savaş)", () => { 
                     AudioManager.Instance.PlayWarHorn();
-                   // DayManager.Instance.NextDay(3); 
                     ClosePanel();
                     BattleManager.Instance.StartBattle(failEnemyCount, failDifficulty, failEnv); 
                 });
@@ -723,16 +722,11 @@ public class MapEventManager : MonoBehaviour
     }
 
    
-    private void ResolveContest(Gladiator selectedSoldier, NodeType eventType, int askerStat, int rakipStat, string rakipAd)
+   private void ResolveContest(Gladiator selectedSoldier, NodeType eventType, int askerStat, int rakipStat, string rakipAd)
     {
-        // Önceki butonları temizle
         foreach(Transform child in buttonContainer) Destroy(child.gameObject);
-
-        // Zar atma sesi çıkar
         AudioManager.Instance.PlayDice();
 
-        // 6'lık Zar atıyoruz
-        // Zarın hedefi (target) önemli değil, callback bize zardan geleni (1-6 arası) verecek
         DiceManager.Instance.RollDice(6, (zarSonucu) => 
         {
             int totalScore = askerStat + zarSonucu;
@@ -740,8 +734,8 @@ public class MapEventManager : MonoBehaviour
 
             string statAd = eventType == NodeType.Atyarisi ? "Hızı" : "Gücü";
 
-            // İşte o mükemmel şeffaf matematik yazısı
-            string mathText = $"\n\n<size=85%><color=yellow>{selectedSoldier.data.gladiatorName} {statAd} = {askerStat} + Atılan Zar = {zarSonucu}</color></size>\n";
+            // RPG Matematik Yazısı
+            string mathText = $"\n\n<size=85%><b><color=#FFD700>Askerin {statAd} ({askerStat}) + Zar ({zarSonucu}) = {totalScore}</color></b> / Hakem Puanı ({rakipStat})</size>\n";
 
             if (isWin)
             {
@@ -749,7 +743,7 @@ public class MapEventManager : MonoBehaviour
                     ? $"{selectedSoldier.data.gladiatorName} rüzgar gibi esti! Yarışı birinci bitirdi."
                     : $"{selectedSoldier.data.gladiatorName} sırtı yere gelmeden rakibi {rakipAd}'i tuş etti!";
 
-                descText.text = $"<color=green>ZAFER!</color>\n\nHakem puanı {rakipStat} - {selectedSoldier.data.gladiatorName}{totalScore} olarak verdi ve yiğidimiz kazandı!\n\n" + flavorText + mathText;
+                descText.text = $"<color=green>ZAFER!</color>\n\nYiğidimiz beklentileri aştı ve müsabakayı kazandı!\n\n" + flavorText + mathText;
 
                 int reward = eventType == NodeType.Atyarisi ? 150 : 250;
                 MoneyManager.Instance.Add(reward); 
@@ -762,15 +756,12 @@ public class MapEventManager : MonoBehaviour
                     ? $"{selectedSoldier.data.gladiatorName}'ın atı tökezledi, yarışı gerilerde tamamladı. Ahali bize güldü."
                     : $"{selectedSoldier.data.gladiatorName} elinden geleni yaptı ama rakibine dayanamadı. Meydandan boynu bükük ayrıldık.";
 
-                descText.text = $"<color=red>KAYBETTİN!</color>\n\nMaalesef hakem puanı {rakipStat} - {totalScore} olarak verdi ve yiğidimiz müsabakayı kaybetti.\n\n" + flavorText + mathText;
+                descText.text = $"<color=red>KAYBETTİN!</color>\n\nMaalesef yiğidimiz müsabakayı kaybetti.\n\n" + flavorText + mathText;
                 
                 if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-10);
             }
 
-            // Sonucu okuduktan sonra kapatması için tek bir buton koyuyoruz
-            CreateButton("Devam Et", () => { 
-            ClosePanel();
-        });
+            CreateButton("Devam Et", () => { ClosePanel(); });
         });
     }
 

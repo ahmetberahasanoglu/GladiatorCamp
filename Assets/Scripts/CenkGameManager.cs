@@ -247,25 +247,31 @@ public class CenkGameManager : MonoBehaviour
             enemyCardCountText.text = $"{enemyBoardArea.childCount}/{MAX_CARDS_PER_ROUND}";
     }
 
-    int CalculateRowScore(Transform row)
+   int CalculateRowScore(Transform row)
     {
         CenkCardUI[] cardsInRow = row.GetComponentsInChildren<CenkCardUI>();
         int rowScore = 0;
 
+        // Kartları isimlerine göre grupluyoruz (Senin harika LINQ çözümün)
         var groupedCards = cardsInRow.GroupBy(c => c.cardName);
 
         foreach (var group in groupedCards)
         {
+          
             int count = group.Count();
-            int multiplier = count > 1 ? 2 : 1; 
+            
+           
+            int multiplier = count; 
 
             foreach (CenkCardUI card in group)
             {
                 card.currentPower = card.basePower * multiplier;
                 card.UpdateVisuals(); 
+                
                 rowScore += card.currentPower;
             }
         }
+        
         return rowScore;
     }
 

@@ -163,7 +163,7 @@ public class MapEventManager : MonoBehaviour
    public void SetupMysteriousDiceEvent()
     {
         titleText.text = "Gizemli Yabancı";
-        descText.text = "Karanlık bir pelerin giymiş bir adam yolunu kesti. Avucundan kemikten yapılma bir zar çıkardı.\n\n<color=#66001D>\"Şu zarı at bakalım Uç Beyi... Eğer 3'ten büyük atarsan sana tam 1000 Akçe vereceğim. Ama kaybedersen, en değerli şeylerinden birini alırım...\"</color>";
+        descText.text = "Karanlık bir pelerin giymiş bir adam yolunu kesti. Avucundan kemikten yapılma bir zar çıkardı.\n\n<color=#66001D>\"Şu zarı at bakalım Uç Beyi... Eğer 3'ten büyük atarsan sana tam 1000 Akçe vereceğim. Ama kaybedersen, en değerli şeylerinden birini... ordundan bir canı alırım.\"</color>";
         
         if(diceSprite != null) eventImage.sprite = diceSprite;
 
@@ -171,43 +171,25 @@ public class MapEventManager : MonoBehaviour
         {
             AudioManager.Instance.PlayDice();
             
-            // 6'lık Zar atıyoruz
             DiceManager.Instance.RollDice(6, (zarSonucu) => 
             {
-                // Önceki butonları temizle ki ekran güncellensin
                 foreach(Transform child in buttonContainer) Destroy(child.gameObject);
 
                 if (zarSonucu > 3) 
                 {
                     descText.text = $"<color=green>ZAR: {zarSonucu}</color>\n\nAdam şaşkınlıkla sana baktı. Elindeki devasa keseyi ayaklarının dibine fırlattı ve tek kelime etmeden karanlıkta kayboldu.";
-                    
                     MoneyManager.Instance.Add(1000); 
                     if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(15);
                     AudioManager.Instance.PlayCheer(); 
+                    
+                    CreateButton("Devam Et", () => { ClosePanel(); });
                 }
                 else
                 {
-                    // KAYBETTİK! Bir askeri kurban seçiyoruz
-                    string olenAskerIsmi = KillRandomSoldier();
-
-                    if (!string.IsNullOrEmpty(olenAskerIsmi))
-                    {
-                        descText.text = $"<color=red>ZAR: {zarSonucu}</color>\n\nAdam korkunç bir kahkaha attı. O an arkadan kan donduran bir çığlık koptu... Döndüğünde yiğitlerinden <color=yellow>{olenAskerIsmi}</color>'nin cansız bedeniyle karşılaştın.";
-                        if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-25);
-                    }
-                    else
-                    {
-                        // Eğer oyuncunun hiç askeri kalmamışsa altınlarını çalalım
-                        descText.text = $"<color=red>ZAR: {zarSonucu}</color>\n\nAdam kahkaha attı ancak alacak bir can bulamadı! <color=#66001D>'Ordun zaten yok olmuş...'</color> diyerek alay etti ve hazinenden 500 Akçe çalıp kayboldu.";
-                        if (MoneyManager.Instance.gold >= 500) MoneyManager.Instance.Spend(500);
-                        else if (MoneyManager.Instance.gold > 0) MoneyManager.Instance.Spend(MoneyManager.Instance.gold);
-                    }
+                    // --- YENİ: KAYBETTİK! RASTGELE ÖLDÜRMEK YERİNE SEÇİM EKRANINI AÇ ---
+                    descText.text = $"<color=red>ZAR: {zarSonucu}</color>\n\nAdam korkunç bir kahkaha attı. <color=#66001D>\"Kaybettin Uç Beyi... Söz verdiğin gibi, şimdi bana bir can ver!\"</color>\n\n<color=yellow>(Kimi feda edeceksin?)</color>";
+                    ShowSacrificeSelection();
                 }
-
-                // Sonucu okuduktan sonra paneli kapatacak buton
-                CreateButton("Devam Et", () => {
-                    ClosePanel(); 
-                });
             });
         });
 
@@ -217,50 +199,68 @@ public class MapEventManager : MonoBehaviour
             ClosePanel();
         });
     }
- // Ordudaki yaşayan askerlerden rastgele birini seçip infaz eder, ismini döndürür.
-    private string KillRandomSoldier()
+ // Kaybedildiğinde feda edilecek askeri seçtiren ekran
+    private void ShowSacrificeSelection()
     {
         Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
-        List<Gladiator> aliveSoldiers = new List<Gladiator>();
+        bool hasEligibleSoldier = false;
 
-        // Sadece hayatta olan kendi askerlerimizi listeye alalım
         foreach (var soldier in allSoldiers)
         {
             GladiatorAI ai = soldier.GetComponent<GladiatorAI>();
-            if (soldier.CompareTag("MySoldier") && (ai == null || !ai.isDead))
-            {
-                if (soldier.data != null && soldier.data.currentHealth > 0)
-                {
-                    aliveSoldiers.Add(soldier);
-                }
-            }
-        }
-
-        // Eğer yaşan asker varsa birini seç
-        if (aliveSoldiers.Count > 0)
-        {
-            int randomIndex = Random.Range(0, aliveSoldiers.Count);
-            Gladiator doomedSoldier = aliveSoldiers[randomIndex];
-            string doomedName = doomedSoldier.data.gladiatorName;
-
-            // Askeri öldür
-            doomedSoldier.data.currentHealth = 0;
             
-            GladiatorAI ai = doomedSoldier.GetComponent<GladiatorAI>();
-            if (ai != null)
+            // Asker hayattaysa ve bizim askerimizse
+            if (soldier.CompareTag("MySoldier") && (ai == null || !ai.isDead) && soldier.data != null && soldier.data.currentHealth > 0)
             {
-                ai.Die(); // Varsa senin kendi ölüm animasyonunu tetikler
-            }
-            else
-            {
-                Destroy(doomedSoldier.gameObject); // Yoksa direkt sahneden siler
-            }
+                // --- BARRİYER: KEŞİF GÖREVİNDE OLANLAR SEÇİLEMEZ! ---
+                if (soldier.data.currentActivity == SoldierActivity.OnMission) continue;
 
-            return doomedName;
+                hasEligibleSoldier = true;
+                
+                // Askerin ismini ve canını butona yazalım
+                string btnText = $"{soldier.data.gladiatorName} Feda Et";
+                
+                // Yakalanan 'soldier' referansını butonun içine hapsediyoruz
+                Gladiator doomedSoldier = soldier; 
+                CreateButton(btnText, () => {
+                    ExecuteSacrifice(doomedSoldier);
+                });
+            }
         }
 
-        // Yaşayan asker yoksa null döner
-        return null; 
+        // Eğer kampta feda edilecek kimse yoksa (herkes seferdeyse veya asker kalmadıysa)
+        if (!hasEligibleSoldier)
+        {
+            descText.text += "\n\n<color=#66001D>\"Alacak bir can bulamıyorum... Ordun zaten tükenmiş!\"</color> diyerek alay etti ve hazinenden 500 Akçe çalıp kayboldu.";
+            
+            if (MoneyManager.Instance.gold >= 500) MoneyManager.Instance.Spend(500);
+            else if (MoneyManager.Instance.gold > 0) MoneyManager.Instance.Spend(MoneyManager.Instance.gold);
+
+            CreateButton("Devam Et", () => { ClosePanel(); });
+        }
+    }
+
+    // Seçilen askerin kalemini kıran fonksiyon
+    private void ExecuteSacrifice(Gladiator doomedSoldier)
+    {
+        // Butonları temizle
+        foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+
+        string doomedName = doomedSoldier.data.gladiatorName;
+
+        // Askeri öldür (Savaşta ölmekle aynı işlemleri tetikler, kampı vs. bozulmaz)
+        doomedSoldier.data.currentHealth = 0;
+        GladiatorAI ai = doomedSoldier.GetComponent<GladiatorAI>();
+        
+        if (ai != null) ai.Die();
+        else Destroy(doomedSoldier.gameObject);
+
+        // Ölüm metni ve moral düşüşü
+        descText.text = $"Adam kara pelerininin içinden elini uzattı. <color=yellow>{doomedName}</color> acı dolu bir çığlık atarak oracıkta cansız yere yığıldı. Gözleri kararırken kampa ağır bir sessizlik çöktü...";
+        
+        if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-25);
+
+        CreateButton("Devam Et", () => { ClosePanel(); });
     }
     void SetupZindan()
     {

@@ -78,7 +78,7 @@ public void PlayTypewriter()
             sfxSource.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
             
             // Sesi çal (uiVolume'un biraz daha düşüğünü kullanıyoruz ki kulak tırmalamasın)
-            sfxSource.PlayOneShot(typewriterSound, uiVolume * 0.3f);
+            sfxSource.PlayOneShot(typewriterSound, uiVolume * 0.4f);
             
             // Pitch ayarını normal (1.0) haline geri döndür ki diğer oyun sesleri bozulmasın!
             sfxSource.pitch = 1.0f; 

@@ -27,7 +27,7 @@ public class CampRestSystem : MonoBehaviour
         }
     }
 
-   // CampRestSystem.cs içindeki HealIdleSoldiers fonksiyonu
+   
     void HealIdleSoldiers()
     {
         // 1. Kilit: Savaşta mıyız? Savaşta dinlenme olmaz.
@@ -49,16 +49,16 @@ public class CampRestSystem : MonoBehaviour
             
             if ((ai == null || !ai.isDead) && soldier.CompareTag("MySoldier") && soldier.currentHealth < soldier.maxHealth)
             {
-                // Şifayı uygula (10 saniyede bir 2 can çok dengelidir)
                 soldier.currentHealth += healAmount; 
                 
                 if (soldier.currentHealth > soldier.maxHealth) soldier.currentHealth = soldier.maxHealth;
 
                 if (soldier.healthBar != null) soldier.healthBar.UpdateBar(soldier.currentHealth, soldier.maxHealth);
 
+                soldier.RefreshStats();
                 anyoneHealed = true;
 
-                // Yeşil Artı Efekti
+
                 if (healParticlePrefab != null)
                 {
                     GameObject fx = Instantiate(healParticlePrefab, soldier.transform.position + Vector3.up * 2f, Quaternion.identity);

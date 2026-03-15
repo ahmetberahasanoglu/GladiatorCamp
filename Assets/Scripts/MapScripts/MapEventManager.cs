@@ -82,11 +82,12 @@ public class MapEventManager : MonoBehaviour
             case NodeType.YagliGures:   SetupYagliGures(); break;
             case NodeType.FirstBattle:   SetupFirstBattleEvent(); break;
             case NodeType.NasibEncounter:   SetupNasibEvent(); break;
+            case NodeType.DervishEncounter:   SetupDervishEvent(); break;
+            case NodeType.CaravanEncounter:   SetupCaravanEvent(); break;
         }
     }
 
-    // --- DİĞER EVENTLERİN BURADA DURUYOR (Vahsi, Dice, Zindan, Kalkan vb.) ---
-    // --- YENİ: KUTUYU İÇİNDEKİ BUTON SAYISINA GÖRE ESNETİR/DARALTIR ---
+ 
     private void AdjustButtonContainerWidth()
     {
         int count = buttonContainer.childCount;
@@ -688,7 +689,8 @@ public void SetupDervishEvent()
             foreach(Transform child in buttonContainer) Destroy(child.gameObject);
             
             descText.text = "Tüccarın feryatlarına kulak tıkayıp yoluna devam ettin. Arkada onu kurtlara ve eşkıyalara yem olarak bıraktın.\n\n<size=85%><color=gray>(Zaman kaybetmediniz ama vicdanlar sızladı.)</color></size>";
-            
+            if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-5); 
+            if (ReputationManager.Instance != null)ReputationManager.Instance.ChangeReputation(-5);
             CreateButton("Yola Devam Et", () => { ClosePanel(); });
         });
     }

@@ -84,7 +84,7 @@ public class MoneyManager : MonoBehaviour
         // 2. KONTROL: KASADA YETERLİ PARA VAR MI?
         if (gold >= totalWageToPay)
         {
-            // --- DURUM İYİ: MAAŞLAR ÖDENDİ ---
+          
             gold -= totalWageToPay;
             
             if (NotificationManager.Instance != null)
@@ -94,14 +94,14 @@ public class MoneyManager : MonoBehaviour
         }
         else
         {
-            // --- DURUM KÖTÜ: PARA YETMEDİ ---
+         
             gold = 0; 
             
             if (NotificationManager.Instance != null)
             {
-                NotificationManager.Instance.Show($"<color=red>KASADA PARA YOK!</color> {daysPassed} günlük ulufe ödenemedi, ordu isyankar!", NotificationType.Warning);
+                NotificationManager.Instance.Show($"<color=red>KASADA PARA YOK!</color> {daysPassed} günlük ulufe ödenemedi, ordu mutsuz ve nasibin azaldı.!", NotificationType.Warning);
             }
-
+            if (NasipManager.Instance != null) NasipManager.Instance.SpendNasip(2);
             // Asıl ceza: Moralleri ciddi şekilde düşür!
             if (CampMoraleManager.Instance != null)
             {

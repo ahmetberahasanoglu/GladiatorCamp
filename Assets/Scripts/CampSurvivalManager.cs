@@ -118,6 +118,7 @@ public class CampSurvivalManager : MonoBehaviour
         if (currentTemperature <= -10) 
         {
             if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-10); 
+            if (NasipManager.Instance != null) NasipManager.Instance.SpendNasip(-1);
             if (NotificationManager.Instance != null)
                 NotificationManager.Instance.Show("<color=blue>İliklerimize kadar donuyoruz!</color> Moraller çöktü.", NotificationType.Error);
         }

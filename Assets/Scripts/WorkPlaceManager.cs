@@ -82,26 +82,29 @@ public class WorkplaceManager : MonoBehaviour
             {
                 totalIncome += (soldier.data.dailyWage * daysPassed);
                 workerCount++;
-
-                // --- DÜZELTİLDİ: İşleri bittiği için artık BOŞTA (Idle) kalmalılar ---
-                // Eğer Training yaparsan oyun bug'a girer, bedavadan görünmez eğitimde kalırlar!
                 soldier.SetActivity(SoldierActivity.Idling);
             }
         }
 
-        // ... (Sonraki para ekleme ve Notification kodları aynı kalıyor) ...
-        if (totalIncome > 0)
+
+       if (totalIncome > 0)
         {
-            MoneyManager.Instance.Add(totalIncome);
-            if(NotificationManager.Instance != null)
+           
+            if (NasipManager.Instance != null && NasipManager.Instance.currentNasip >= 5) 
             {
-                NotificationManager.Instance.Show(
-                    $"{workerCount} asker {daysPassed} günlük çalışmayı tamamladı ve toplam {totalIncome} Akçe kazandırdı.", 
-                    NotificationType.Success
-                );
+                if (Random.Range(0, 100) < 20) 
+                {
+                    totalIncome *= 2;
+                    if (AudioManager.Instance != null) AudioManager.Instance.PlayCheer();
+                    if (NotificationManager.Instance != null)
+                        NotificationManager.Instance.Show($"<color=#FFD700>BEREKET!</color> Yüce gönüllülüğün sayesinde bugün işler bereketli geçti. Kazanç İKİYE KATLANDI! (+{totalIncome} Akçe)", NotificationType.Success);
+                }
             }
-        }
-        
+          
+
+            MoneyManager.Instance.Add(totalIncome);
+            }
+
         if (workPanel.activeSelf)
         {
             RefreshList(); 

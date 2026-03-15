@@ -18,5 +18,7 @@ public enum NodeType
     Dice,
     YagliGures,
     FirstBattle,
-    NasibEncounter
+    NasibEncounter,
+    DervishEncounter,
+    CaravanEncounter
 }

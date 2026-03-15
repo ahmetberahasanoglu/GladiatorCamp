@@ -16,5 +16,5 @@ MonoBehaviour:
   description: "\u015Eehirde \xE7\u0131kan yang\u0131n erzak depolar\u0131m\u0131z\u0131
     vurdu."
   moneyChange: 0
-  foodChange: -30
-  moraleChange: 0
+  foodChange: 30
+  moraleChange: -5

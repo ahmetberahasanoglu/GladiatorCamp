@@ -52,15 +52,33 @@ public class StrangerManager : MonoBehaviour
         }
     }
 
-    void SpawnStranger()
+   void SpawnStranger()
     {
         currentStranger = Instantiate(strangerPrefab, spawnAndExitPoint.position, Quaternion.identity);
         WanderingStranger strangerScript = currentStranger.GetComponent<WanderingStranger>();
         
-        int randomType = Random.Range(0, 2); 
-        strangerScript.Setup(campWaitPoint, spawnAndExitPoint, randomType);
+        int typeToSpawn = 0; 
+        int currentNasip = NasipManager.Instance != null ? NasipManager.Instance.currentNasip : 0;
+        int maxNasip = NasipManager.Instance != null ? NasipManager.Instance.maxNasip : 6;
+
+        // (Nasip Full ise %25 ihtimalle gelir)
+        if (currentNasip >= maxNasip && Random.Range(0, 100) < 25)
+        {
+            typeToSpawn = 5; 
+        }
+        else
+        {
+            typeToSpawn = Random.Range(0, 5); 
+        }
+
+        strangerScript.Setup(campWaitPoint, spawnAndExitPoint, typeToSpawn);
         
         if (NotificationManager.Instance != null)
-            NotificationManager.Instance.Show("Kampa kukuletalı bir yabancı geldi...", NotificationType.Info);
+        {
+            if (typeToSpawn == 5)
+                NotificationManager.Instance.Show("<color=yellow>Kampa nur yüzlü bir ihtiyar geldi...</color>", NotificationType.Info);
+            else
+                NotificationManager.Instance.Show("Kampa kukuletalı bir yabancı geldi...", NotificationType.Info);
+        }
     }
 }

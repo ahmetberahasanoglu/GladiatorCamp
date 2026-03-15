@@ -16,4 +16,4 @@ MonoBehaviour:
   description: "Padi\u015Fah oca\u011F\u0131m\u0131zdan memnun kald\u0131."
   moneyChange: 500
   foodChange: 0
-  moraleChange: 0
+  moraleChange: 5

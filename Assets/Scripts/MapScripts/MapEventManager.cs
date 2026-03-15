@@ -361,29 +361,32 @@ public class MapEventManager : MonoBehaviour
 
    
 
-    void SetupVillageEvent()
+   // (Artık BattleEnvironment ve enemyCount parametrelerine ihtiyacımız yok, sadece Zorluk yeterli)
+    public void SetupVillageEvent()
     {
-        titleText.text = "Türkmen Köyü";
-        descText.text = "Köy halkı zor durumda. Onlara yardım edersen dualarını alırsın.";
-        if(villageSprite != null) eventImage.sprite = villageSprite;
-
-        CreateButton("Köy Halkına Yardım Et (+10 İtibar)", () => {
-            
-            if (ReputationManager.Instance != null)
-                ReputationManager.Instance.ChangeReputation(10);
-            
-            if (NotificationManager.Instance != null)
-                NotificationManager.Instance.Show("Halk sana minnettar!", NotificationType.Success);
-            
-            ClosePanel();
+        titleText.text = "İşgal Edilmiş Köy";
+        descText.text = "Ufukta dumanlar tüten bir köy belirdi. Yaklaştıkça durumu anlıyorsun; acımasız bir eşkıya grubu köyü işgal etmiş. Ahalinin çığlıkları ta buraya kadar geliyor.\n\n<color=#FFD700>Askerlerin kılıçlarının kabzalarını sıkarak senin ağzından çıkacak emri bekliyor.</color>";
+        
+        // SEÇENEK 1: RPG Tarzı Savaşa Gir
+        CreateButton("Köyü Kurtar (Saldır)", () => 
+        {
+            ResolveVillageBattle(1);
         });
 
-        CreateButton("Yola Devam Et", () => {
+        // SEÇENEK 2: Görmezden Gel
+        CreateButton("Bulaşma (Etrafından Dolan)", () => 
+        {
+            foreach(Transform child in buttonContainer) Destroy(child.gameObject);
             
-            ClosePanel();
+            descText.text = "Köydeki feryatlara kulak tıkayıp askerlerini ormanın derinliklerine doğru yönlendirdin. Kimse tek kelime etmedi ama herkesin başı öne eğikti...\n\n<size=85%><color=red>(Nasip Azaldı! Ordunun morali bozuldu.)</color></size>";
+            
+            if (NasipManager.Instance != null) NasipManager.Instance.SpendNasip(1); 
+            if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-10); 
+            
+            CreateButton("Vicdan Azabıyla Devam Et", () => { ClosePanel(); });
         });
     }
-
+  
     void SetupStartEvent()
     {
         titleText.text = "Kamp";
@@ -400,7 +403,94 @@ public class MapEventManager : MonoBehaviour
             BattleManager.Instance.ReturnToCamp();
         });
     }
+private void ResolveVillageBattle(int difficulty)
+    {
+        foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+        AudioManager.Instance.PlayWarHorn(); // Savaşa hücum sesi
+        
+        // Zar atma süreci başlasın
+        DiceManager.Instance.RollDice(6, (zarSonucu) => 
+        {
+            // Ordu Gücünü Hesapla (Sadece hayatta olan kendi askerlerimizin gücü)
+            int orduGucu = 0;
+            Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
+            foreach (var soldier in allSoldiers)
+            {
+                GladiatorAI ai = soldier.GetComponent<GladiatorAI>();
+                if (soldier.CompareTag("MySoldier") && (ai == null || !ai.isDead) && soldier.data != null)
+                {
+                    orduGucu += soldier.data.strength; // Askerlerin saf gücünü topluyoruz
+                }
+            }
 
+            int nasip = NasipManager.Instance != null ? NasipManager.Instance.currentNasip : 0;
+            int totalScore = orduGucu + zarSonucu + nasip;
+            bool isWin = totalScore >= difficulty;
+
+            // Şeffaf RPG Matematiği
+            string mathText = $"\n\n<size=85%><b><color=#FFD700>Ordu Gücü ({orduGucu}) + Zar ({zarSonucu}) + Nasip ({nasip}) = {totalScore}</color></b> / Düşman Zorluğu ({difficulty})</size>\n";
+
+            if (isWin)
+            {
+                descText.text = $"<color=green>KESİN ZAFER!</color>\n\nAskerlerinle köy meydanına daldın ve işgalcileri darmadağın ettin! Sağ kalanlar kılıçlarını atıp diz çöktü.\n" + mathText;
+
+                // Kazanırsa doğrudan Merhamet/İnfaz paneline geçiş yap!
+                CreateButton("Köyün Kaderini Belirle", () => {
+                    SetupVillageVictoryEvent(); 
+                });
+            }
+            else
+            {
+                descText.text = $"<color=red>AĞIR YENİLGİ!</color>\n\nİşgalciler beklediğinden çok daha kalabalıktı! Ağır yaralar alarak ormana geri çekilmek zorunda kaldınız. Kaçarken bir askerimiz geride kaldı...\n" + mathText;
+
+                if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-20);
+
+                // Kaybederse ceza olarak bir askeri feda etme ekranı açılır! (Zar eventinde yazdığımız kod)
+                CreateButton("Kayıpları Say...", () => {
+                    ShowSacrificeSelection(); 
+                });
+            }
+        });
+    }
+    public void SetupVillageVictoryEvent()
+    {
+        foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+
+        titleText.text = "Köyün Kaderi";
+        descText.text = "Savaş bitti! Köyün yaşlısı titreyerek ayaklarına kapandı: <color=#FFD700>\"Bizi kurtardın Uç Beyi! Allah senden razı olsun... Ama neyimiz var neyimiz yoksa bu sandıktadır, yalvarırım köyümüze dokunma!\"</color>\n\nAskerlerin ise ganimet hırsıyla ambarlara bakıyor...";
+
+        // SEÇENEK 1: Yağmala ve Yak (Büyük Ganimet, Devasa Günah)
+        CreateButton("Köyü Yağmalayın! (Zulüm)", () => 
+        {
+            foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+            
+            descText.text = "<color=red>ZULÜM!</color>\n\nKurtarıcı olarak girdiğin köyden zalim olarak çıkıyorsun. Askerlerin evleri yağmaladı, ambarları boşalttı. Hazinen doldu taştı ama şerefin iki paralık oldu!\n\n<size=85%><color=red>(Nasip Sıfırlandı! Ağır Moral Kaybı... +300 Akçe, +150 Erzak)</color></size>";
+            
+            MoneyManager.Instance.Add(300);
+            SupplyManager.Instance.AddFood(150);
+            
+            if (NasipManager.Instance != null) NasipManager.Instance.SpendNasip(NasipManager.Instance.maxNasip); 
+            if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-30); 
+            
+            CreateButton("Lanetlenmiş Olarak Devam Et", () => { ClosePanel(); });
+        });
+
+        // SEÇENEK 2: Adalet ve Erdem
+        CreateButton("Ahaliye Dokunmayın! (Merhamet)", () => 
+        {
+            foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+            
+            descText.text = "<color=green>ADALET!</color>\n\n<color=#FFD700>\"Biz harami değiliz! Sadece ölen işgalcilerin silahlarını alın!\"</color> diye gürledin. \n\nKöy halkı sevinç gözyaşlarıyla sana dualar etti. Askerlerin onurlu bir komutanın emrinde olmaktan gurur duydu.\n\n<size=85%><color=yellow>(Nasip Arttı! +50 Akçe, +20 Erzak)</color></size>";
+            
+            MoneyManager.Instance.Add(50);
+            SupplyManager.Instance.AddFood(20);
+            
+            if (NasipManager.Instance != null) NasipManager.Instance.AddNasip(2);
+            if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(20); 
+            
+            CreateButton("Onurla Yola Devam Et", () => { ClosePanel(); });
+        });
+    }
    void SetupFirstBattleEvent()
     {
         titleText.text = "Çapulcu Pusu";

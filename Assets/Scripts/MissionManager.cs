@@ -70,16 +70,21 @@ public class MissionManager : MonoBehaviour
         newMission.originalData = data;
         newMission.squadComponents = new List<Gladiator>(squad);
         
-        // Saniye hesabı yerine direkt gün sayısını alıyoruz
         newMission.totalDuration = data.durationDays; 
         newMission.daysRemaining = data.durationDays;
 
-        // Askerleri Kilitle
-        foreach (var soldier in squad) soldier.isOnMission = true;
+        // --- YENİ DURUM KİLİDİ: Askerleri "Seferde" olarak işaretle ---
+        foreach (var soldier in squad)
+        {
+            soldier.isOnMission = true; // (Bunu eski sistemler kırılmasın diye tutuyoruz)
+            soldier.SetActivity(SoldierActivity.OnMission); // YENİ AAA KİLİDİMİZ
+            
+            // Eğer istersen seferdeki askerleri kampta görünmez yapabilirsin
+            // soldier.gameObject.SetActive(false); 
+        }
 
         // UI Oluştur
         var uiObj = Instantiate(activeMissionPrefab, activeMissionsParent);
-        // İlk kurulumda (Kalan Gün, Toplam Gün) gönderiyoruz
         uiObj.Setup(data.missionName, newMission.totalDuration);
         
         newMission.uiReference = uiObj;
@@ -87,15 +92,24 @@ public class MissionManager : MonoBehaviour
         NotificationManager.Instance.Show($"{data.missionName} başladı. Süre: {data.durationDays} Gün.", NotificationType.Info);
     }
 
-   void CompleteMission(OngoingMission mission)
+    void CompleteMission(OngoingMission mission)
     {
         Destroy(mission.uiReference.gameObject);
         currentMissions.Remove(mission);
 
-        // Asker kilidini aç
+        // --- YENİ DURUM ÇÖZÜCÜ: Asker kilidini aç ---
         foreach (var soldier in mission.squadComponents)
         {
-            if (soldier != null) soldier.isOnMission = false;
+            if (soldier != null)
+            {
+                soldier.isOnMission = false;
+                
+                // Geri döndükleri için tekrar BOŞTA (Idle) oldular
+                soldier.SetActivity(SoldierActivity.Idling);
+                
+                // Eğer görünmez yaptıysan burada görünür yapmalısın:
+                // soldier.gameObject.SetActive(tr ue);
+            }
         }
 
         int totalPower = 0;

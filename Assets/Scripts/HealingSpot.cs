@@ -48,34 +48,35 @@ public class HealingSpot : MonoBehaviour
             return;
         }
 
-        // Seçili askeri bul (Aynı yöneticiyi kullanıyoruz, çok pratik!)
-        GladiatorTraining currentGladiator = TrainingUIManager.Instance.current;
+        GladiatorTraining currentGladiatorComp = TrainingUIManager.Instance.current;
         
-        if (currentGladiator == null)
+        if (currentGladiatorComp == null)
         {
             if (NotificationManager.Instance != null) NotificationManager.Instance.Show("Önce yaralı bir asker seçmelisin!", NotificationType.Warning);
             return;
         }
 
-        // İSTEĞE BAĞLI: Askerin canı zaten full ise engelleme eklenebilir.
-        // if (currentGladiator.GetComponent<Gladiator>().data.currentHp >= currentGladiator.GetComponent<Gladiator>().data.maxHp) ...
-
-        if (currentGladiator.IsTraining)
+        // --- YENİ BARRİYER: TEK DOĞRU KAYNAK KONTROLÜ ---
+        Gladiator gladiator = currentGladiatorComp.GetComponent<Gladiator>();
+        
+        if (!gladiator.IsAvailableForTask())
         {
-            if (NotificationManager.Instance != null) NotificationManager.Instance.Show("Bu asker şu an başka bir talimde!", NotificationType.Warning);
+            if (NotificationManager.Instance != null) 
+                NotificationManager.Instance.Show("Bu asker şu an başka bir görevle meşgul!", NotificationType.Warning);
             return;
         }
 
         // Parayı Kontrol Et ve Kes
         if (MoneyManager.Instance.Spend(cost))
         {
-            // Askerin üstündeki Healing componentini çağır
-            GladiatorHealing healingComp = currentGladiator.GetComponent<GladiatorHealing>();
+            GladiatorHealing healingComp = currentGladiatorComp.GetComponent<GladiatorHealing>();
             if (healingComp != null)
             {
+                // YENİ: Askerin durumunu "Şifahanede" olarak kilitle!
+                gladiator.SetActivity(SoldierActivity.Healing);
+
                 healingComp.StartHealing(this);
                 
-                // Seçimi temizle (Başka yere tıklamasın diye)
                 TrainingUIManager.Instance.SetCurrentGladiator(null);
                 OnMouseExit();
             }

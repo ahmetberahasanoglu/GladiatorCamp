@@ -7,48 +7,49 @@ public class StrangerManager : MonoBehaviour
     public Transform spawnAndExitPoint; 
     public Transform campWaitPoint;     
 
-    [Header("Zamanlama (Gerçek Zaman)")]
-    public float minSpawnTime = 60f; 
-    public float maxSpawnTime = 120f; 
+    [Header("Oyun İçi Gün Ayarları (YENİ)")]
+    [Tooltip("Yabancıların kampa gelmeye başlayacağı ilk gün (Tutorial sonrasına ayarla)")]
+    public int startingDayForStrangers = 3; 
+    [Tooltip("Belirlenen günden sonra her gün kampa gelme ihtimali (% olarak)")]
+    [Range(0, 100)] public int dailySpawnChance = 25; 
 
     private GameObject currentStranger;
-    
-    // YENİ: Süreyi artık Update içinde biz kontrol ediyoruz
-    private float timer = 0f;
-    private float nextSpawnTime = 0f;
 
     void Start()
     {
-        SetNewSpawnTime();
-    }
-
-    void Update()
-    {
-        // --- 1. KİLİT: OYUN DURUMU KONTROLÜ ---
-        // Eğer savaştaysak SÜREYİ DONDUR
-        if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Idle) return;
-        
-        // Eğer harita açıksa SÜREYİ DONDUR
-        if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
-
-        // --- 2. KİLİT: ZATEN BİRİ VAR MI? ---
-        // Eğer kampta zaten bir yabancı varsa yenisi için süre sayma
-        if (currentStranger != null) return;
-
-        // --- 3. SÜREYİ İŞLET ---
-        timer += Time.deltaTime;
-
-        if (timer >= nextSpawnTime)
+        // Gün atlama eventine abone ol
+        if (DayManager.Instance != null)
         {
-            SpawnStranger();
-            SetNewSpawnTime();
-            timer = 0f; // Süreyi sıfırla
+            DayManager.Instance.OnNewDay += CheckAndSpawnStranger;
         }
     }
 
-    void SetNewSpawnTime()
+    void OnDestroy()
     {
-        nextSpawnTime = Random.Range(minSpawnTime, maxSpawnTime);
+        if (DayManager.Instance != null)
+        {
+            DayManager.Instance.OnNewDay -= CheckAndSpawnStranger;
+        }
+    }
+
+    // UPDATE FONKSİYONU TAMAMEN SİLİNDİ!
+    // Artık sadece gün değiştiğinde 1 kere çalışacak. Çok daha performanslı.
+    void CheckAndSpawnStranger()
+    {
+        int currentDay = DayManager.Instance.currentDay;
+
+        // 1. Kilit: Tutorial bitmediyse veya gün çok erkense GELDİREMEZ
+        if (currentDay < startingDayForStrangers) return;
+
+        // 2. Kilit: Zaten kampta bekleyen biri varsa YENİSİ GELEMEZ
+        if (currentStranger != null) return;
+
+        // 3. Zar at: Bugün gelecek mi?
+        int roll = Random.Range(0, 100);
+        if (roll < dailySpawnChance)
+        {
+            SpawnStranger();
+        }
     }
 
     void SpawnStranger()

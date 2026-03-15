@@ -64,7 +64,7 @@ public class MissionUIManager : MonoBehaviour
         UpdateWinChance();
     }
 
-   void RefreshSoldierList()
+ void RefreshSoldierList()
     {
         foreach (Transform child in soldierListParent) Destroy(child.gameObject);
 
@@ -75,17 +75,11 @@ public class MissionUIManager : MonoBehaviour
             // Sadece bizim askerimiz olanları kontrol et
             if (!glad.CompareTag("MySoldier")) continue;
 
-            // 1. Asker zaten seferdeyse ekleme
-            if (!glad.IsAvailable) continue;
-
-            // --- YENİ EKLENEN: ÇALIŞANLARI VE YARALILARI FİLTRELE ---
-            // 2. Asker çalışıyorsa ekleme
-            if (glad.data != null && glad.data.currentActivity == SoldierActivity.Working) continue;
-
-            // İsteğe Bağlı: Canı 0 olan ölüleri/baygınları göreve yollayamasın
-            GladiatorAI ai = glad.GetComponent<GladiatorAI>();
-            if (ai != null && ai.isDead) continue;
-            // ---------------------------------------------------------
+            // --- YENİ BARRİYER: TEK DOĞRU KAYNAK KONTROLÜ ---
+            // Asker Boşta (Idle) ve Yaşıyor değilse, listede GÖSTERME!
+            // Bu tek satır; çalışanları, eğitimdekileri, ibadettekileri ve ölüleri otomatik olarak eler.
+            if (!glad.IsAvailableForTask()) continue;
+            // ------------------------------------------------
 
             var slot = Instantiate(soldierSlotPrefab, soldierListParent);
             slot.Setup(glad, OnSoldierToggled);

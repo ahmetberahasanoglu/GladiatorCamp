@@ -25,20 +25,18 @@ public class MosqueArea : MonoBehaviour
         }
     }
 
-   public void AssignSoldierToPray(Gladiator soldier)
+  public void AssignSoldierToPray(Gladiator soldier)
     {
-        // --- YENİ BARRİYER: Asker eğitimdeyse camiye GİDEMEZ ---
-        var training = soldier.GetComponent<GladiatorTraining>();
-        if (training != null && training.IsTraining)
+        // --- YENİ BARRİYER: TEK DOĞRU KAYNAK KONTROLÜ ---
+        if (!soldier.IsAvailableForTask())
         {
             if (NotificationManager.Instance != null)
-                NotificationManager.Instance.Show("Bu asker şu an eğitimde! Önce talimini bitirmeli.", NotificationType.Warning);
+                NotificationManager.Instance.Show("Bu asker müsait değil! Önce mevcut işini bitirmeli.", NotificationType.Warning);
             
-            // Seçimi temizle ki oyuncu tıklamaya devam etmesin
             if (GladiatorSelector.Instance != null)
                 GladiatorSelector.Instance.ClearSelection();
             
-            return; // Kodu burada durdur, seccade arama!
+            return; // Kodu burada durdur
         }
 
         // Boş bir seccade bul
@@ -48,6 +46,9 @@ public class MosqueArea : MonoBehaviour
             {
                 GladiatorPraying prayingScript = soldier.GetComponent<GladiatorPraying>();
                 if (prayingScript == null) prayingScript = soldier.gameObject.AddComponent<GladiatorPraying>();
+
+                // YENİ: Askerin durumunu "İbadette" olarak kilitle!
+                soldier.SetActivity(SoldierActivity.Praying);
 
                 prayingScript.StartPraying(spot);
                 

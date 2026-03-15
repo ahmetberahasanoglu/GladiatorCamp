@@ -41,10 +41,11 @@ public class TrainingSpot : MonoBehaviour
         if (hoverTextObj != null) hoverTextObj.SetActive(false);
     }
 
-    void OnMouseDown()
+  void OnMouseDown()
     {
         if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) return;
         if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
+        
         if (isBusy) 
         {
             if (NotificationManager.Instance != null) NotificationManager.Instance.Show("Bu alan şu an dolu!", NotificationType.Warning);
@@ -52,33 +53,31 @@ public class TrainingSpot : MonoBehaviour
             return;
         }
 
-        GladiatorTraining currentGladiator = TrainingUIManager.Instance.current;
+        GladiatorTraining currentTrainingComp = TrainingUIManager.Instance.current;
         
-        if (currentGladiator == null)
+        if (currentTrainingComp == null)
         {
             if (NotificationManager.Instance != null) NotificationManager.Instance.Show("Önce bir asker seçmelisin!", NotificationType.Warning);
             if (AudioManager.Instance != null) AudioManager.Instance.PlayError();
             return;
         }
 
-        if (currentGladiator.IsTraining)
-        {
-            if (NotificationManager.Instance != null) NotificationManager.Instance.Show("Bu asker zaten eğitimde!", NotificationType.Warning);
-            if (AudioManager.Instance != null) AudioManager.Instance.PlayError();
-            return;
-        }
+        // --- SİHİRLİ KISIM (TÜM BUG'LARI ÇÖZEN KİLİT) ---
+        Gladiator currentGladiator = currentTrainingComp.GetComponent<Gladiator>();
         
-
-        if (currentGladiator.GetComponent<GladiatorHealing>() != null && currentGladiator.GetComponent<GladiatorHealing>().IsHealing)
+        // Eğer asker "Idle" (Boşta) değilse, ne yapıyorsa yapsın bu işlemi REDDET!
+        if (!currentGladiator.IsAvailableForTask())
         {
-            if (NotificationManager.Instance != null) NotificationManager.Instance.Show("Bu asker şu an şifahanede, eğitim yapamaz!", NotificationType.Warning);
+            if (NotificationManager.Instance != null) 
+                NotificationManager.Instance.Show("Bu asker şu an başka bir görevle meşgul!", NotificationType.Warning);
+            
             if (AudioManager.Instance != null) AudioManager.Instance.PlayError();
-            return;
+            return; // Aşağıya inip parayı kesmesini engeller!
         }
+        // ------------------------------------------------
 
         int maxAllowedStat = CampManager.Instance != null ? CampManager.Instance.GetBuildingValue("talimhane") : 15;
-        
-        JanissaryData data = currentGladiator.GetComponent<Gladiator>().data;
+        JanissaryData data = currentGladiator.data;
         GladiatorInventory inv = currentGladiator.GetComponent<GladiatorInventory>();
 
         if (data != null)
@@ -118,26 +117,27 @@ public class TrainingSpot : MonoBehaviour
                     break;
             }
 
-            int baseStatValue = currentTotalStat - equipmentBonus;
+           int baseStatValue = currentTotalStat - equipmentBonus;
 
             if (baseStatValue >= maxAllowedStat)
             {
                 if (NotificationManager.Instance != null) 
                     NotificationManager.Instance.Show($"Askerin saf yeteneği sınırda! (Maks: {maxAllowedStat}). Daha fazlası için Talimhaneyi geliştirin.", NotificationType.Warning);
-                
                 if (AudioManager.Instance != null) AudioManager.Instance.PlayError();
                 return; 
             }
         }
 
+       
         if (MoneyManager.Instance.Spend(MoneyManager.Instance.trainingCost))
         {
-            currentGladiator.StartTraining(this);
+         
+            currentGladiator.SetActivity(SoldierActivity.Training);
+
+            currentTrainingComp.StartTraining(this);
             
             if (AudioManager.Instance != null) AudioManager.Instance.PlayClick();
-            
             TrainingUIManager.Instance.SetCurrentGladiator(null);
-
             OnMouseExit(); 
         }
         else

@@ -3,7 +3,7 @@ using UnityEngine.AI;
 using System;
 using TMPro;
 
-public enum SoldierActivity { Training, Working, Idling,Praying }
+public enum SoldierActivity { Training, Working, Idling,Praying,Healing,OnMission }
 
 public class Gladiator : MonoBehaviour
 {
@@ -46,6 +46,20 @@ public class Gladiator : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         UpdateNameLabel();
     }
+public bool IsAvailableForTask()
+{
+    // Asker ölüyse zaten müsait değildir
+    if (data.currentHealth <= 0) return false;
+
+    // SADECE BOŞTA (Idle) ise yeni bir işe gönderilebilir!
+    return data.currentActivity == SoldierActivity.Idling;
+}
+
+// İş atama ve bitirme için yardımcı bir fonksiyon (Yine Gladiator.cs içine):
+  public void SetActivity(SoldierActivity newActivity)
+    {
+        if (data != null) data.currentActivity = newActivity;
+    }
 
     public void InitializeData(JanissaryData sourceData)
     {
@@ -72,11 +86,7 @@ public class Gladiator : MonoBehaviour
         set { if (data != null) data.isOnMission = value; }
     }
 
-    public void SetActivity(SoldierActivity newActivity)
-    {
-        if (data != null) data.currentActivity = newActivity;
-    }
-
+  
     public bool IsAvailable 
     {
         get 

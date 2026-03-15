@@ -31,7 +31,7 @@ public class WorkplaceManager : MonoBehaviour
         workPanel.SetActive(false);
     }
 
-    public void RefreshList()
+   public void RefreshList()
     {
         foreach (Transform child in contentArea) Destroy(child.gameObject);
 
@@ -39,7 +39,8 @@ public class WorkplaceManager : MonoBehaviour
 
         foreach (var soldier in allSoldiers)
         {
-            if (soldier.IsAvailable)
+            // --- DÜZELTİLDİ: Artık sadece TAMAMEN BOŞTA olanlar çalışma listesinde görünür ---
+            if (soldier.IsAvailableForTask())
             {
                 GameObject newSlot = Instantiate(slotPrefab, contentArea);
                 newSlot.GetComponent<WorkSlotUI>().Setup(soldier);
@@ -79,19 +80,19 @@ public class WorkplaceManager : MonoBehaviour
         {
             if (soldier.data != null && soldier.data.currentActivity == SoldierActivity.Working)
             {
-                // Günlük maaşını geçen gün sayısıyla çarpıp kasaya ekliyoruz!
                 totalIncome += (soldier.data.dailyWage * daysPassed);
                 workerCount++;
 
-                // İşleri bittiği için tekrar talime döndür
-                soldier.SetActivity(SoldierActivity.Training);
+                // --- DÜZELTİLDİ: İşleri bittiği için artık BOŞTA (Idle) kalmalılar ---
+                // Eğer Training yaparsan oyun bug'a girer, bedavadan görünmez eğitimde kalırlar!
+                soldier.SetActivity(SoldierActivity.Idling);
             }
         }
 
+        // ... (Sonraki para ekleme ve Notification kodları aynı kalıyor) ...
         if (totalIncome > 0)
         {
             MoneyManager.Instance.Add(totalIncome);
-            
             if(NotificationManager.Instance != null)
             {
                 NotificationManager.Instance.Show(

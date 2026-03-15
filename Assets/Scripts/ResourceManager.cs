@@ -9,15 +9,19 @@ public class ResourceManager : MonoBehaviour
     public event Action OnResourcesChanged; 
 
     public int wood = 0;
+    [Header("Kapasite")]
+    public int maxWood = 100;
 
     void Awake()
     {
         Instance = this;
     }
 
-    public void AddWood(int amount)
+   public void AddWood(int amount)
     {
         wood += amount;
+        if (wood > maxWood) wood = maxWood;
+        
         OnResourcesChanged?.Invoke();
     }
 

@@ -584,7 +584,114 @@ public class MapEventManager : MonoBehaviour
             ClosePanel();
         });
     }
+public void SetupDervishEvent()
+    {
+        titleText.text = "Yolcu Derviş";
+        descText.text = "Tozlu yolların kenarında, üstü başı yamalı ama gözleri huzurla parlayan yaşlı bir derviş oturuyor. Önündeki boş ahşap kaseye bakarak mırıldanıyor:\n\n<color=#FFD700>\"Dünya malı dünyada kalır Uç Beyim... Yolda kalmışa bir lokma, bir akçe sadakan var mıdır? Veren el, alan elden üstündür.\"</color>";
+        
+        // if(dervishSprite != null) eventImage.sprite = dervishSprite;
 
+        // SEÇENEK 1: Altın Ver (Büyük Sevap)
+        CreateButton("Kesesini Doldur (-50 Akçe)", () => 
+        {
+            if (MoneyManager.Instance.Spend(50))
+            {
+                foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+                
+                descText.text = "Dervişin yüzünde sıcacık bir tebessüm belirdi. Ellerini göğe açıp sana dualar etti.\n\n<color=green>\"Allah kılıcını keskin, atını kavi, nasibini gür eylesin evlat...\"</color>\n\n<size=85%><color=yellow>(Nasip Arttı! Askerlerin içi huzurla doldu.)</color></size>";
+                
+                if (NasipManager.Instance != null) NasipManager.Instance.AddNasip(2); // Nasibi artır
+                if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(10); // Vicdani rahatlık
+                
+                CreateButton("Yola Devam Et", () => { ClosePanel(); });
+            }
+            else
+            {
+                NotificationManager.Instance.Show("Yeterli Akçen yok!", NotificationType.Error);
+            }
+        });
+
+        // SEÇENEK 2: Erzak Ver (Orta Sevap)
+        CreateButton("Erzak Paylaş (-20 Erzak)", () => 
+        {
+            if (SupplyManager.Instance.currentFood >= 20)
+            {
+                SupplyManager.Instance.SpendFood(20);
+                foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+                
+                descText.text = "Derviş uzattığın ekmeği ve suyu minnetle kabul etti.\n\n<color=green>\"Sofranız bereketli olsun Beyim...\"</color>\n\n<size=85%><color=yellow>(Nasip Arttı!)</color></size>";
+                
+                if (NasipManager.Instance != null) NasipManager.Instance.AddNasip(1); 
+                
+                CreateButton("Yola Devam Et", () => { ClosePanel(); });
+            }
+            else
+            {
+                NotificationManager.Instance.Show("Yeterli Erzağın yok!", NotificationType.Error);
+            }
+        });
+
+        // SEÇENEK 3: Reddet (Nasip Kapanır)
+        CreateButton("Sırt Çevir (Geçip Git)", () => 
+        {
+            foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+            
+            descText.text = "Askerlerine yürüyüş kararı verdin. Derviş arkandan sessizce bakakaldı. Havanın aniden soğuduğunu ve rüzgarın tersine esmeye başladığını hissettin...\n\n<size=85%><color=red>(Nasip Kapandı... Ordunun morali bozuldu.)</color></size>";
+            
+            if (NasipManager.Instance != null) NasipManager.Instance.SpendNasip(1); // Kul hakkı / Cimrilik
+            if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-5); 
+            
+            CreateButton("Yola Devam Et", () => { ClosePanel(); });
+        });
+    }
+
+    public void SetupCaravanEvent()
+    {
+        titleText.text = "Savunmasız Kervan";
+        descText.text = "Orman yolunda ilerlerken çamura saplanmış, tekerleği kırılmış zengin bir tüccar kervanı gördün. Muhafızları kaçmış, tüccar ise çaresizce mallarını kurtarmaya çalışıyor. Arabanın kasası altın ve erzakla dolup taşıyor.\n\n<color=#FFD700>\"Uç Beyim! Yetiş imdadıma! Kurtların ve eşkıyaların insafına kaldım!\"</color>";
+        
+        // SEÇENEK 1: Yardım Et (Helal Yol)
+        CreateButton("Yardım Eli Uzat (Askerleri Yor)", () => 
+        {
+            foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+            
+            descText.text = "Askerlerine emir verdin, omuz omuza verip arabayı çamurdan çıkardınız. Tüccar minnetle ellerine sarıldı ve sana helalinden bir miktar ödül verdi.\n\n<color=green>\"Hızır gibi yetiştiniz Beyim! Bu kadarı ancak helaldir!\"</color>\n\n<size=85%><color=yellow>(Nasip Arttı! +100 Akçe, +10 Odun, Ancak askerler yoruldu.)</color></size>";
+            
+            if (NasipManager.Instance != null) NasipManager.Instance.AddNasip(1);
+            if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-5); // Yorulma cezası
+            MoneyManager.Instance.Add(100);
+            ResourceManager.Instance.AddWood(10);
+            
+            CreateButton("Yola Devam Et", () => { ClosePanel(); });
+        });
+
+        // SEÇENEK 2: Yağmala (Zulüm)
+        CreateButton("Mallara El Koy! (Yağma)", () => 
+        {
+            foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+            
+            descText.text = "<color=red>ZULÜM!</color>\n\nKılıçları çektiniz. Tüccar ağlayarak ormana kaçtı. Arabadaki tüm zenginliğe çöktünüz. Hazinen dolup taştı ama askerlerinin yüzündeki o onurlu ifade yerini hırsızlık utancına bıraktı. Gökyüzü karardı...\n\n<size=85%><color=red>(Nasip Ciddi Şekilde Düştü! Büyük Kul Hakkı... Ordunun Şerefi Zedelendi.)</color></size>";
+            
+            if (NasipManager.Instance != null) NasipManager.Instance.SpendNasip(3); // Çok büyük nasip kaybı
+            if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-20); // Şeref kaybı
+            
+            // Devasa ama haram ödül
+            MoneyManager.Instance.Add(600);
+            SupplyManager.Instance.AddFood(100);
+            
+            CreateButton("Vicdan Azabıyla Devam Et", () => { ClosePanel(); });
+        });
+
+        // SEÇENEK 3: Görmezden Gel (Tarafsız)
+        CreateButton("Bizi İlgilendirmez (Geç)", () => 
+        {
+            foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+            
+            descText.text = "Tüccarın feryatlarına kulak tıkayıp yoluna devam ettin. Arkada onu kurtlara ve eşkıyalara yem olarak bıraktın.\n\n<size=85%><color=gray>(Zaman kaybetmediniz ama vicdanlar sızladı.)</color></size>";
+            
+            CreateButton("Yola Devam Et", () => { ClosePanel(); });
+        });
+    }
     void SetupBossEvent()
     {
         titleText.text = "KIZIL KALE";

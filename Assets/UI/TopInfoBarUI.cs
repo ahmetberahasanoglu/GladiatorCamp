@@ -22,11 +22,6 @@ public class TopInfoBarUI : MonoBehaviour
     public Gradient tempGradient; 
 
 
-    [Header("Maksimum Değerler (Barlar İçin)")]
-    public float maxGold = 10000f;
-    public float maxFood = 100f;
-    public float maxWood = 100f;
-    public float maxNasip = 6f; 
 
     [Header("Slider (Fill) İmajları")]
     public Image goldFillBar;
@@ -100,14 +95,15 @@ public class TopInfoBarUI : MonoBehaviour
             goldText.text = $"{current} <size=70%><color=#ff6666>(-{cost})</color></size>";
             if (isInitialized) FlashUI(goldText);
 
-           
             if (goldFillBar != null)
             {
-                goldFillBar.fillAmount = Mathf.Clamp01((float)current / maxGold);
+                // UI limitleri direkt Manager'dan alıyor!
+                goldFillBar.fillAmount = Mathf.Clamp01((float)current / MoneyManager.Instance.maxGold);
             }
         }
     }
-   void UpdateFood()
+
+    void UpdateFood()
     {
         if(SupplyManager.Instance != null && foodText != null)
         {
@@ -117,10 +113,10 @@ public class TopInfoBarUI : MonoBehaviour
             foodText.text = $"{current} <size=70%><color=#ff6666>(-{cost})</color></size>";
             if (isInitialized) FlashUI(foodText);
 
-            // YENİ: Erzak Barını Güncelle
             if (foodFillBar != null)
             {
-                foodFillBar.fillAmount = Mathf.Clamp01((float)current / maxFood);
+                // UI limitleri direkt Manager'dan alıyor!
+                foodFillBar.fillAmount = Mathf.Clamp01((float)current / SupplyManager.Instance.maxFood);
             }
         }
     }
@@ -133,10 +129,26 @@ public class TopInfoBarUI : MonoBehaviour
             woodText.text = $"{current}";
             if (isInitialized) FlashUI(woodText);
 
-            // YENİ: Odun Barını Güncelle
             if (woodFillBar != null)
             {
-                woodFillBar.fillAmount = Mathf.Clamp01((float)current / maxWood);
+                // UI limitleri direkt Manager'dan alıyor!
+                woodFillBar.fillAmount = Mathf.Clamp01((float)current / ResourceManager.Instance.maxWood);
+            }
+        }
+    }
+
+    void UpdateNasip()
+    {
+        if(NasipManager.Instance != null && nasipText != null)
+        {
+            int current = NasipManager.Instance.currentNasip;
+            nasipText.text = $"{current}";
+            if (isInitialized) FlashUI(nasipText);
+
+            if (nasipFillBar != null)
+            {
+                // İnatçı 100f hatası tamamen silindi! Direkt Manager'a bakıyor.
+                nasipFillBar.fillAmount = Mathf.Clamp01((float)current / NasipManager.Instance.maxNasip);
             }
         }
     }
@@ -173,23 +185,7 @@ public class TopInfoBarUI : MonoBehaviour
         }
     }
 
-    void UpdateNasip()
-    {
-        if(NasipManager.Instance != null && nasipText != null)
-        {
-            int current = NasipManager.Instance.currentNasip;
-            nasipText.text = $"{current}";
-            if (isInitialized) FlashUI(nasipText);
-
-           
-            if (nasipFillBar != null)
-            {
-                // Nasibin maksimum değerini buraya yazmalısın (Örn: 100 varsayıyorum)
-                float maxNasip = 100f; 
-                nasipFillBar.fillAmount = Mathf.Clamp01((float)current / maxNasip);
-            }
-        }
-    }
+   
    public void UpdateCapacity() 
     {
         if (CampManager.Instance == null) return;

@@ -9,7 +9,8 @@ public class MoneyManager : MonoBehaviour
 
     public int trainingCost = 30;
     //public int dailyIncome = -20;//YEMEK PARASI
-
+[Header("Kapasite")]
+    public int maxGold = 10000;
     public event Action<int> OnGoldChanged;
 
     void Awake()
@@ -43,11 +44,13 @@ public class MoneyManager : MonoBehaviour
         return true;
     }
 
+   
     public void Add(int amount)
     {
         gold += amount;
-     //   SaveGold();
-     AudioManager.Instance.PlayGold();
+         AudioManager.Instance.PlayGold();
+        if (gold > maxGold) gold = maxGold; 
+        
         OnGoldChanged?.Invoke(gold);
     }
 

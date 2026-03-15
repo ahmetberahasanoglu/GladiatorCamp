@@ -8,6 +8,9 @@ public class NasipManager : MonoBehaviour
     public int currentNasip = 0;
     public event Action<int> OnNasipChanged;
 
+    [Header("Kapasite")]
+    public int maxNasip = 6;
+
     void Awake()
     {
         Instance = this;
@@ -17,6 +20,7 @@ public class NasipManager : MonoBehaviour
     public void AddNasip(int amount)
     {
         currentNasip += amount;
+        currentNasip = Mathf.Clamp(currentNasip, 0, maxNasip);
         OnNasipChanged?.Invoke(currentNasip);
         if (NotificationManager.Instance != null)
             NotificationManager.Instance.Show($"Nasibimiz arttı (+{amount})", NotificationType.Info);
@@ -26,6 +30,7 @@ public class NasipManager : MonoBehaviour
     public void SpendNasip(int amount)
     {
         currentNasip -= amount;
+        currentNasip = Mathf.Clamp(currentNasip, 0, maxNasip);
         if (currentNasip < 0) currentNasip = 0;
         OnNasipChanged?.Invoke(currentNasip);
     }

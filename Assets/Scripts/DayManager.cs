@@ -189,7 +189,7 @@ public class DayManager : MonoBehaviour
     void TriggerEvent(GameEvent e)
     {
         if (e.moneyChange != 0) MoneyManager.Instance.Add(e.moneyChange); 
-        if (e.foodChange != 0) SupplyManager.Instance.BuyFood(e.foodChange); 
+        if (e.foodChange != 0) SupplyManager.Instance.SpendFood(e.foodChange); 
         
         OnEventTriggered?.Invoke(e);
         Debug.Log($"OLAY VAR: {e.title}");

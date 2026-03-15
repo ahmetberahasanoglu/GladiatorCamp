@@ -18,7 +18,7 @@ public class CampfireInteract : MonoBehaviour
 
     private AudioSource activeLoop;
     private AudioSource nextLoop;
-    private Coroutine loopCoroutine;        // Söndürdüğümüzde döngüyü durdurabilmek için
+    private Coroutine loopCoroutine;      
 
     private bool isSparking = true;
     private bool isOnCooldown = false;
@@ -31,7 +31,7 @@ public class CampfireInteract : MonoBehaviour
         if (isSparking)
         {
             if (sparksParticle != null) sparksParticle.Play();
-            StartLoop(); // Oyun başında ateş yanıyorsa A/B döngüsünü başlat
+            StartLoop(); 
         }
     }
 
@@ -55,12 +55,11 @@ public class CampfireInteract : MonoBehaviour
 
         if (isSparking)
         {
-            // 🔥 ATEŞİ SÖNDÜR
             isSparking = false;
 
             if (sparksParticle != null) sparksParticle.Stop();
 
-            StopFireLoops(); // YENİ: Hem sesleri hem Coroutine'i durdurur
+            StopFireLoops(); 
 
             if (extinguishSound != null && flareSound != null)
                 flareSound.PlayOneShot(extinguishSound);
@@ -70,7 +69,7 @@ public class CampfireInteract : MonoBehaviour
         }
         else
         {
-            // 🔥 ATEŞİ YAK
+           
             if (CampSurvivalManager.Instance != null)
             {
                 bool isSuccess = CampSurvivalManager.Instance.StokeFire();
@@ -83,7 +82,7 @@ public class CampfireInteract : MonoBehaviour
 
                     if (flareSound != null) flareSound.Play(); 
 
-                    StartLoop(); // YENİ: A/B Döngüsünü yeniden başlat
+                    StartLoop(); 
                 }
             }
         }
@@ -98,16 +97,14 @@ public class CampfireInteract : MonoBehaviour
 
         if (sparksParticle != null) sparksParticle.Stop();
         
-        StopFireLoops(); // Yeni gün geldiğinde de döngüyü temizle
+        StopFireLoops(); 
     }
 
-    // --- A/B CROSSFADE MANTIĞI (DÜZELTİLDİ) ---
+
 
     void StartLoop()
     {
         if (campfireLoopA == null || campfireLoopB == null) return;
-
-        // Daha önce çalışan bir döngü varsa çakışmasın diye durdur
         if (loopCoroutine != null) StopCoroutine(loopCoroutine);
 
         activeLoop = campfireLoopA;
@@ -117,21 +114,18 @@ public class CampfireInteract : MonoBehaviour
         nextLoop.volume = 0f;
         
         activeLoop.Play();
-        nextLoop.Stop(); // B kanalını susturarak bekle
+        nextLoop.Stop(); 
 
         loopCoroutine = StartCoroutine(LoopRoutine());
     }
 
     void StopFireLoops()
     {
-        // Döngüyü kırmak için Coroutine'i durdur
         if (loopCoroutine != null)
         {
             StopCoroutine(loopCoroutine);
             loopCoroutine = null;
         }
-
-        // Açık olan tüm kanalları sustur
         if (campfireLoopA != null) campfireLoopA.Stop();
         if (campfireLoopB != null) campfireLoopB.Stop();
     }
@@ -140,7 +134,7 @@ public class CampfireInteract : MonoBehaviour
     {
         while (isSparking)
         {
-            // Eğer AudioSource içine ses dosyası konmadıysa hata vermesin
+
             if (activeLoop.clip == null) yield break;
 
             // Sesin bitimine crossfadeTime kadar süre kalana dek bekle

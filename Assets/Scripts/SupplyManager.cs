@@ -9,7 +9,8 @@ public class SupplyManager : MonoBehaviour
     public int currentFood = 50;   
     public int foodCost = 5;       
     public int baseFoodPerSoldier = 1; 
-
+[Header("Kapasite")]
+    public int maxFood = 100;
     public event System.Action OnFoodChanged;
 
     void Awake()
@@ -74,12 +75,43 @@ public class SupplyManager : MonoBehaviour
         {
             MoneyManager.Instance.Spend(totalCost);
             currentFood += amount;
+            if (currentFood > maxFood) currentFood = maxFood;
+            //Currentfood-amount birim erzak alındı deniycem
             if (NotificationManager.Instance != null) NotificationManager.Instance.Show($"{amount} birim erzak alındı.", NotificationType.Info);
             UpdateUI();
         }
         else
         {
             if (NotificationManager.Instance != null) NotificationManager.Instance.Show("Yemek için yeterli akçe yok!", NotificationType.Error);
+        }
+    }
+    // --- DIŞARIDAN ERZAK EKLEME (Yağma, Sandık, Ödül vb.) ---
+  public void AddFood(int amount)
+    {
+        if (amount <= 0) return;
+        currentFood += amount;
+        
+        // YENİ: Kapasiteyi aşmasını engelle
+        if (currentFood > maxFood) currentFood = maxFood; 
+
+        UpdateUI();
+    }
+
+
+    public bool SpendFood(int amount)
+    {
+        if (amount <= 0) return true;
+
+        if (currentFood >= amount)
+        {
+            currentFood -= amount;
+            UpdateUI();
+            return true;
+        }
+        else
+        {
+            // Erzak yetersiz! (Uyarı mesajını dışarıdaki event koduna da bırakabilirsin)
+            return false;
         }
     }
 

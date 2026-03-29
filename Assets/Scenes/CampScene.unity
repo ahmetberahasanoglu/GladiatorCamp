@@ -1045,7 +1045,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.5411765}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -2494,7 +2494,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.5411765}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -3667,7 +3667,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1385167606, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}
+  m_Sprite: {fileID: 292402063, guid: 71d61fbad6c06434b9ebfda2f9f058cb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8656,7 +8656,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 1860812428, guid: 332097f3a163dab47a9bcfa08db8580d, type: 3}
+  m_Sprite: {fileID: 36660469, guid: 71d61fbad6c06434b9ebfda2f9f058cb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -25484,7 +25484,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 1623881015, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}
+  m_Sprite: {fileID: 2026457412, guid: 71d61fbad6c06434b9ebfda2f9f058cb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -28394,7 +28394,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -591408020, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}
+  m_Sprite: {fileID: 713734972, guid: 71d61fbad6c06434b9ebfda2f9f058cb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -33019,7 +33019,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.5411765}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -33738,7 +33738,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1592467524, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}
+  m_Sprite: {fileID: -2062646400, guid: b28e5bb92d858354c8b1a16f2107e7e8, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -34754,6 +34754,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ResourceManager
   wood: 65
+  maxWood: 100
 --- !u!1 &879723454
 GameObject:
   m_ObjectHideFlags: 0
@@ -35910,6 +35911,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NasipManager
   currentNasip: 0
+  maxNasip: 6
 --- !u!1 &919817401
 GameObject:
   m_ObjectHideFlags: 0
@@ -42817,8 +42819,8 @@ MonoBehaviour:
   strangerPrefab: {fileID: 790413151240634207, guid: faccdedaab610674dacc80e0671afbf2, type: 3}
   spawnAndExitPoint: {fileID: 1170231855}
   campWaitPoint: {fileID: 242980932}
-  minSpawnTime: 90
-  maxSpawnTime: 180
+  startingDayForStrangers: 3
+  dailySpawnChance: 25
 --- !u!114 &1108299980
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -43363,7 +43365,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -541999629, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}
+  m_Sprite: {fileID: 883512433, guid: 71d61fbad6c06434b9ebfda2f9f058cb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -52108,7 +52110,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -623685654, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}
+  m_Sprite: {fileID: -884176783, guid: 71d61fbad6c06434b9ebfda2f9f058cb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -57740,6 +57742,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5735293144898464569, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5735293144898464569, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 0
       objectReference: {fileID: 0}
@@ -58024,7 +58030,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -2134399777, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}
+  m_Sprite: {fileID: 1520420090, guid: 71d61fbad6c06434b9ebfda2f9f058cb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -58642,6 +58648,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MoneyManager
   gold: 10000
   trainingCost: 30
+  maxGold: 10000
 --- !u!1 &1546307581
 GameObject:
   m_ObjectHideFlags: 0
@@ -59587,6 +59594,7 @@ MonoBehaviour:
   currentFood: 51
   foodCost: 5
   baseFoodPerSoldier: 1
+  maxFood: 100
 --- !u!1 &1571130086
 GameObject:
   m_ObjectHideFlags: 0
@@ -64641,7 +64649,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.5411765}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -68353,10 +68361,6 @@ MonoBehaviour:
     m_ColorSpace: -1
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
-  maxGold: 10000
-  maxFood: 100
-  maxWood: 100
-  maxNasip: 6
   goldFillBar: {fileID: 2108618701}
   foodFillBar: {fileID: 1725734161}
   woodFillBar: {fileID: 1063916682}
@@ -72772,7 +72776,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 2060371336, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}
+  m_Sprite: {fileID: -477325511, guid: 71d61fbad6c06434b9ebfda2f9f058cb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -78310,7 +78314,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 1841601764, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}
+  m_Sprite: {fileID: -252565555, guid: 71d61fbad6c06434b9ebfda2f9f058cb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -78481,7 +78485,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 1954933338, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}
+  m_Sprite: {fileID: 828445049, guid: 71d61fbad6c06434b9ebfda2f9f058cb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -79883,8 +79887,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 0fdcc50b45042994fbdc711513f010ca, type: 2}
   - {fileID: 11400000, guid: c77da090b93f23b43a92781399afd411, type: 2}
   - {fileID: 11400000, guid: 17aa1bbaa5a0d8f4b8fab47937593401, type: 2}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 8280b6461b597c646b2b29ed105244e6, type: 2}
+  - {fileID: 11400000, guid: a5f1ede1ca56b004b93d512cc3257cc7, type: 2}
   itemUIPrefab: {fileID: 2924887513182458772, guid: 901f2d54548ccb1488920bbdc5da3da1, type: 3}
   contentParent: {fileID: 1377625022}
 --- !u!1 &2085589903
@@ -82236,7 +82240,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.5411765}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -83175,14 +83179,6 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4464441590071992511, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 293
-      objectReference: {fileID: 0}
-    - target: {fileID: 4464441590071992511, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 200
-      objectReference: {fileID: 0}
     - target: {fileID: 4490658610047485166, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 54.2587
@@ -83205,10 +83201,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4503820687279816287, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
       propertyPath: m_Color.r
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4608130352665171688, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
-      propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4834937911232345708, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}

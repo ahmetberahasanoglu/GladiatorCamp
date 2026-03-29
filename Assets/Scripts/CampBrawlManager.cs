@@ -7,9 +7,15 @@ public class CampBrawlManager : MonoBehaviour
     public static CampBrawlManager Instance;
 
     [Header("Ayarlar")]
-    public GameObject brawlIconPrefab; // Senin hazırladığın ve içine BrawlEvent.cs attığın Ünlem Prefabı
-    public float checkInterval = 20f; // Kaç saniyede bir kavga ihtimali zarı atılsın? (Gerçek zamanlı)
-    public float brawlDuration = 30f; // Kavgaya müdahale etmek için kaç saniyesi var?
+    public GameObject brawlIconPrefab; // Ünlem Prefabı
+    public float checkInterval = 20f; 
+    public float brawlDuration = 30f; 
+
+    // YENİ: Mükerrer kavga engeli listesi
+    public List<Gladiator> activeBrawlers = new List<Gladiator>();
+
+    // YENİ: Haritanın açık olup olmadığını dışarıdan kontrol edebileceğimiz değişken
+    public bool isMapOpen = false; 
 
     void Awake()
     {
@@ -18,7 +24,6 @@ public class CampBrawlManager : MonoBehaviour
 
     void Start()
     {
-        // Döngüyü başlat
         StartCoroutine(BrawlCheckRoutine());
     }
 
@@ -33,29 +38,26 @@ public class CampBrawlManager : MonoBehaviour
 
     void TryStartBrawl()
     {
-        // 1. Savaşta falan mıyız? Savaşta kendi içlerinde kavga etmezler.
+        // 1. KONTROL: Oyun duraklatılmışsa veya HARİTA AÇIKSA kavga başlatma!
+        if (Time.timeScale == 0 || isMapOpen) return;
+
+        // Savaşta falan mıyız?
         if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Idle) return;
 
-        // 2. Moral Kontrolü (Moral 60'ın üzerindeyse herkes mutludur, kavga çıkmaz)
         int morale = CampMoraleManager.Instance != null ? CampMoraleManager.Instance.currentMorale : 100;
         if (morale > 60) return; 
 
-        // 3. Kavga Çıkma İhtimali (Moral ne kadar düşükse ihtimal o kadar yüksek)
-        int brawlChance = 80 - morale; // Örn: Moral 30 ise %50 ihtimal, Moral 10 ise %70 ihtimal.
-        if (Random.Range(0, 100) > brawlChance) return; // Şans tutmadı, şimdilik sakinler
+        int brawlChance = 80 - morale; 
+        if (Random.Range(0, 100) > brawlChance) return; 
 
-        // 4. Boşta takılan askerleri bul
         List<Gladiator> idleSoldiers = GetIdleSoldiers();
         
-        // Kavga için en az 2 kişi lazım!
         if (idleSoldiers.Count < 2) return; 
 
-        // 5. İki rastgele kurban seç
         Gladiator s1 = idleSoldiers[Random.Range(0, idleSoldiers.Count)];
         idleSoldiers.Remove(s1);
         Gladiator s2 = idleSoldiers[Random.Range(0, idleSoldiers.Count)];
 
-        // Kavgayı Başlat!
         StartBrawl(s1, s2);
     }
 
@@ -68,13 +70,16 @@ public class CampBrawlManager : MonoBehaviour
         {
             GladiatorAI ai = soldier.GetComponent<GladiatorAI>();
             
-            // Asker hayattaysa, bizim askerimizse ve kampta boş boş duruyorsa...
             if (soldier.CompareTag("MySoldier") && (ai == null || !ai.isDead) && soldier.data != null)
             {
-                // Görevde, talimde veya çalışıyorsa kavga etmeye mecali yoktur. Boşta olması lazım.
-                if (soldier.data.currentActivity == SoldierActivity.Idling)
+                // YENİ KONTROL: Asker boşta mı VE halihazırda başka bir kavgada değil mi?
+                if (soldier.data.currentActivity == SoldierActivity.Idling && !activeBrawlers.Contains(soldier))
                 {
-                    idles.Add(soldier);
+                    // Askerin canı çok düşükse kavgaya mecali yoktur
+                    if (soldier.currentHealth > 5f) 
+                    {
+                        idles.Add(soldier);
+                    }
                 }
             }
         }
@@ -83,12 +88,16 @@ public class CampBrawlManager : MonoBehaviour
 
     void StartBrawl(Gladiator s1, Gladiator s2)
     {
-        // Ünlemi tam ikisinin ortasında ve kafalarının biraz üzerinde çıkar
-        Vector3 centerPoint = (s1.transform.position + s2.transform.position) / 2f + Vector3.up * 3f;
-        
-        GameObject iconObj = Instantiate(brawlIconPrefab, centerPoint, Quaternion.identity);
+        // Adamları mükerrer kavga engeli listesine ekle
+        activeBrawlers.Add(s1);
+        activeBrawlers.Add(s2);
+
+        // --- YENİ MANTIK: Pozisyonu Manager değil, Setup kendisi halledecek ---
+        // Sadece adamların ortasında ünlemi spawn et, Setup fonksiyonu kavgayı arrange edecek
+        GameObject iconObj = Instantiate(brawlIconPrefab, Vector3.zero, Quaternion.identity);
         BrawlEvent brawl = iconObj.GetComponent<BrawlEvent>();
         
+        // Setup fonksiyonu kavgayı organize edecek
         brawl.Setup(s1, s2, brawlDuration);
     }
 }

@@ -1,6 +1,5 @@
 using UnityEngine;
 
-
 public enum ItemType
 {
     Weapon,
@@ -8,6 +7,7 @@ public enum ItemType
     Shield,
     Helmet
 }
+
 [CreateAssetMenu(menuName = "Data/Item")]
 public class ItemData : ScriptableObject
 {
@@ -15,7 +15,10 @@ public class ItemData : ScriptableObject
     public ItemType type;
     public Sprite icon;
     public int price;
-   // [TextArea(3, 10)] public string description;
+
+    [Header("Skinned Mesh Ayarı (YENİ)")]
+    [Tooltip("Karakterin içindeki açılacak olan mesh objesinin tam adı (Örn: 'Sword_Iron')")]
+    public string targetMeshName; 
 
     [Header("Stats")]
     public int bonusStrength;

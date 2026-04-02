@@ -16,6 +16,7 @@ MonoBehaviour:
   type: 2
   icon: {fileID: -153356289, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}
   price: 0
+  targetMeshName: Shield2
   bonusStrength: 5
   bonusDefense: 10
   bonusSpeed: 0

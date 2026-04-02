@@ -16,6 +16,7 @@ MonoBehaviour:
   type: 1
   icon: {fileID: 1841601764, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}
   price: 0
+  targetMeshName: cape1
   bonusStrength: 0
   bonusDefense: 50
   bonusSpeed: 0

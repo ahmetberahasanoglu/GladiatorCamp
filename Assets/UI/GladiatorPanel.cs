@@ -89,7 +89,7 @@ public class GladiatorPanel : MonoBehaviour
             else if (healing != null && healing.IsHealing) 
                 statusText = "<color=green>Şifahanede</color>";
         }
-
+        int dailyWage = data.level * 5;
         // --- 4. YAZIYI OLUŞTURMA ---
         infoText.text =
             $"DURUM: {statusText}\n" +
@@ -98,6 +98,6 @@ public class GladiatorPanel : MonoBehaviour
             $"DEF: {data.defense}\n" +
             $"SPD: {data.speed}\n" +
             $"STA: {data.stamina}\n" +
-            $"Seviye: {data.level}"+  $"<size=120%>{gaziTitle}</size>" ;
+            $"Seviye: {data.level}"+  $"<size=120%>{gaziTitle}</size>" +$"\t<color=#FFD700>Ulufe: {dailyWage}</color>";
     }
 }

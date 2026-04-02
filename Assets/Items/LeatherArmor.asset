@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 872777d28f1ec70429103b9364761e4f, type: 3}
   m_Name: LeatherArmor
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemID: Chain vest
+  itemID: Cloth cape
   type: 1
   icon: {fileID: 21300000, guid: ce4d1947a5da2414395158cf93a7dbfd, type: 3}
   price: 100
+  targetMeshName: Cape1
   bonusStrength: 0
   bonusDefense: 12
   bonusSpeed: 30

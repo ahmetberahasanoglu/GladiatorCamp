@@ -16,6 +16,7 @@ MonoBehaviour:
   type: 0
   icon: {fileID: 21300000, guid: 1225aae5cdb5cfb4196e11d97df783b3, type: 3}
   price: 0
+  targetMeshName: zulfikar
   bonusStrength: 50
   bonusDefense: 0
   bonusSpeed: 15

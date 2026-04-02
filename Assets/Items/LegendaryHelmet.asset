@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 872777d28f1ec70429103b9364761e4f, type: 3}
   m_Name: LegendaryHelmet
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemID: "K\u0131p\xE7ak Mi\u011Fferi"
+  itemID: Kipcak Helmet
   type: 3
   icon: {fileID: 2060371336, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}
   price: 0
+  targetMeshName: kask2
   bonusStrength: 5
   bonusDefense: 30
   bonusSpeed: 10

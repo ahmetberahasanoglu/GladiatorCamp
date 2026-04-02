@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0773f154cffb1f4cb00e63ae3701dea, type: 3}
   m_Name: Av
   m_EditorClassIdentifier: Assembly-CSharp::MissionData
-  missionName: 
+  missionName: "Geyik Av\u0131"
   description: "Geyik t\xFCr\xFCn\xFC avlamakla ilgili birka\xE7 \u015Fey"
   difficulty: 30
   durationDays: 10

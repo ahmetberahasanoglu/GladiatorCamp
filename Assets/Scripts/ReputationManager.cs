@@ -6,7 +6,7 @@ public class ReputationManager : MonoBehaviour
     public static ReputationManager Instance;
 
     [Header("İtibar Ayarları")]
-    public int currentReputation = 100;
+    public int currentReputation = 80;
     public int maxReputation = 100;
     
     

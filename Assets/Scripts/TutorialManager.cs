@@ -170,7 +170,7 @@ public class TutorialManager : MonoBehaviour
 
             case TutorialStep.Rebirth_Cenk:
                 StartCoroutine(Highlight3DDelayed(cenkOyunu3D, cenkOyunuMarkerScale));
-                ShowDialogue("Boş vakitlerinde askerlerinle Cenk* oynayarak hem moral hem de fazladan altın kazanabilirsin.", false);
+                ShowDialogue("Boş vakitlerinde askerlerinle Cenk oynayarak hem moral hem de fazladan altın kazanabilirsin.", false);
                 break;
 
             case TutorialStep.Rebirth_TempUI:

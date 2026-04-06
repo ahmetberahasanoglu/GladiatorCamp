@@ -160,6 +160,7 @@ public class RecruitManager : MonoBehaviour
         GameObject newObj = Instantiate(soldierPrefab, soldierSpawnPoint.position, Quaternion.identity);
         Gladiator glad = newObj.GetComponent<Gladiator>();
         JanissaryData newData = ScriptableObject.CreateInstance<JanissaryData>();
+
         newData.gladiatorName = candidate.candidateName;
         newData.strength = candidate.potentialStrength;
         newData.stamina = candidate.potentialStamina;
@@ -167,10 +168,12 @@ public class RecruitManager : MonoBehaviour
         newData.speed = 1;
         //newData.morale = 100;
         newData.level = 1;
+        newData.trait = candidate.trait;
 
     
         glad.InitializeData(newData);
         dailyCandidates.Remove(candidate);
+        RefreshUI();
         OnSoldierCountChanged?.Invoke();
         NotificationManager.Instance.Show($"{candidate.candidateName} ocağa katıldı!", NotificationType.Success);
        // Debug.Log("Yeni bir Acemi Oğlanı ocağa katıldı: " + candidate.candidateName);

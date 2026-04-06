@@ -1,6 +1,7 @@
 using UnityEngine;
-
+public enum SoldierTrait { Siradan, Obur, Dindar, Yetenekli }
 [CreateAssetMenu(menuName = "Data/Gladiator")]
+
 public class JanissaryData : ScriptableObject
 {
     public string gladiatorName;
@@ -13,6 +14,8 @@ public class JanissaryData : ScriptableObject
     public int stamina;
     public int level = 1;     
     public bool isGazi = false;
+    [Header("Kişilik")]
+    public SoldierTrait trait;
 
     [Header("Anlık Durumlar (Save İçin)")]
     public float currentHealth;
@@ -25,5 +28,20 @@ public class JanissaryData : ScriptableObject
     public int GetTotalStats()
     {
         return strength + defense + stamina + speed ;
+    }
+    public string GetTraitDescription()
+    {
+        switch(trait)
+        {
+            case SoldierTrait.Obur: 
+                return "<color=orange>Obur:</color> Çok erzak tüketir ama canı yüksektir.";
+            case SoldierTrait.Dindar: 
+                return "<color=yellow>Dindar:</color> İbadet sırasında daha fazla Nasip bulur.";
+            case SoldierTrait.Yetenekli: 
+                return "<color=#00FFFF>Yetenekli:</color> Eğitimlerin hepsinden 2 kat verim alır.";
+            case SoldierTrait.Siradan:
+            default: 
+                return "<color=white>Sıradan:</color> Kendi halinde, sadık bir nefer.";
+        }
     }
 }

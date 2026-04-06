@@ -90,14 +90,15 @@ public class GladiatorPanel : MonoBehaviour
                 statusText = "<color=green>Şifahanede</color>";
         }
         int dailyWage = data.level * 5;
-        // --- 4. YAZIYI OLUŞTURMA ---
+        string traitText = _currentGladiator.GetTraitDescription(); // Doğru çağırma şekli
+
+        // İstatistikleri yan yana alarak dikeyde yer kazandık:
         infoText.text =
             $"DURUM: {statusText}\n" +
             $"CAN: <color={hpColor}>{currentHp} / {maxHp}</color>\n" +
-            $"STR: {data.strength}\n" +
-            $"DEF: {data.defense}\n" +
-            $"SPD: {data.speed}\n" +
-            $"STA: {data.stamina}\n" +
-            $"Seviye: {data.level}"+  $"<size=120%>{gaziTitle}</size>" +$"\t<color=#FFD700>Ulufe: {dailyWage}</color>";
+            $"{traitText}\n" + 
+            $"STR: {data.strength} \tDEF: {data.defense}\n" + // Yan yana
+            $"SPD: {data.speed} \tSTA: {data.stamina}\n" +    // Yan yana
+            $"Seviye: {data.level} <size=120%>{gaziTitle}</size>\t<color=#FFD700>Ulufe: {dailyWage}</color>";
     }
 }

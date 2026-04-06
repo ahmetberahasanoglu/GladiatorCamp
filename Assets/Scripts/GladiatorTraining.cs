@@ -177,23 +177,65 @@ IEnumerator TrainingAnimationRoutine()
         }
     }
 
-    void FinishTraining()
+  void FinishTraining()
     {
-        ApplyStatGain(currentTrainingType, currentSpot.statGain);
+        int kazanilanStat = currentSpot.statGain;
 
+        if (gladiator != null && gladiator.data != null && gladiator.data.trait == SoldierTrait.Yetenekli)
+        {
+            kazanilanStat *= 2; 
+        }
+
+        // STAT EKLENDİ
+        ApplyStatGain(currentTrainingType, kazanilanStat);
+
+        // LEVEL EKLENDİ
         gladiator.data.level += 1;
+
+        // --- HATA BURADA ÇÖZÜLÜYOR ---
+        // Stat ve Level eklendikten SONRA canı yeni değerlere göre baştan hesapla!
+        gladiator.RecalculateMaxHealth();
+        // ------------------------------
 
         currentSpot.isBusy = false;
         currentSpot = null;
         GetComponent<Gladiator>().SetIdle();
         DayManager.Instance.OnNewDay -= OnNewDay;
-        gladiator.RefreshStats();
+        
+        // Bu kod muhtemelen senin askere tıklandığında açılan paneli yeniliyor (STR DEF SPD artışını UI'a yansıtıyor)
+        gladiator.RefreshStats(); 
 
-if (levelUpParticle != null)
-{
-    levelUpParticle.Play();
-}
-        // GetComponent<Animator>().SetBool("IsTraining", false);
+        if (levelUpParticle != null)
+        {
+            levelUpParticle.Play();
+        }
+    }
+
+    // ApplyStatGain fonksiyonunu da güncelledik ki bildirimi doğru sayıyla (Örn: +2) göstersin
+    private void ApplyStatGain(TrainingType type, int finalAmount)
+    {
+        GladiatorInventory inv = GetComponent<GladiatorInventory>();
+        if (inv != null)
+        {
+            inv.PermanentlyIncreaseStat(type, finalAmount);
+        }
+        else
+        {
+            switch (type)
+            {
+                case TrainingType.Strength: gladiator.data.strength += finalAmount; break;
+                case TrainingType.Speed: gladiator.data.speed += finalAmount; break;
+                case TrainingType.Defense: gladiator.data.defense += finalAmount; break;
+                case TrainingType.Stamina: gladiator.data.stamina += finalAmount; break;
+            }
+        }
+
+        if (NotificationManager.Instance != null)
+        {
+            // Eğer Yetenekli ise bunu ekranda vurgulamak oyuncunun hoşuna gider
+            string traitVurgusu = (gladiator.data.trait == SoldierTrait.Yetenekli) ? " (Yetenekli!)" : "";
+            NotificationManager.Instance.Show($"Eğitim Tamamlandı! {type} +{finalAmount}{traitVurgusu}", NotificationType.Success);
+        }
     }
 
     int GetRequiredDays(int level)
@@ -203,26 +245,5 @@ if (levelUpParticle != null)
         return 3;
     }
 
-    private void ApplyStatGain(TrainingType type, int amount)
-    {
-        GladiatorInventory inv = GetComponent<GladiatorInventory>();
-        if (inv != null)
-        {
-            inv.PermanentlyIncreaseStat(type, amount);
-        }
-        else
-        {
-       
-            switch (type)
-            {
-                case TrainingType.Strength: gladiator.data.strength += amount; break;
-                case TrainingType.Speed: gladiator.data.speed += amount; break;
-                case TrainingType.Defense: gladiator.data.defense += amount; break;
-                case TrainingType.Stamina: gladiator.data.stamina += amount; break;
-            }
-        }
-
-        if (NotificationManager.Instance != null)
-            NotificationManager.Instance.Show($"Eğitim Tamamlandı! {type} +{amount}", NotificationType.Success);
-    }
+    
 }

@@ -24,7 +24,7 @@ public class SupplyManager : MonoBehaviour
         UpdateUI(); 
     }
 
-    public int GetExpectedDailyFoodCost()
+ public int GetExpectedDailyFoodCost()
     {
         int totalFoodNeeded = 0;
         Gladiator[] soldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
@@ -35,13 +35,22 @@ public class SupplyManager : MonoBehaviour
             if (soldier.CompareTag("MySoldier") && (ai == null || !ai.isDead))
             {
                 int lvl = (soldier.data != null) ? soldier.data.level : 1;
-                totalFoodNeeded += (baseFoodPerSoldier * lvl); 
+                
+                int dailyFood = baseFoodPerSoldier * lvl; 
+                
+         
+                if (soldier.data != null && soldier.data.trait == SoldierTrait.Obur)
+                {
+                    dailyFood *= 2; 
+                }
+                
+                totalFoodNeeded += dailyFood; 
             }
         }
         return totalFoodNeeded;
     }
 
-    // YENİ: public yaptık ve hesaplamayı daysPassed ile çarptık
+
     public void ConsumeDailyFood(int daysPassed)
     {
         int dailyNeededFood = GetExpectedDailyFoodCost();

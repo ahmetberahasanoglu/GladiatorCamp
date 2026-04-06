@@ -9,7 +9,7 @@ public class CampMoraleManager : MonoBehaviour
 
     [Header("UI Ayarları")]
     public TextMeshProUGUI moraleText; 
-    public Image moraleFillBar; // YENİ: Moral barının imajı
+    public Image moraleFillBar; 
 
     [Header("Durum")]
     [Range(0, 100)]
@@ -60,7 +60,7 @@ public class CampMoraleManager : MonoBehaviour
                 NotificationManager.Instance.Show($"Kışla Morali Düştü! ({amount})", NotificationType.Error);
         }
     }
-    // --- YENİ EKLENEN: FİRAR SİSTEMİ ---
+  
     public void CheckDesertion()
     {
         // 1. Kilit: Moral 20'nin üzerindeyse kimse kaçmaz, herkes halinden memnundur.
@@ -91,7 +91,7 @@ public class CampMoraleManager : MonoBehaviour
             }
         }
 
-        // 4. İnfaz (Kaçış)
+    
         if (potentialDeserters.Count > 0)
         {
             int randomIndex = Random.Range(0, potentialDeserters.Count);

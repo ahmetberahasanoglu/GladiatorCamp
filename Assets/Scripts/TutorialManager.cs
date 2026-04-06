@@ -109,7 +109,7 @@ public class TutorialManager : MonoBehaviour
 
             case TutorialStep.Camp_Tour:
                 StartCoroutine(HighlightUIDelayed(topBarGoldUI));
-                ShowDialogue("Burası merkezimiz. Yukarıda Altınımız, Erzağımız ve Asker kapasitemiz var.", false);
+                ShowDialogue("Burası merkezimiz. Yukarıda Altınımız, Erzağımız ve Odun sayımız var.", false);
                 break;
             case TutorialStep.Camp_Tour1:
                 StartCoroutine(HighlightUIDelayed(itibarUI));

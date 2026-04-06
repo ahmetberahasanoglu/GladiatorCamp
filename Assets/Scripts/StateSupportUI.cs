@@ -1,72 +1,136 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System.Collections.Generic;
+
+// --- YENİ VERİ YAPISI: Kart Verilerini Tutar ---
+[System.Serializable]
+public struct LoanTierCard
+{
+    public GameObject cardObject; // Kartın UI objesi (Tüm kartı açıp kapatmak için)
+    public TextMeshProUGUI loanAmountText; // "1000 Akçe" yazısı
+    public TextMeshProUGUI requiredRepText; // "40'tan Fazla İtibar" yazısı
+    public Button actionButton; // "Borç İste" veya "Öde" butonu
+    public TextMeshProUGUI buttonText; // Butonun üzerindeki yazı
+    public GameObject lockedOverlay; // Kilit simgesi ve "İtibar Yetersiz" yazısı (Eğer itibar < X ise açılacak)
+}
 
 public class StateSupportUI : MonoBehaviour
 {
     [Header("UI Bileşenleri")]
-    public GameObject loanPanel; 
+    public GameObject loanPanel;
     public TextMeshProUGUI loanStatusText; 
-    
-    [Header("Borç Butonları")]
-    public Button borrowButton;
-    public Button repayButton;
+    public TextMeshProUGUI cooldownText; // "Yeni borç için 3 gün bekleyin" yazısı
 
-    [Header("Bağış Alanı (Yeni)")]
-    public Button donateButton;      // "Bağış Yap" butonu
-    public TextMeshProUGUI donateInfoText; // "500 Akçe Bağışla (+5 İtibar)" yazısı
-    public int donationCost = 500;   // Kaç para gidecek?
-    public int donationReward = 5;   // Kaç itibar gelecek?
+    [Header("Kademeli Kartlar (YENİ)")]
+    public List<LoanTierCard> loanCards; // 1000, 2000, 3000 kartlarını buraya sürükle
+
+    [Header("Bağış Alanı")]
+    public Button donateButton;      
+    public TextMeshProUGUI donateInfoText; 
+    public int donationCost = 500;   
+    public int donationReward = 5;   
 
     void Start()
     {
-        // Borç Butonları
-        borrowButton.onClick.AddListener(() => StateLoanManager.Instance.RequestLoan());
-        repayButton.onClick.AddListener(() => StateLoanManager.Instance.RepayLoan());
-
-        // --- YENİ: Bağış Butonu ---
         donateButton.onClick.AddListener(OnDonateClicked);
         
-        // Butonun üzerindeki yazıyı ayarla (Otomatik)
         if(donateInfoText != null)
             donateInfoText.text = $"{donationCost} Akçe Bağışla\n<size=80%>(+{donationReward} İtibar)</size>";
 
-        // Eventleri Dinle
         if (StateLoanManager.Instance != null)
             StateLoanManager.Instance.OnLoanStateChanged += UpdateLoanPanel;
         
-        // Paneli Güncelle
         UpdateLoanPanel();
     }
 
     void OnDonateClicked()
     {
-        // Direkt Manager'daki yeni fonksiyonu çağırıyoruz
         ReputationManager.Instance.DonateToState(donationCost, donationReward);
-        
-        // Belki bir ses efekti veya popup burada ekleyebilirsin
+        if (NotificationManager.Instance != null)
+            NotificationManager.Instance.Show("Vakfa bağış yapıldı. Dualar seninle.", NotificationType.Success);
     }
 
     public void UpdateLoanPanel()
     {
         if (StateLoanManager.Instance == null) return;
         var manager = StateLoanManager.Instance;
+        int currentDay = DayManager.Instance.currentDay;
 
-        // Borç Durumu UI Güncellemesi
-        if (manager.hasActiveLoan)
+        // 1. Durum Metni ve Cooldown
+        if (currentDay < manager.nextAvailableLoanDay)
         {
-            loanStatusText.text = $"BORÇ: <color=red>{manager.loanAmount}</color> Akçe\nSON GÜN: {manager.loanDueDay}. Gün";
-            borrowButton.gameObject.SetActive(false); 
-            repayButton.gameObject.SetActive(true);   
+            int remainingDays = manager.nextAvailableLoanDay - currentDay;
+            loanStatusText.text = "Vakıf Defterleri Düzenliyor...";
+            cooldownText.text = $"Yeni bir emanet için <color=#AF2C3E>{remainingDays} gün</color> bekleyin.";
+            cooldownText.gameObject.SetActive(true);
         }
         else
         {
-            loanStatusText.text = "Aktif Borç Yok\n<size=70%>Devlet hazinesi emrinize amadedir.</size>";
-            borrowButton.gameObject.SetActive(true);
-            repayButton.gameObject.SetActive(false);
+            loanStatusText.text = "Aktif Emanet Yok\n<size=70%>Vakıf sandığı dar gününde yanındadır.</size>";
+            cooldownText.gameObject.SetActive(false);
         }
 
-        // Bağış butonu kontrolü (Paramız yoksa buton sönük olsun)
+        // 2. Kademeli Kartları Yönet (En Kritik Kısım)
+        for (int i = 0; i < loanCards.Count; i++)
+        {
+            LoanTierCard card = loanCards[i];
+            
+            // Kartın borç miktarını kodla (Örn: 1000, 2000, 3000)
+            int tierAmount = (i + 1) * 1000;
+            card.loanAmountText.text = $"{tierAmount} Akçe";
+            
+            // Gerekli itibarı kodla (i=0 için 40, i=1 için 60, i=2 için 80)
+            int requiredRep = 40 + (i * 20);
+            card.requiredRepText.text = $"Gerekli İtibar: <color=#AF2C3E>{requiredRep}+</color>";
+
+            // Aktif bir borç varsa, o kartı "Öde" kartına dönüştür, diğerlerini kapat.
+            if (manager.hasActiveLoan && manager.loanAmount == tierAmount)
+            {
+                card.actionButton.gameObject.SetActive(true);
+                card.buttonText.text = "Borcu öde";
+                card.actionButton.onClick.RemoveAllListeners();
+                card.actionButton.onClick.AddListener(() => manager.RepayLoan());
+                
+                // Kilit simgesini kapat (Kendi borcumuzu ödüyoruz, itibar yetersiz olamaz)
+                card.lockedOverlay.SetActive(false);
+                card.actionButton.interactable = true;
+                
+                card.cardObject.SetActive(true); // Bizim borcumuz olan kart açık kalır
+            }
+            // Başka bir borç aktifse, bu kartı kapat.
+            else if (manager.hasActiveLoan && manager.loanAmount != tierAmount)
+            {
+                card.cardObject.SetActive(false); 
+            }
+            // Aktif borç yoksa, normal kilitli/açık borç alma moduna geç.
+            else
+            {
+                card.cardObject.SetActive(true); // Tüm kartları aç
+                card.actionButton.gameObject.SetActive(true);
+                card.buttonText.text = "Borç Al";
+                card.actionButton.onClick.RemoveAllListeners();
+                card.actionButton.onClick.AddListener(() => manager.RequestLoan(tierAmount)); // YENİ: Miktarı fonksiyona yolla
+
+                // Kilitli mi? (İtibar yetersizse veya Cooldown aktifse kilit aç)
+                int currentRep = ReputationManager.Instance.GetReputation();
+                bool tooLowRep = currentRep < requiredRep;
+                bool cooldownActive = currentDay < manager.nextAvailableLoanDay;
+
+                if (tooLowRep || cooldownActive)
+                {
+                    card.lockedOverlay.SetActive(true);
+                    card.actionButton.interactable = false;
+                }
+                else
+                {
+                    card.lockedOverlay.SetActive(false);
+                    card.actionButton.interactable = true;
+                }
+            }
+        }
+
+        // Bağış butonu kontrolü
         if (donateButton != null && MoneyManager.Instance != null)
         {
             donateButton.interactable = MoneyManager.Instance.gold >= donationCost;

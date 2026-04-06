@@ -96,7 +96,7 @@ public class GladiatorPraying : MonoBehaviour
         if (anim != null) anim.SetBool("isSitting", false);
 
         if (DayManager.Instance != null) DayManager.Instance.OnNewDay -= GenerateNasip;
-
+        GetComponent<Gladiator>().SetIdle();
         if (gladiator != null && gladiator.data != null)
             gladiator.data.currentActivity = SoldierActivity.Idling;
             gladiator.RefreshStats();

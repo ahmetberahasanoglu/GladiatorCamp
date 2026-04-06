@@ -185,7 +185,7 @@ IEnumerator TrainingAnimationRoutine()
 
         currentSpot.isBusy = false;
         currentSpot = null;
-
+        GetComponent<Gladiator>().SetIdle();
         DayManager.Instance.OnNewDay -= OnNewDay;
         gladiator.RefreshStats();
 

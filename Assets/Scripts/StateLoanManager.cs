@@ -1,24 +1,22 @@
 using UnityEngine;
-using System; // Action eventini kullanmak için gerekli
+using System;
 
 public class StateLoanManager : MonoBehaviour
 {
     public static StateLoanManager Instance;
 
-    [Header("Borç Ayarları")]
+    [Header("Karz-ı Hasen (Faizsiz Borç) Ayarları")]
     public bool hasActiveLoan = false; 
     public int loanAmount = 0;         
     public int loanDueDay = 0;         
     public int paymentPeriod = 7;      
     
-  [Header("Limitler ve Cezalar")]
-    public int minRepToBorrow = 50;    
-    public int defaultLoanAmount = 2000; 
-    public int repaymentAmount = 2400; 
+    [Header("Cezalar ve Kısıtlamalar")]
     public int latePenaltyRep = 15;    
-
+    public int cooldownDays = 3; // YENİ: Borç ödendikten sonra kaç gün beklenmeli?
 
     private int dayLoanTaken = 0;
+    public int nextAvailableLoanDay = 0; // YENİ: Bir sonraki borç alınabilecek gün
 
     public event Action OnLoanStateChanged;
 
@@ -39,33 +37,59 @@ public class StateLoanManager : MonoBehaviour
             DayManager.Instance.OnDayChanged -= CheckLoanStatus;
     }
 
-    public void RequestLoan()
+    public int GetMaxAvailableLoan()
+    {
+        int rep = ReputationManager.Instance.GetReputation();
+        
+        if (rep >= 80) return 3000;
+        if (rep >= 60) return 2000;
+        if (rep >= 40) return 1000;
+        
+        return 0; 
+    }
+
+   public void RequestLoan(int tierAmount)
     {
         if (hasActiveLoan)
         {
-            NotificationManager.Instance.Show("Zaten ödenmemiş bir borcun var!", NotificationType.Error);
+            NotificationManager.Instance.Show("Vakıf sandığından alınmış, ödenmemiş bir emanetin var!", NotificationType.Error);
             return;
         }
 
-        if (ReputationManager.Instance.GetReputation() < minRepToBorrow)
+        // --- BEKLEME SÜRESİ KONTROLÜ ---
+        int currentDay = DayManager.Instance.currentDay;
+        if (currentDay < nextAvailableLoanDay)
         {
-            NotificationManager.Instance.Show("Devlet sana güvenmiyor! (İtibar < 50)", NotificationType.Warning);
+            int remainingDays = nextAvailableLoanDay - currentDay;
+            NotificationManager.Instance.Show($"Vakıf sandığı defterleri düzenliyor. Yeni bir emanet için {remainingDays} gün sonra gel.", NotificationType.Warning);
             return;
         }
 
-        MoneyManager.Instance.Add(defaultLoanAmount); 
+        // --- HATA BURADAYDI ÇÖZÜLDÜ ---
+        // Artık "Maksimum ne alabilir" diye sormuyoruz. "İstediği miktara (tierAmount) itibarı yetiyor mu?" diye soruyoruz.
+        int requiredRep = 40;
+        if (tierAmount == 2000) requiredRep = 60;
+        else if (tierAmount == 3000) requiredRep = 80;
+
+        if (ReputationManager.Instance.GetReputation() < requiredRep)
+        {
+            NotificationManager.Instance.Show($"Ahiler sana o kadar büyük bir meblağ güvenmiyor! (İtibar {requiredRep}+ olmalı)", NotificationType.Warning);
+            return;
+        }
+
+        // availableLoan yerine doğrudan UI'dan gelen tierAmount'u kullanıyoruz!
+        MoneyManager.Instance.Add(tierAmount); 
         
         hasActiveLoan = true;
-        loanAmount = repaymentAmount; 
+        loanAmount = tierAmount; // Borcumuz da tam olarak istediğimiz miktar kadar oluyor
         
-        loanDueDay = DayManager.Instance.currentDay + paymentPeriod;
-        dayLoanTaken = DayManager.Instance.currentDay; 
+        loanDueDay = currentDay + paymentPeriod;
+        dayLoanTaken = currentDay; 
 
-        NotificationManager.Instance.Show($"Devletten {defaultLoanAmount} Akçe alındı. Geri Ödeme: {loanAmount} Akçe", NotificationType.Info);
+        NotificationManager.Instance.Show($"İtibarına güvenilerek Vakıf sandığından {tierAmount} Akçe emanet alındı.", NotificationType.Info);
         
         OnLoanStateChanged?.Invoke(); 
     }
-
     public void RepayLoan()
     {
         if (!hasActiveLoan) return;
@@ -73,31 +97,23 @@ public class StateLoanManager : MonoBehaviour
         if (MoneyManager.Instance.gold >= loanAmount)
         {
             MoneyManager.Instance.Spend(loanAmount);
-            
             int currentDay = DayManager.Instance.currentDay;
 
             if (currentDay <= loanDueDay) 
             {
+                ReputationManager.Instance.ChangeReputation(10);
+                if (NasipManager.Instance != null) NasipManager.Instance.AddNasip(1); 
 
                 if (currentDay > dayLoanTaken)
-                {
-
-                    ReputationManager.Instance.ChangeReputation(10);
-
-                    if (NasipManager.Instance != null)
-                    {
-                        NasipManager.Instance.AddNasip(1); 
-                    }
-
-                    NotificationManager.Instance.Show("Borç zamanında ödendi! (+10 İtibar, +1 Nasip)", NotificationType.Success);
-                }
+                    NotificationManager.Instance.Show("Vakfın emaneti zamanında ödendi! (+10 İtibar, +1 Nasip)", NotificationType.Success);
                 else
-                {
-                    NotificationManager.Instance.Show("Borç erkenden kapatıldı. Devlet masrafı kesti.", NotificationType.Info);
-                }
+                    NotificationManager.Instance.Show("Emaneti erkenden teslim ettin. Ahiler sadakatini takdir ediyor!", NotificationType.Success);
             }
 
-            // Borcu sıfırla
+            // --- YENİ: BEKLEME SÜRESİNİ BAŞLAT ---
+            // Borç ödendiği an, şu anki güne 3 gün ekleyip "bir sonraki alınabilecek tarihi" belirliyoruz.
+            nextAvailableLoanDay = currentDay + cooldownDays;
+
             hasActiveLoan = false;
             loanAmount = 0;
             loanDueDay = 0;
@@ -107,7 +123,7 @@ public class StateLoanManager : MonoBehaviour
         }
         else
         {
-            NotificationManager.Instance.Show("Borcu tamamen kapatacak paran yok!", NotificationType.Warning);
+            NotificationManager.Instance.Show("Emaneti tamamen teslim edecek kadar Akçen yok!", NotificationType.Warning);
         }
     }
 
@@ -117,12 +133,12 @@ public class StateLoanManager : MonoBehaviour
 
         if (currentDay > loanDueDay)
         {
-            NotificationManager.Instance.Show("BORÇ GÜNÜ GEÇTİ! İtibar düşürülüyor.", NotificationType.Warning);
+            NotificationManager.Instance.Show("VAKFIN EMANETİ GECİKTİ! İtibarın zedeleniyor.", NotificationType.Warning);
             ReputationManager.Instance.ChangeReputation(-latePenaltyRep);
-
-            loanDueDay += 3; // 3 gün ek süre
             
-            // HATA ÇÖZÜLDÜ: UI'a haber ver (Güncellensin ki yeni tarihi görsün)
+            if (NasipManager.Instance != null) NasipManager.Instance.SpendNasip(2);
+
+            loanDueDay += 3; 
             OnLoanStateChanged?.Invoke();
         }
     }

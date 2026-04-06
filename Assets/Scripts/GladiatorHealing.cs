@@ -92,7 +92,7 @@ public class GladiatorHealing : MonoBehaviour
 
         // Efekti patlat
         if (healParticle != null) healParticle.Play();
-
+        GetComponent<Gladiator>().SetIdle();
         // Ekrana bildirim ver
         if (NotificationManager.Instance != null)
             NotificationManager.Instance.Show($"{gladiator.data.gladiatorName} şifahaneden taburcu oldu! (+{currentSpot.extraHealAmount} Bonus HP)", NotificationType.Success);

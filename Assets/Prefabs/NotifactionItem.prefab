@@ -34,8 +34,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 400, y: 90}
+  m_AnchoredPosition: {x: -38.71649, y: 0}
+  m_SizeDelta: {x: 477.433, y: 90}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9059896279464301167
 CanvasRenderer:
@@ -65,7 +65,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: asdasdasdasdasdasdadasdaasdasdasdasdasdasdasdaasdasdas
+  m_text: "<color=red>\u0130SYAN VE F\u0130RAR!</color> Moral o kadar d\xFC\u015F\xFCk
+    ki, Yusuf gece yar\u0131s\u0131 kamptan ka\xE7t\u0131!"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: fbe5565e4dd7a1148b1541ab8fd85882, type: 2}
   m_sharedMaterial: {fileID: -6674717547585697400, guid: fbe5565e4dd7a1148b1541ab8fd85882, type: 2}
@@ -170,8 +171,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: 4.03}
-  m_SizeDelta: {x: 400, y: 4.7565994}
+  m_AnchoredPosition: {x: -38.71649, y: 4.029999}
+  m_SizeDelta: {x: 477.433, y: 4.7566}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &5702326338537795459
 CanvasRenderer:

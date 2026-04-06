@@ -96,7 +96,23 @@ public bool IsAvailableForTask()
             return !isOnMission && !isTraining;
         }
     }   
+public void SetIdle()
+    {
+        // 1. Asıl kilitlenmeyi çözen kısım (Aktiviteyi Boşta yap)
+        if (data != null) 
+        {
+            data.currentActivity = SoldierActivity.Idling;
+        }
 
+        // 2. Eğer seferdeyse onu da iptal et
+        isOnMission = false;
+
+        // IsTraining ve IsHealing değişkenleri remainingDays 0 olduğunda 
+        // kendi kendine false olacağı için onlara dokunmuyoruz!
+
+        // 3. UI Panellerini güncelle
+        RefreshStats(); 
+    }
     public void RefreshStats()
     {
         OnStatsChanged?.Invoke();

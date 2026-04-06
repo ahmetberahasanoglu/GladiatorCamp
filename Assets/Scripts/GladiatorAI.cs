@@ -328,12 +328,13 @@ if (target != null)
             agent.isStopped = true; 
         }
 
-        if (gladiator.data.level >= 3 && !gladiator.data.isGazi) MakeGazi();
+        if (!gladiator.data.isGazi) MakeGazi();//gladiator.data.level >= 3 && 
     }
     
     void MakeGazi()
     {
         gladiator.data.isGazi = true;
+        gladiator.data.level+=2;
         if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(10);
         if (NotificationManager.Instance != null) NotificationManager.Instance.Show($"{gladiator.data.gladiatorName} artık bir GAZİ! Morali yükseldi.", NotificationType.Success);
     }

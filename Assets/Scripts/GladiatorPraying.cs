@@ -68,8 +68,18 @@ public class GladiatorPraying : MonoBehaviour
     {
         if (isPraying && currentSpot != null)
         {
+            if (NasipManager.Instance != null){
             // 1. Ödülü Ver (Nasip kazandır)
-            if (NasipManager.Instance != null) NasipManager.Instance.AddNasip(2);
+             if (gladiator.data.trait == SoldierTrait.Dindar)
+               {
+                    NasipManager.Instance.AddNasip(2);
+                }
+                else
+                {
+                    NasipManager.Instance.AddNasip(1); 
+                }
+            }
+           
             
             // Eğer istersen asker ibadet ettiği için ufak bir can da kazanabilir
             // gladiator.currentHealth += 10;

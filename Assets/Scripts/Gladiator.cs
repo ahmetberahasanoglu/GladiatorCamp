@@ -9,7 +9,8 @@ public class Gladiator : MonoBehaviour
 {
     [SerializeField] private JanissaryData _templateData;
     public JanissaryData data { get; private set; }
-
+    [Header("Kişilik Sistemi")]
+    public SoldierTrait trait;
     public HealthBar healthBar;
     public string candidateName;
     private NavMeshAgent agent;
@@ -33,27 +34,116 @@ public class Gladiator : MonoBehaviour
         {
             if (string.IsNullOrEmpty(candidateName)) candidateName = data.gladiatorName;
 
-            // --- CAN HESABI ARTIK DATA'NIN İÇİNDE ---
-            data.maxHealth = (data.stamina * 10) + (data.level * 5);
+             int staminaMultiplier = (data.trait == SoldierTrait.Obur) ? 15 : 10;
+            data.maxHealth = 100 + (data.stamina * staminaMultiplier) + (data.level * 5);
             
-            // Eğer yeni üretilen bir askerse canını fullüyoruz
-            // (İleride Save'den yüklüyorsak bu satırı atlayacağız ki yaralı kalsın)
-            data.currentHealth = data.maxHealth; 
+            data.currentHealth = data.maxHealth;
 
             if (healthBar != null) healthBar.UpdateBar(data.currentHealth, data.maxHealth);
         }
       
         agent = GetComponent<NavMeshAgent>();
         UpdateNameLabel();
+        AssignRandomTrait();
     }
+        public void AssignRandomTrait()
+    {
+    
+        int roll = UnityEngine.Random.Range(0, 100);
+        
+        if (roll < 40) trait = SoldierTrait.Siradan;      // %40
+        else if (roll < 60) trait = SoldierTrait.Obur;    // %20
+        else if (roll < 80) trait = SoldierTrait.Dindar;  // %20
+        else trait = SoldierTrait.Yetenekli;          //20
+    }
+
+
+public string GetTraitDescription()
+{
+    switch(trait)
+    {
+        case SoldierTrait.Obur: 
+            return "<color=orange>Obur</color> ";//Çok erzak tüketir ama canı yüksektir.
+        case SoldierTrait.Dindar: 
+            return "<color=yellow>Dindar</color> ";//İbadet sırasında çok daha fazla Nasip bulur.
+        case SoldierTrait.Yetenekli: 
+            return "<color=red>Yetenekli</color>";// Güçlüdür
+        
+        default: 
+            return "<color=white>Sıradan</color>";// Kendi halinde, sadık bir nefer.
+    }
+}
 public bool IsAvailableForTask()
 {
-    // Asker ölüyse zaten müsait değildir
     if (data.currentHealth <= 0) return false;
 
-    // SADECE BOŞTA (Idle) ise yeni bir işe gönderilebilir!
     return data.currentActivity == SoldierActivity.Idling;
 }
+
+   // --- GÜNCELLENMİŞ: ORDUDAN KOVMA FONKSİYONU (Gladiator.cs İçinde) ---
+    public void DismissFromArmy()
+    {
+        ConfirmationManager.Instance.Show(
+            "<color=red>Sürgün Kararı</color>", 
+            $"<color=yellow>{data.gladiatorName}</color> isimli askeri ordudan atmak istediğine emin misin?\n\n<size=80%>Bu işlem geri alınamaz ve kampta ufak bir moral düşüşüne sebep olur.</size>", 
+            () => 
+            {
+                // Askeri şifahaneden veya eğitimden güvenlice çek
+                SetIdle();
+
+                // Geri bildirim ver
+                if (NotificationManager.Instance != null)
+                {
+                    NotificationManager.Instance.Show($"{data.gladiatorName} ordudan atıldı! Kampta huzursuzluk var.", NotificationType.Error);
+                }
+
+                if (TrainingUIManager.Instance != null)
+                {
+                    TrainingUIManager.Instance.SetCurrentGladiator(null);
+                }
+
+                // --- SİHİRLİ DOKUNUŞ (UI GÜNCELLEMESİ İÇİN) ---
+                
+                // 1. Askerin etiketini sil ki TopBar sayarken ve masraf hesaplarken bunu görmesin
+                gameObject.tag = "Untagged"; 
+                
+                // 2. TopBar'ı ZORLA GÜNCELLE (Bu kod Kapasiteyi, Yemeği ve Maaşı anında düşürecektir)
+                if (TopInfoBarUI.Instance != null)
+                {
+                    TopInfoBarUI.Instance.UpdateCapacity();
+                }
+
+                // ----------------------------------------------
+
+                // Askeri sahneden sil (Frame sonunda silinecek ama artık sayılmıyor)
+                Destroy(gameObject);
+            }
+        );
+    }
+    public void RecalculateMaxHealth()
+    {
+        if (data == null) return;
+
+        // 1. Eski maksimum canı aklımızda tutalım
+        float oldMaxHealth = data.maxHealth;
+
+        // 2. Yeni statlara göre Canı baştan hesapla (Obur kontrolü dahil)
+        int staminaMultiplier = (data.trait == SoldierTrait.Obur) ? 15 : 10;
+        data.maxHealth = 100 + (data.stamina * staminaMultiplier) + (data.level * 5);
+
+        // 3. Maksimum can ne kadar arttıysa, mevcut cana (currentHealth) da o kadar ekleyelim
+        float difference = data.maxHealth - oldMaxHealth;
+        if (difference > 0)
+        {
+            data.currentHealth += difference;
+        }
+
+        // 4. Askerin kafasındaki Can Barı UI'ını güncelle
+        if (healthBar != null) 
+        {
+            healthBar.UpdateBar(data.currentHealth, data.maxHealth);
+        }
+    }
 
 // İş atama ve bitirme için yardımcı bir fonksiyon (Yine Gladiator.cs içine):
   public void SetActivity(SoldierActivity newActivity)

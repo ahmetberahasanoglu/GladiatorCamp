@@ -34631,9 +34631,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 20d0c2548763fac48a879aebc36d02e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
-  infoText: "Ordu Morali:\\nAskerlerin inanc\u0131n\u0131 temsil eder. Maa\u015Flar
-    \xF6denmezse d\xFC\u015Fer. D\xFC\u015F\xFCk moral askerlerin ka\xE7mas\u0131na
-    sebep olabilir."
+  infoText: "Ordu Morali:\\nAskerlerin moralini temsil eder. Maa\u015Flar \xF6denmezse
+    d\xFC\u015Fer. D\xFC\u015F\xFCk moral askerlerin ka\xE7mas\u0131na sebep olabilir.
+    Y\xFCksek moral sava\u015Flar\u0131 kolayla\u015Ft\u0131r\u0131r."
 --- !u!1 &850764194
 GameObject:
   m_ObjectHideFlags: 0
@@ -59715,8 +59715,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.6318707, y: 1.8374134, z: 3.355176}
-  m_Center: {x: 0.09203124, y: 0.41870683, z: 0.67825365}
+  m_Size: {x: 2.6318707, y: 0.98809606, z: 1.7452979}
+  m_Center: {x: 0.09203124, y: -0.005951911, z: -0.12668538}
 --- !u!23 &1533837187
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -63983,8 +63983,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 4.0189285, y: 3.128722, z: 2.521116}
-  m_Center: {x: -0.06085682, y: 1.064361, z: -0.760558}
+  m_Size: {x: 4.0189285, y: 2.6525416, z: 2.521116}
+  m_Center: {x: -0.06085682, y: 0.8262708, z: -0.760558}
 --- !u!23 &1636056402
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -66158,8 +66158,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 3.039442, y: 1, z: 2.531742}
-  m_Center: {x: -0.11413193, y: 0, z: -0.14649868}
+  m_Size: {x: 2.9905062, y: 1, z: 2.2282577}
+  m_Center: {x: -0.08966398, y: 0, z: -0.2982409}
 --- !u!23 &1687994403
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -75011,7 +75011,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 20d0c2548763fac48a879aebc36d02e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
-  infoText: "Kapasitesi:\\n Ka\xE7 asker alabilece\u011Fin ve \u015Fuan ka\xE7 tane
+  infoText: "Kapasite:\\n Ka\xE7 asker alabilece\u011Fin ve \u015Fuan ka\xE7 tane
     askerin oldu\u011Funu g\xF6sterir."
 --- !u!1 &1917442233
 GameObject:

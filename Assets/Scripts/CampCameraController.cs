@@ -3,83 +3,121 @@ using UnityEngine.EventSystems;
 
 public class CampCameraController : MonoBehaviour
 {
-    [Header("Hedef (Kampın Ortasındaki Boş Obje)")]
-    public Transform cameraPivot;
+    [Header("Hareket (Pan) Ayarları")]
+    public float panSpeed = 25f;
+    public float panSmoothness = 10f;
 
     [Header("Yakınlaştırma (Zoom) Ayarları")]
-    public float zoomSpeed = 5f;
-    public float minDistance = 5f;   
-    public float maxDistance = 40f;  
+    public float zoomSpeed = 20f;
+    public float minZoomY = 5f;   // Yere ne kadar yaklaşsın
+    public float maxZoomY = 35f;  // Havaya ne kadar çıksın
     public float zoomSmoothness = 10f;
 
     [Header("Döndürme (Rotation) Ayarları")]
     public float rotationSpeed = 300f;
     public float rotationSmoothness = 10f;
 
-    private float pitchAngle; 
-    private float currentDistance;
-    private float targetDistance;
-    
-    private float currentYaw;
+    private Vector3 targetPosition;
     private float targetYaw;
+    private float pitchAngle;
 
     void Start()
     {
-        if (cameraPivot == null) return;
-
-        // 1. Senin kamerayı koyduğun yer ile pivot arasındaki farkı (vektörü) bul
-        Vector3 offset = transform.position - cameraPivot.position;
-        
-        // 2. Başlangıç mesafesini senin koyduğun yere göre kesin olarak hesapla
-        targetDistance = offset.magnitude;
-        currentDistance = targetDistance;
-
-        // 3. Kameranın zıplamaması için, açıları senin pozisyonuna göre TERSİNE MÜHENDİSLİKLE bul
-        Quaternion exactLookRotation = Quaternion.LookRotation(-offset);
-        
-        pitchAngle = exactLookRotation.eulerAngles.x;
-        targetYaw = exactLookRotation.eulerAngles.y;
-        currentYaw = targetYaw;
-
-        // 4. Kameranın başlangıçta milimetrik olarak pivota bakmasını garantile
-        transform.rotation = exactLookRotation;
+        // Editörde kamerayı nereye bıraktıysan orayı hedef kabul et (Zıplamayı önler)
+        targetPosition = transform.position;
+        targetYaw = transform.eulerAngles.y;
+        pitchAngle = transform.eulerAngles.x;
     }
 
     void Update()
     {
-        if (cameraPivot == null) return;
         if (EventSystem.current.IsPointerOverGameObject()) return;
 
-        HandleZoom();
+        HandleMovement();
+        HandleZoomToMouse();
         HandleRotation();
     }
 
     void LateUpdate()
     {
-        if (cameraPivot == null) return;
+        // Yumuşak geçişleri (Smoothness) uygula
+        Vector3 smoothedPosition = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * panSmoothness);
+        float smoothedYaw = Mathf.LerpAngle(transform.eulerAngles.y, targetYaw, Time.deltaTime * rotationSmoothness);
 
-        currentDistance = Mathf.Lerp(currentDistance, targetDistance, Time.deltaTime * zoomSmoothness);
-        currentYaw = Mathf.Lerp(currentYaw, targetYaw, Time.deltaTime * rotationSmoothness);
-
-        Quaternion rotation = Quaternion.Euler(pitchAngle, currentYaw, 1.169f);
-        Vector3 position = cameraPivot.position - (rotation * Vector3.forward * currentDistance);
-
-        transform.position = position;
-        transform.rotation = rotation;
+        transform.position = smoothedPosition;
+        transform.rotation = Quaternion.Euler(pitchAngle, smoothedYaw, 0f);
     }
 
-    private void HandleZoom()
+    private void HandleMovement()
+    {
+        // 1. WASD veya Yön Tuşları ile Haritada Gezinme
+        float moveX = Input.GetAxisRaw("Horizontal");
+        float moveZ = Input.GetAxisRaw("Vertical");
+
+        if (moveX != 0 || moveZ != 0)
+        {
+            // Kameranın baktığı açıya göre ileri/sağ vektörlerini bul (Y eksenini yoksay)
+            Vector3 forward = transform.forward;
+            forward.y = 0;
+            forward.Normalize();
+
+            Vector3 right = transform.right;
+            right.y = 0;
+            right.Normalize();
+
+            // Uzaktayken hızlı, yakındayken yavaş kayması için Y yüksekliğini çarpan olarak kullanıyoruz
+            float speedMultiplier = targetPosition.y / 10f; 
+            Vector3 moveDir = (forward * moveZ + right * moveX).normalized;
+            
+            targetPosition += moveDir * panSpeed * speedMultiplier * Time.deltaTime;
+        }
+
+        // 2. Farenin Orta Tuşuna (Tekerlek) basılı tutarak haritayı kaydırma
+        if (Input.GetMouseButton(2)) 
+        {
+            float mouseX = -Input.GetAxis("Mouse X");
+            float mouseY = -Input.GetAxis("Mouse Y");
+            
+            Vector3 forward = transform.forward;
+            forward.y = 0;
+            forward.Normalize();
+
+            Vector3 right = transform.right;
+            right.y = 0;
+            right.Normalize();
+
+            targetPosition += (right * mouseX + forward * mouseY) * panSpeed * Time.deltaTime;
+        }
+    }
+
+    private void HandleZoomToMouse()
     {
         float scrollData = Input.GetAxis("Mouse ScrollWheel");
         if (scrollData != 0)
         {
-            targetDistance -= scrollData * zoomSpeed * 10f;
-            targetDistance = Mathf.Clamp(targetDistance, minDistance, maxDistance);
+            // Ekranda imlecin olduğu noktadan yere doğru sanal bir ışın (Ray) yolluyoruz
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Plane groundPlane = new Plane(Vector3.up, Vector3.zero); // Y=0 düzlemi (Kamp zemini)
+            
+            if (groundPlane.Raycast(ray, out float enter))
+            {
+                Vector3 hitPoint = ray.GetPoint(enter);
+                
+                // İmlecin olduğu yere doğru olan yönü bul
+                Vector3 directionToHit = hitPoint - targetPosition;
+
+                // Zoom yap
+                targetPosition += directionToHit * scrollData * zoomSpeed * Time.deltaTime;
+
+                // Kameranın yerin dibine girmesini veya uzaya çıkmasını engelle
+                targetPosition.y = Mathf.Clamp(targetPosition.y, minZoomY, maxZoomY);
+            }
         }
     }
 
     private void HandleRotation()
     {
+        // Sağ tık basılıyken döndür
         if (Input.GetMouseButton(1)) 
         {
             float mouseX = Input.GetAxis("Mouse X");

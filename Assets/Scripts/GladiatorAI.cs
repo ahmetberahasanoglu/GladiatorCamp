@@ -149,7 +149,7 @@ if (target != null)
                 GladiatorAI enemyAI = target.GetComponent<GladiatorAI>();
                 if (enemyAI != null && !enemyAI.isDead && gladiator.data != null)
                 {
-                    float attackDamage = gladiator.data.strength * 1.5f;
+                    float attackDamage = gladiator.data.strength * 3f;//1.5'di güncelledim
                     attackDamage += (gladiator.data.level * 2);
 
                     bool isCrit = Random.Range(0, 100) < gladiator.data.speed;
@@ -309,7 +309,7 @@ if (target != null)
         target = nearest != null ? nearest.transform : null;
     }
 
-    public void ReviveForCamp()
+   public void ReviveForCamp()
     {
         if (isDead) return;
 
@@ -328,15 +328,21 @@ if (target != null)
             agent.isStopped = true; 
         }
 
-        if (!gladiator.data.isGazi) MakeGazi();//gladiator.data.level >= 3 && 
     }
     
-    void MakeGazi()
+
+    public void MakeGazi()
     {
+        if (gladiator.data.isGazi) return; // Zaten gaziyse işlemi iptal et
+
         gladiator.data.isGazi = true;
-        gladiator.data.level+=2;
-        if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(10);
-        if (NotificationManager.Instance != null) NotificationManager.Instance.Show($"{gladiator.data.gladiatorName} artık bir GAZİ! Morali yükseldi.", NotificationType.Success);
+        gladiator.data.level += 2;
+
+
+        gladiator.RecalculateMaxHealth();
+
+        //if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(10);
+        if (NotificationManager.Instance != null) NotificationManager.Instance.Show($"{gladiator.data.gladiatorName} artık bir GAZİ! (+2 Seviye)", NotificationType.Success);
     }
 
     IEnumerator LifeCycleRoutine()

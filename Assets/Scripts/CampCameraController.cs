@@ -7,10 +7,17 @@ public class CampCameraController : MonoBehaviour
     public float panSpeed = 25f;
     public float panSmoothness = 10f;
 
+    [Header("Harita Sınırları (Limits)")]
+    public bool useLimits = true;
+    public float minX = -30f;
+    public float maxX = 50f;
+    public float minZ = -40f;
+    public float maxZ = 40f;
+
     [Header("Yakınlaştırma (Zoom) Ayarları")]
     public float zoomSpeed = 20f;
-    public float minZoomY = 5f;   // Yere ne kadar yaklaşsın
-    public float maxZoomY = 35f;  // Havaya ne kadar çıksın
+    public float minZoomY = 5f;   
+    public float maxZoomY = 35f;  
     public float zoomSmoothness = 10f;
 
     [Header("Döndürme (Rotation) Ayarları")]
@@ -21,9 +28,11 @@ public class CampCameraController : MonoBehaviour
     private float targetYaw;
     private float pitchAngle;
 
+
+    public bool isLocked = false;
+
     void Start()
     {
-        // Editörde kamerayı nereye bıraktıysan orayı hedef kabul et (Zıplamayı önler)
         targetPosition = transform.position;
         targetYaw = transform.eulerAngles.y;
         pitchAngle = transform.eulerAngles.x;
@@ -31,7 +40,8 @@ public class CampCameraController : MonoBehaviour
 
     void Update()
     {
-        if (EventSystem.current.IsPointerOverGameObject()) return;
+ 
+        if (isLocked || EventSystem.current.IsPointerOverGameObject()) return;
 
         HandleMovement();
         HandleZoomToMouse();
@@ -40,7 +50,6 @@ public class CampCameraController : MonoBehaviour
 
     void LateUpdate()
     {
-        // Yumuşak geçişleri (Smoothness) uygula
         Vector3 smoothedPosition = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * panSmoothness);
         float smoothedYaw = Mathf.LerpAngle(transform.eulerAngles.y, targetYaw, Time.deltaTime * rotationSmoothness);
 
@@ -50,13 +59,11 @@ public class CampCameraController : MonoBehaviour
 
     private void HandleMovement()
     {
-        // 1. WASD veya Yön Tuşları ile Haritada Gezinme
         float moveX = Input.GetAxisRaw("Horizontal");
         float moveZ = Input.GetAxisRaw("Vertical");
 
         if (moveX != 0 || moveZ != 0)
         {
-            // Kameranın baktığı açıya göre ileri/sağ vektörlerini bul (Y eksenini yoksay)
             Vector3 forward = transform.forward;
             forward.y = 0;
             forward.Normalize();
@@ -65,14 +72,12 @@ public class CampCameraController : MonoBehaviour
             right.y = 0;
             right.Normalize();
 
-            // Uzaktayken hızlı, yakındayken yavaş kayması için Y yüksekliğini çarpan olarak kullanıyoruz
             float speedMultiplier = targetPosition.y / 10f; 
             Vector3 moveDir = (forward * moveZ + right * moveX).normalized;
             
             targetPosition += moveDir * panSpeed * speedMultiplier * Time.deltaTime;
         }
 
-        // 2. Farenin Orta Tuşuna (Tekerlek) basılı tutarak haritayı kaydırma
         if (Input.GetMouseButton(2)) 
         {
             float mouseX = -Input.GetAxis("Mouse X");
@@ -88,6 +93,8 @@ public class CampCameraController : MonoBehaviour
 
             targetPosition += (right * mouseX + forward * mouseY) * panSpeed * Time.deltaTime;
         }
+
+        ApplyLimits(); 
     }
 
     private void HandleZoomToMouse()
@@ -95,33 +102,50 @@ public class CampCameraController : MonoBehaviour
         float scrollData = Input.GetAxis("Mouse ScrollWheel");
         if (scrollData != 0)
         {
-            // Ekranda imlecin olduğu noktadan yere doğru sanal bir ışın (Ray) yolluyoruz
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            Plane groundPlane = new Plane(Vector3.up, Vector3.zero); // Y=0 düzlemi (Kamp zemini)
+            Plane groundPlane = new Plane(Vector3.up, Vector3.zero); 
             
             if (groundPlane.Raycast(ray, out float enter))
             {
                 Vector3 hitPoint = ray.GetPoint(enter);
-                
-                // İmlecin olduğu yere doğru olan yönü bul
                 Vector3 directionToHit = hitPoint - targetPosition;
 
-                // Zoom yap
                 targetPosition += directionToHit * scrollData * zoomSpeed * Time.deltaTime;
-
-                // Kameranın yerin dibine girmesini veya uzaya çıkmasını engelle
                 targetPosition.y = Mathf.Clamp(targetPosition.y, minZoomY, maxZoomY);
+                
+                ApplyLimits();
             }
         }
     }
 
     private void HandleRotation()
     {
-        // Sağ tık basılıyken döndür
         if (Input.GetMouseButton(1)) 
         {
             float mouseX = Input.GetAxis("Mouse X");
             targetYaw += mouseX * rotationSpeed * Time.deltaTime;
         }
+    }
+
+
+    private void ApplyLimits()
+    {
+        if (!useLimits) return;
+        
+        targetPosition.x = Mathf.Clamp(targetPosition.x, minX, maxX);
+        targetPosition.z = Mathf.Clamp(targetPosition.z, minZ, maxZ);
+    }
+
+  
+    public void TeleportTo(Transform newTarget, bool lockCamera)
+    {
+        targetPosition = newTarget.position;
+        targetYaw = newTarget.eulerAngles.y;
+        pitchAngle = newTarget.eulerAngles.x;
+
+        transform.position = targetPosition;
+        transform.rotation = Quaternion.Euler(pitchAngle, targetYaw, 0f);
+
+        isLocked = lockCamera;
     }
 }

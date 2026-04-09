@@ -44,4 +44,19 @@ public class JanissaryData : ScriptableObject
                 return "<color=white>Sıradan:</color> Kendi halinde, sadık bir nefer.";
         }
     }
+    public string GetTrait()
+    {
+        switch(trait)
+        {
+            case SoldierTrait.Obur: 
+                return "<color=orange>Obur</color>";
+            case SoldierTrait.Dindar: 
+                return "<color=yellow>Dindar</color>";
+            case SoldierTrait.Yetenekli: 
+                return "<color=#00FFFF>Yetenekli</color>";
+            case SoldierTrait.Siradan:
+            default: 
+                return "<color=white>Sıradan</color>";
+        }
+    }
 }

@@ -62,6 +62,8 @@ public class GladiatorInventory : MonoBehaviour
             data = GetComponent<Gladiator>().data;
             if (data == null) return;
         }
+        Gladiator gladiator = GetComponent<Gladiator>();
+     
 
         ItemData oldItem = null; 
 
@@ -98,6 +100,11 @@ public class GladiatorInventory : MonoBehaviour
         ToggleMesh(newItem.targetMeshName, true);
 
         RecalculateStats();
+           if (gladiator != null)
+        {
+            gladiator.RecalculateMaxHealth();
+           gladiator.RefreshStats(); // Eğer UI yenilenmiyorsa bu satırı da aktif edebilirsin
+        }
     }
 
     public void RemoveItem(ItemType type)
@@ -119,6 +126,13 @@ public class GladiatorInventory : MonoBehaviour
         }
 
         RecalculateStats();
+        Gladiator gladiator = GetComponent<Gladiator>();
+        if (gladiator != null)
+        {
+            gladiator.RecalculateMaxHealth();
+            gladiator.RefreshStats();
+        }
+
     }
 
     // --- YENİ: SİHİRLİ GÖRSEL DEĞİŞTİRİCİ ---

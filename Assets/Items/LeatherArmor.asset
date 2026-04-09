@@ -18,6 +18,6 @@ MonoBehaviour:
   price: 100
   targetMeshName: Cape1
   bonusStrength: 0
-  bonusDefense: 12
-  bonusSpeed: 30
-  bonusStamina: 30
+  bonusDefense: 15
+  bonusSpeed: 5
+  bonusStamina: 20

@@ -17,7 +17,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: b8297a4bc47da7f4eba89293b5629320, type: 3}
   price: 80
   targetMeshName: kask1
-  bonusStrength: 1
-  bonusDefense: 1
-  bonusSpeed: 1
-  bonusStamina: 50
+  bonusStrength: 0
+  bonusDefense: 3
+  bonusSpeed: 0
+  bonusStamina: 10

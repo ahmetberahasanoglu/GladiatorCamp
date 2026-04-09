@@ -17,7 +17,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 044c90d3453c31d4e9994247a085c17e, type: 3}
   price: 100
   targetMeshName: Shield1
-  bonusStrength: 30
-  bonusDefense: 10
+  bonusStrength: 0
+  bonusDefense: 20
   bonusSpeed: -1
-  bonusStamina: -2
+  bonusStamina: 2

@@ -18,6 +18,6 @@ MonoBehaviour:
   price: 150
   targetMeshName: Mizrak
   bonusStrength: 20
-  bonusDefense: 20
-  bonusSpeed: 30
-  bonusStamina: 20
+  bonusDefense: 0
+  bonusSpeed: 10
+  bonusStamina: 0

@@ -90,7 +90,7 @@ public class GladiatorPanel : MonoBehaviour
                 statusText = "<color=green>Şifahanede</color>";
         }
         int dailyWage = data.level * 5;
-        string traitText = _currentGladiator.GetTraitDescription(); // Doğru çağırma şekli
+       string traitText = data.GetTrait();
 
         // İstatistikleri yan yana alarak dikeyde yer kazandık:
         infoText.text =

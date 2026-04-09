@@ -40,16 +40,16 @@ public class WorkSlotUI : MonoBehaviour
             // Tik atıldı -> Çalışmaya gönder
             _soldier.SetActivity(SoldierActivity.Working);
              NotificationManager.Instance.Show(
-                    $"{_soldier.data.gladiatorName} bugün çalışacak .", 
+                    $"{_soldier.data.gladiatorName} madende çalışacak.", 
                     NotificationType.Info
                 );
         }
         else
         {
             // Tik kaldırıldı -> Talime dönsün
-            _soldier.SetActivity(SoldierActivity.Training);
+            _soldier.SetActivity(SoldierActivity.Idling);
             NotificationManager.Instance.Show(
-                    $"{_soldier.data.gladiatorName} talime döndü.", 
+                    $"{_soldier.data.gladiatorName} kampa döndü.", 
                     NotificationType.Info
                 );
     

@@ -4,7 +4,7 @@ using UnityEngine;
 [System.Serializable]
 public class GameSaveData
 {
-    // Global Veriler
+  
     public int savedGold;
     public int savedDay;
     public int savedFood;
@@ -16,7 +16,6 @@ public class GameSaveData
     public List<BuildingSaveData> buildings = new List<BuildingSaveData>();
 }
 
-// Askerin tekil verisi (GladiatorData ScriptableObject'ini direkt kaydedemeyiz, değerleri tutuyoruz)
 [System.Serializable]
 public class SoldierSaveData
 {

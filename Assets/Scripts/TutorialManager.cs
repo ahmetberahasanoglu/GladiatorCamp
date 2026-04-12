@@ -137,7 +137,7 @@ public class TutorialManager : MonoBehaviour
 
             case TutorialStep.Battle_ScriptedLoss:
                 ShowDialogue("Kılıçları çekin!", true); 
-                StartCoroutine(HideDialogueAfterSeconds(2f));
+                StartCoroutine(HideDialogueAfterSeconds(1f));
                 break;
 
             // ==========================================

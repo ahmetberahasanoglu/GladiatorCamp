@@ -135,7 +135,7 @@ public class BattleSkillManager : MonoBehaviour
                     if (arrowEffectPrefab != null)
                     {
                         // Düşmanın kafasının 5 birim üstünde oluşsun
-                        Vector3 spawnPos = unit.transform.position + Vector3.up * 5.0f;
+                        Vector3 spawnPos = unit.transform.position + Vector3.up * 0.1f;
                         
                         // Efekti yere bakacak şekilde döndür (90 derece)
                         Quaternion rotation = Quaternion.Euler(90, 0, 0);

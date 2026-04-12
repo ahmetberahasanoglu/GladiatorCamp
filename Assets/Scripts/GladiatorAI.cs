@@ -41,6 +41,9 @@ public class GladiatorAI : MonoBehaviour
     private float CurrentPoise => 1f + (gladiator.data.stamina * 0.05f);
     private float CurrentMoveSpeed => 3.5f + (gladiator.data.speed * 0.05f);
 
+    [Header("Savaş Durumu")]
+    public bool isInBattle = false; 
+
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -60,7 +63,7 @@ public class GladiatorAI : MonoBehaviour
     
     void Update()
     {
-        if (isDead || BattleManager.Instance.state != BattleState.Fighting || isGettingHit) return;
+      if (isDead || BattleManager.Instance.state != BattleState.Fighting || !isInBattle || isGettingHit) return;
 
         // Yürüme hızını sürekli güncelle (Eşya vs. takılırsa anında hızlansın)
         agent.speed = CurrentMoveSpeed;
@@ -148,9 +151,10 @@ if (target != null)
             {
                 GladiatorAI enemyAI = target.GetComponent<GladiatorAI>();
                 if (enemyAI != null && !enemyAI.isDead && gladiator.data != null)
-                {
-                    float attackDamage = gladiator.data.strength * 3f;//1.5'di güncelledim
-                    attackDamage += (gladiator.data.level * 2);
+                {   
+                    
+                    float attackDamage = gladiator.data.strength * 2f;//1.5'di güncelledim
+                    attackDamage = attackDamage + (gladiator.data.level * 2);
 
                     bool isCrit = Random.Range(0, 100) < gladiator.data.speed;
                     if (isCrit) attackDamage *= 1.5f; 
@@ -300,7 +304,7 @@ if (target != null)
         foreach (GameObject e in enemies)
         {
             var ai = e.GetComponent<GladiatorAI>();
-            if (ai != null && !ai.isDead)
+           if (ai != null && !ai.isDead && ai.isInBattle)
             {
                 float dst = Vector3.Distance(transform.position, e.transform.position);
                 if (dst < minDst) { minDst = dst; nearest = e; }

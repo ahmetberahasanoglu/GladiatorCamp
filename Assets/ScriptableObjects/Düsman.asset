@@ -13,10 +13,15 @@ MonoBehaviour:
   m_Name: "D\xFCsman"
   m_EditorClassIdentifier: Assembly-CSharp::JanissaryData
   gladiatorName: "Bizansl\u0131"
-  strength: 10
-  defense: 10
-  speed: 10
-  morale: 10
-  stamina: 10
-  level: 1
-  price: 100
+  strength: 4
+  defense: 1
+  speed: 4
+  stamina: 4
+  level: 4
+  isGazi: 0
+  trait: 0
+  currentHealth: 0
+  maxHealth: 0
+  isOnMission: 0
+  currentActivity: 2
+  dailyWage: 50

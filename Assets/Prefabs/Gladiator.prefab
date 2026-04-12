@@ -967,7 +967,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gladiator
   _templateData: {fileID: 11400000, guid: c24b5dc32a5e3e5459b03e86c6679877, type: 2}
-  trait: 0
   healthBar: {fileID: 3646057390651392921}
   candidateName: 
   nameLabel: {fileID: 9153447922391545415}
@@ -999,10 +998,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GladiatorAI
   deathEffectPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
   enemyTag: EnemySoldier
-  attackRange: 2
-  baseAttackAnimLength: 1.733
+  attackRange: 2.9
+  baseAttackAnimLength: 1.5
   target: {fileID: 0}
   isDead: 0
+  isInBattle: 0
 --- !u!114 &8161922304838044321
 MonoBehaviour:
   m_ObjectHideFlags: 0

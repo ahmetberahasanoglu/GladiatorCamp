@@ -19,6 +19,7 @@ MonoBehaviour:
   stamina: 1
   level: 1
   isGazi: 0
+  trait: 0
   currentHealth: 0
   maxHealth: 0
   isOnMission: 0

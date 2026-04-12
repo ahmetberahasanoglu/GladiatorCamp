@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: Janissary_Mustafa
   m_EditorClassIdentifier: Assembly-CSharp::GladiatorData
   gladiatorName: Mustafa
-  strength: 10
-  defense: 10
-  speed: 10
-  stamina: 10
-  level: 1
+  strength: 2
+  defense: 2
+  speed: 2
+  stamina: 2
+  level: 2
   isGazi: 0
+  trait: 0
   currentHealth: 0
   maxHealth: 0
   isOnMission: 0

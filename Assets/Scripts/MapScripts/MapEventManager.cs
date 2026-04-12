@@ -284,7 +284,7 @@ public class MapEventManager : MonoBehaviour
         else
         {
             enterBtn.onClick.AddListener(() => {
-                AudioManager.Instance.PlayWarHorn();
+               // AudioManager.Instance."PlayWarHorn"();
                 ClosePanel();
                 
                 if (NotificationManager.Instance != null)
@@ -617,7 +617,7 @@ private void ResolveVillageBattle(int difficulty)
                 {
                     TutorialManager.Instance.AdvanceTutorial(); 
                 }
-                AudioManager.Instance.PlayWarHorn();
+                //AudioManager.Instance.PlayWarHorn();
                 //DayManager.Instance.NextDay(3); 
                 ClosePanel();
                 BattleManager.Instance.StartBattle(2, 1, BattleEnvironment.Forest); 
@@ -674,7 +674,7 @@ private void ResolveVillageBattle(int difficulty)
                 {
                     TutorialManager.Instance.AdvanceTutorial();
                 }
-                AudioManager.Instance.PlayWarHorn();
+                //AudioManager.Instance.PlayWarHorn();
                 //DayManager.Instance.NextDay(3); 
                 ClosePanel();
                 BattleManager.Instance.StartBattle(2, 1, BattleEnvironment.Tower); 
@@ -720,7 +720,7 @@ private void ResolveVillageBattle(int difficulty)
                 {
                     TutorialManager.Instance.AdvanceTutorial(); 
                 }
-                AudioManager.Instance.PlayWarHorn();
+                //AudioManager.Instance.PlayWarHorn();
                 //DayManager.Instance.NextDay(3); 
                 ClosePanel();
                 BattleManager.Instance.StartBattle(3, 1, BattleEnvironment.Tower); 
@@ -763,7 +763,7 @@ private void ResolveVillageBattle(int difficulty)
                 if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-10); 
 
                 CreateButton("Kılıçları Çekin! (Savaş)", () => { 
-                    AudioManager.Instance.PlayWarHorn();
+                    //AudioManager.Instance.PlayWarHorn();
                     ClosePanel();
                     BattleManager.Instance.StartBattle(failEnemyCount, failDifficulty, failEnv); 
                 });
@@ -904,7 +904,7 @@ public void SetupDervishEvent()
                     NotificationManager.Instance.Show("Savaşa sokacak hiç askerin yok! Kampa dönmelisin.", NotificationType.Error);
                 return; 
             }
-            if (AudioManager.Instance != null) AudioManager.Instance.PlayWarHorn();
+           // if (AudioManager.Instance != null) AudioManager.Instance.PlayWarHorn();
             BattleManager.Instance.StartBossBattle(5, BattleEnvironment.Tower); 
             ClosePanel();
         });

@@ -32,15 +32,19 @@ public class MapManager : MonoBehaviour
     public Transform lineContainer; 
     public static string sessionLastNode = "";
 public bool isMapOpen = false;
+[Header("Sis ve Çizgi Ayarları")]
+    public List<MapNode> visitedNodes = new List<MapNode>();
+    private List<MapLine> allLines = new List<MapLine>();
     void Awake()
     {
         Instance = this;
     }
 
-    void Start()
+   void Start()
     {
         DrawAllConnections();
         LoadPlayerPosition();
+        UpdateMapVisibility(); 
     }
 
     public void HideMap()
@@ -54,41 +58,92 @@ public bool isMapOpen = false;
         }
     }
     
-    public void ShowMap()
+   public void ShowMap()
     {
         CloseAllOpenPanels();
         mapPanel.SetActive(true);
         topPanel.SetActive(false);
-       isMapOpen = true;
+        isMapOpen = true;
        
-       AudioManager.Instance.PlayMap();
+        AudioManager.Instance.PlayMap();
+        UpdateMapVisibility();
     }
+public void UpdateMapVisibility()
+    {
+        // 1. ÇİZGİLERİ GÜNCELLE
+        foreach (var line in allLines)
+        {
+            if ((line.startNode == currentNode && IsMoveValid(line.endNode)) || 
+                (line.endNode == currentNode && IsMoveValid(line.startNode)))
+            {
+                line.lineImage.color = new Color(1f, 0f, 0f, 1f); // Gidilebilir (Parlak Kırmızı)
+            }
+            else if (visitedNodes.Contains(line.startNode) && visitedNodes.Contains(line.endNode))
+            {
+                line.lineImage.color = new Color(0.6f, 0f, 0f, 0.4f); // Geçilmiş (Soluk)
+            }
+            else
+            {
+                line.lineImage.color = new Color(0.1f, 0.1f, 0.1f, 0.3f); // Karanlık
+            }
+        }
 
-    void DrawAllConnections()
+        // 2. NODE'LARI GÜNCELLE (HATA BURADA ÇÖZÜLÜYOR)
+        // FindObjectsInactive.Include sayesinde mapPanel kapalı olsa bile Node'ları bulur!
+        var allNodes = FindObjectsByType<MapNode>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        
+        foreach (var node in allNodes)
+        {
+            if (visitedNodes.Contains(node))
+            {
+                node.SetState(NodeState.Cleared);
+            }
+            else if (IsMoveValid(node))
+            {
+                node.SetState(NodeState.Accessible);
+            }
+            else if (node == currentNode)
+            {
+                node.SetState(NodeState.Cleared);
+            }
+            else
+            {
+                node.SetState(NodeState.Locked);
+            }
+
+            // Tıklanabilirliği her halükarda tekrar zorla (Garanti olsun)
+            if (node.nodeButton != null)
+            {
+                node.nodeButton.interactable = IsMoveValid(node);
+            }
+        }
+    }
+   void DrawAllConnections()
     {
         var allNodes = FindObjectsOfType<MapNode>();
-
         foreach (var node in allNodes)
         {
             foreach (var target in node.outgoingPaths)
             {
                 if (target != null)
                 {
-                    CreateVisualLine(node.GetComponent<RectTransform>(), target.GetComponent<RectTransform>());
+                    CreateVisualLine(node, target); // Artık RectTransform değil direkt Node yolluyoruz
                 }
             }
         }
     }
 
-    void CreateVisualLine(RectTransform start, RectTransform end)
+    void CreateVisualLine(MapNode start, MapNode end)
     {
         GameObject lineObj = Instantiate(linePrefab, lineContainer);
         lineObj.transform.SetAsFirstSibling(); 
 
         RectTransform rect = lineObj.GetComponent<RectTransform>();
+        RectTransform startRect = start.GetComponent<RectTransform>();
+        RectTransform endRect = end.GetComponent<RectTransform>();
         
-        Vector3 diff = end.localPosition - start.localPosition;
-        Vector3 midpoint = (start.localPosition + end.localPosition) / 2;
+        Vector3 diff = endRect.localPosition - startRect.localPosition;
+        Vector3 midpoint = (startRect.localPosition + endRect.localPosition) / 2;
         
         rect.localPosition = midpoint;
         rect.sizeDelta = new Vector2(diff.magnitude, 5); 
@@ -102,7 +157,15 @@ public bool isMapOpen = false;
             img.type = Image.Type.Tiled; 
             img.pixelsPerUnitMultiplier = 2f; 
         }
+
+        // YENİ: Çizgiyi hafızaya alıyoruz ki sonra parlatabilelim
+        MapLine ml = lineObj.AddComponent<MapLine>();
+        ml.startNode = start;
+        ml.endNode = end;
+        ml.lineImage = img;
+        allLines.Add(ml);
     }
+    
 
     void LoadPlayerPosition()
     {
@@ -126,7 +189,7 @@ public bool isMapOpen = false;
         }
     }
 
-   public void SelectNode(MapNode targetNode)
+ public void SelectNode(MapNode targetNode)
     {
         if (!IsMoveValid(targetNode))
         {
@@ -138,6 +201,12 @@ public bool isMapOpen = false;
         {
             previousNode = currentNode;
             sessionPreviousNode = previousNode.gameObject.name;
+            
+            // YENİ: Eski konumu "Ziyaret Edilenler" listesine ekle
+            if (!visitedNodes.Contains(currentNode))
+            {
+                visitedNodes.Add(currentNode);
+            }
         }
         currentNode = targetNode;
         StartCoroutine(MoveIconRoutine(targetNode));
@@ -151,7 +220,7 @@ public bool isMapOpen = false;
         }
         return currentNode.outgoingPaths.Contains(target);
     }
-    public void RetreatToPreviousNode()
+   public void RetreatToPreviousNode()
     {
         if (previousNode != null)
         {
@@ -159,14 +228,22 @@ public bool isMapOpen = false;
             
             currentNode = previousNode;
             sessionLastNode = sessionPreviousNode;
-
-
             playerIcon.anchoredPosition = previousNode.GetComponent<RectTransform>().anchoredPosition + iconOffset;
+
+            // Geri döndüğümüz için burayı ziyaret edilenlerden çıkarıyoruz ki etrafı tekrar aydınlansın
+            if (visitedNodes.Contains(previousNode)) visitedNodes.Remove(previousNode);
         }
         else
         {
-            Debug.LogWarning("Geri dönülecek bir önceki konum bulunamadı!");
+            // İLK NODE'DA YENİLGİ DURUMU: Tamamen en başa dön
+            Debug.Log("İlk savaş kaybedildi, seferin en başına dönülüyor.");
+            currentNode = null;
+            sessionLastNode = "";
+            playerIcon.anchoredPosition = new Vector2(-800f, 0f); // Haritanın sol dışına (Kamp tarafına) atar
         }
+
+        // Çekildikten sonra haritayı gizliyken bile güvenle güncelle
+        UpdateMapVisibility(); 
     }
     public void CloseAllOpenPanels()
     {
@@ -229,7 +306,7 @@ public bool isMapOpen = false;
         
 
         sessionLastNode = targetNode.gameObject.name;
-  
+        UpdateMapVisibility();
         TriggerEvent(targetNode);
     }
 

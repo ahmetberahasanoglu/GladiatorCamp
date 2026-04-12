@@ -57,7 +57,8 @@ public class SquadSelectionUIManager : MonoBehaviour
             // Kartın içindeki yazıları ayarla (Prefab'ında TextMeshProUGUI'ler olmalı)
             TextMeshProUGUI[] texts = card.GetComponentsInChildren<TextMeshProUGUI>();
             if (texts.Length > 0) texts[0].text = soldier.data.gladiatorName;
-            if (texts.Length > 1) texts[1].text = $"HP:{Mathf.RoundToInt(soldier.currentHealth)} STR:{soldier.data.strength}";
+            if (texts.Length > 1) texts[1].text = $"{Mathf.RoundToInt(soldier.currentHealth)}";
+            if (texts.Length > 2) texts[2].text = $"{soldier.data.strength}";
 
             // Karta tıklanma olayını ata
             Button btn = card.GetComponent<Button>();
@@ -118,7 +119,7 @@ public class SquadSelectionUIManager : MonoBehaviour
     void ConfirmSquadAndStartBattle()
     {
         panel.SetActive(false);
-        // BattleManager'a seçili orduyu yolla
+       AudioManager.Instance.PlayWarHorn();
         BattleManager.Instance.ExecuteBattleWithSquad(selectedSquad, _isBossBattle);
     }
 }

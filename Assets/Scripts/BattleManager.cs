@@ -143,10 +143,20 @@ public class BattleManager : MonoBehaviour
             agent.Warp(spawnPos); 
             agent.isStopped = true; 
         }
+        boss.GetComponent<GladiatorAI>().isInBattle = true;
     }
     // Artık herkesi değil, oyuncunun UI'da seçtiği o 3 özel askeri parametre olarak alacak
     public void SpawnPlayerArmy(List<Gladiator> selectedSquad)
     {
+        var allAI = FindObjectsOfType<GladiatorAI>();
+        foreach(var ai in allAI)
+        {
+            if (ai.CompareTag("MySoldier"))
+            {
+                // Eğer asker taktik ekranında seçildiyse savaştadır, seçilmediyse kamptadır
+                ai.isInBattle = selectedSquad.Contains(ai.GetComponent<Gladiator>());
+            }
+        }
         int row = 0;
         float spacing = 2.0f; 
 
@@ -181,11 +191,14 @@ public class BattleManager : MonoBehaviour
                     agent.Warp(targetPos); 
                     agent.ResetPath(); 
                     agent.isStopped = true; 
-                }
-                else
+                    // Düşmanı savaşta kabul et
+             
+                } else
                 {
                     soldier.transform.position = targetPos;
                 }
+             
+               
 
                 soldier.transform.rotation = playerSpawnPoint.rotation;
 
@@ -245,7 +258,7 @@ private void ChangeEnvironment(BattleEnvironment envType)
                 agent.Warp(spawnPos); 
                 agent.isStopped = true; 
             }
-            
+            newEnemy.GetComponent<GladiatorAI>().isInBattle = true;
             col++;
             if(col > 5) { col = 0; row++; }
         }
@@ -285,7 +298,7 @@ private void ChangeEnvironment(BattleEnvironment envType)
 
         foreach (var unit in allUnits)
         {
-            if (!unit.isDead)
+            if (!unit.isDead && unit.isInBattle)
             {
                 if (unit.CompareTag("MySoldier")) livingMySoldiers++;
                 else if (unit.CompareTag("EnemySoldier")) livingEnemies++;
@@ -376,9 +389,10 @@ private void ChangeEnvironment(BattleEnvironment envType)
             {
                 Destroy(unit.gameObject);
             }
-         else if (unit.CompareTag("MySoldier"))
+        else if (unit.CompareTag("MySoldier"))
             {
                 unit.ReviveForCamp(); 
+                unit.isInBattle = false; 
 
                 if (wasVictorious)
                 {

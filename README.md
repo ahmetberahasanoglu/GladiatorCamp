@@ -121,7 +121,6 @@ Assets/
 ## 👤 Developer
 
 **Ahmet Bera Hasanoğlu**
-[github.com/ahmetberahasanoglu](https://github.com/ahmetberahasanoglu)
 
 ---
 

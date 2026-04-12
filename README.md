@@ -1,12 +1,13 @@
 # ⚔️ Otagama
 
-> *A camp management & tactical battle game set in the Ottoman era — inspired by Domina*
+> *A camp management & tactical battle game set in the Seljuk era — inspired by Domina*
 
 ![Unity](https://img.shields.io/badge/Unity-6-black?logo=unity)
 ![Language](https://img.shields.io/badge/Language-C%23-239120?logo=csharp)
 ![Status](https://img.shields.io/badge/Status-In%20Development-orange)
 ![Platform](https://img.shields.io/badge/Platform-PC%20%7C%20Mobile-blue)
 
+https://www.youtube.com/watch?v=M0vwl9Y0hJ0 
 ---
 
 ## 📸 Screenshots

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Odun kesimi
   m_EditorClassIdentifier: Assembly-CSharp::MissionData
   missionName: Kara Ormanda Odun Kesimi
-  description: deniz seferi
-  difficulty: 10
-  durationDays: 20
+  description: "K\u0131\u015F i\xE7in askerlerini odun kesmeye g\xF6nder"
+  difficulty: 24
+  durationDays: 3
   goldReward: 100
-  woodReward: 300
+  woodReward: 40

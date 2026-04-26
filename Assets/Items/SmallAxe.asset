@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 872777d28f1ec70429103b9364761e4f, type: 3}
-  m_Name: BigSword
+  m_Name: SmallAxe
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemID: Scimitar
+  itemID: Axe
   type: 0
-  icon: {fileID: 21300000, guid: 23bb69e6efb356440ab15768f86b3d92, type: 3}
+  icon: {fileID: 21300000, guid: b4c4095deb9b47c4988ad82e1b369d11, type: 3}
   price: 150
-  targetMeshName: Mizrak
-  bonusStrength: 20
+  targetMeshName: Balta
+  bonusStrength: 3
   bonusDefense: 0
-  bonusSpeed: 10
+  bonusSpeed: 2
   bonusStamina: 0
-  weaponRange: 3.5
+  weaponRange: 2
   isRanged: 0

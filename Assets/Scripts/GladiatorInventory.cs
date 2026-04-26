@@ -21,6 +21,12 @@ public class GladiatorInventory : MonoBehaviour
        if (armor != null) ToggleMesh(armor.targetMeshName, true);
        if (helmet != null) ToggleMesh(helmet.targetMeshName, true);
        if (shield != null) ToggleMesh(shield.targetMeshName, true);
+       RecalculateStats();
+       Gladiator gladiator = GetComponent<Gladiator>();
+       if (gladiator != null)
+       {
+           gladiator.RecalculateMaxHealth();
+       }
     }
 
     public void InitializeBaseStats()

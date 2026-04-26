@@ -12,12 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 872777d28f1ec70429103b9364761e4f, type: 3}
   m_Name: BasicArrow
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemID: Yatagan
+  itemID: Deri Yay
   type: 0
-  icon: {fileID: 21300000, guid: 8d4db37289966354884e9a040abab705, type: 3}
+  icon: {fileID: 21300000, guid: 7cb9425fdda882c448ef136f466a3d54, type: 3}
   price: 100
-  targetMeshName: "K\u0131l\u0131c"
+  targetMeshName: Yay1
   bonusStrength: 10
   bonusDefense: 0
   bonusSpeed: 0
   bonusStamina: 0
+  weaponRange: 15
+  isRanged: 1

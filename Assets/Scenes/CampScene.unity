@@ -14648,6 +14648,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemDatabase
   allGameItems:
   - {fileID: 11400000, guid: c1804bac13c580f4e9537808bd8911ad, type: 2}
+  - {fileID: 11400000, guid: a3f44eeca0943a74b88644c01f7e85ff, type: 2}
   - {fileID: 11400000, guid: efb70ad7bcb350b40846059563e5c947, type: 2}
   - {fileID: 11400000, guid: c77da090b93f23b43a92781399afd411, type: 2}
   - {fileID: 11400000, guid: 0fdcc50b45042994fbdc711513f010ca, type: 2}
@@ -88192,6 +88193,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MarketManager
   allAvailableItems:
   - {fileID: 11400000, guid: c1804bac13c580f4e9537808bd8911ad, type: 2}
+  - {fileID: 11400000, guid: a3f44eeca0943a74b88644c01f7e85ff, type: 2}
   - {fileID: 11400000, guid: efb70ad7bcb350b40846059563e5c947, type: 2}
   - {fileID: 11400000, guid: 0fdcc50b45042994fbdc711513f010ca, type: 2}
   - {fileID: 11400000, guid: c77da090b93f23b43a92781399afd411, type: 2}
@@ -96236,6 +96238,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -23.263775
       objectReference: {fileID: 0}
+    - target: {fileID: 3917729198740615885, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
+      propertyPath: arrowPrefab
+      value: 
+      objectReference: {fileID: 1457583520174222285, guid: ac89f9461b98020448d54d58089ed58b, type: 3}
     - target: {fileID: 3917729198740615885, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
       propertyPath: attackRange
       value: 2.9

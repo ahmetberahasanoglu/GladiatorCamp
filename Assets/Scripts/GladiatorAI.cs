@@ -40,6 +40,9 @@ public class GladiatorAI : MonoBehaviour
     private float CurrentAttackSpeed => 1f + (gladiator.data.speed * 0.02f);
     private float CurrentPoise => 1f + (gladiator.data.stamina * 0.05f);
     private float CurrentMoveSpeed => 3.5f + (gladiator.data.speed * 0.05f);
+    [Header("Yapay Zeka (Radar)")]
+    public float retargetInterval = 1.0f; // Askerin etrafını tekrar tarama süresi
+    private float retargetTimer = 0f;
 
     // YENİ: SİHİRLİ MENZİL OKUYUCU
     // Artık sabit bir menzil yok. Elindeki silaha bakar, ona göre menzilini ve saldırı tipini anlar.
@@ -86,15 +89,19 @@ public class GladiatorAI : MonoBehaviour
         StartCoroutine(LifeCycleRoutine());
     }
     
-    void Update()
+   void Update()
     {
+        // 1. Temel Kontroller (Ölüysek veya savaşmıyorsak hiçbir şey yapma)
         if (isDead || BattleManager.Instance.state != BattleState.Fighting || !isInBattle || isGettingHit) return;
 
+        // 2. Dinamik Hız ve Menzil Ayarları
         agent.speed = CurrentMoveSpeed;
-        
-        // YENİ: Durma mesafesini silahın menziline göre SÜREKLİ güncelle!
         agent.stoppingDistance = CurrentAttackRange * 0.8f; 
 
+        // --- YENİ EKLENEN RADAR KISMI BAŞLANGICI ---
+        retargetTimer -= Time.deltaTime; // Radar sayacını geriye saydır
+
+        // Önceki hedefimiz öldüyse onu aklımızdan silelim
         if (target != null)
         {
             GladiatorAI targetAI = target.GetComponent<GladiatorAI>();
@@ -104,16 +111,22 @@ public class GladiatorAI : MonoBehaviour
             }
         }
         
-        if (target == null)
+        // Eğer HEDEFİMİZ YOKSA veya RADAR SÜRESİ DOLDUYSA etrafı tekrar tara!
+        if (target == null || retargetTimer <= 0f)
         {
             FindNearestTarget();
-            if (target == null)
-            {
-                if (animator) animator.SetBool("isRunning", false);
-                return;
-            }
+            retargetTimer = retargetInterval; // Taramayı yaptık, sayacı başa sar (örn: 1 saniye)
+        }
+        // --- RADAR KISMI BİTİŞİ ---
+
+        // Taramaya rağmen hala hedef yoksa (düşman kalmadıysa) dur
+        if (target == null)
+        {
+            if (animator) animator.SetBool("isRunning", false);
+            return;
         }
 
+        // 3. Mesafe Ölçümü ve Savaş Mantığı (BURASI SENİN ESKİ KODUNLA BİREBİR AYNI)
         float distance = Vector3.Distance(transform.position, target.position);
 
         if (distance <= CurrentAttackRange)
@@ -134,7 +147,7 @@ public class GladiatorAI : MonoBehaviour
         }
         else
         {
-            // --- KOVALAMA ---
+       
             if (!isAttacking)
             {
                 if (agent.isActiveAndEnabled)
@@ -167,26 +180,25 @@ public class GladiatorAI : MonoBehaviour
         isAttacking = false;
     }
 
-    // YENİ: Ortak Saldırı İğnesi (Animation Event burayı çağırmalı)
+   
     public void ExecuteAttackEvent()
     {
         if (target == null || isDead) return;
 
-        // Hasarı burada hesaplıyoruz (Hem ok hem kılıç için geçerli)
+
         float attackDamage = gladiator.data.strength * 2f + (gladiator.data.level * 2);
         bool isCrit = Random.Range(0, 100) < gladiator.data.speed;
         if (isCrit) attackDamage *= 1.5f; 
 
         if (IsRangedWeapon)
         {
-            // --- MENZİLLİ SALDIRI (OK FIRLAT) ---
+     
             if (arrowPrefab != null && arrowSpawnPoint != null)
             {
-                // Oku hedefe doğru bakacak şekilde yarat
+       
                 Vector3 aimDirection = (target.position + Vector3.up * 1f) - arrowSpawnPoint.position;
                 GameObject arrow = Instantiate(arrowPrefab, arrowSpawnPoint.position, Quaternion.LookRotation(aimDirection));
-                
-                // Oku fırlat
+
                 Projectile projectile = arrow.GetComponent<Projectile>();
                 if (projectile != null)
                 {
@@ -196,9 +208,8 @@ public class GladiatorAI : MonoBehaviour
         }
         else
         {
-            // --- YAKIN DÖVÜŞ (KILIÇ/MIZRAK) ---
+    
             float currentDist = Vector3.Distance(transform.position, target.position);
-            // Menzilin biraz fazlasına (x1.5) tolerans tanıyoruz ki adam 1 adım kaçtı diye vuruş boşa gitmesin
             if (currentDist <= CurrentAttackRange * 1.5f) 
             {
                 GladiatorAI enemyAI = target.GetComponent<GladiatorAI>();
@@ -210,7 +221,7 @@ public class GladiatorAI : MonoBehaviour
         }
     }
 
-    // ... (TakeDamage, Die, HitStunRoutine, ReviveForCamp, LifeCycleRoutine fonksiyonları BİREBİR AYNI KALACAK) ...
+
 
     public void TakeDamage(float incomingDamage, bool isCritical = false)
     {
@@ -223,6 +234,10 @@ public class GladiatorAI : MonoBehaviour
         float finalDamage = incomingDamage * reduction;
 
         gladiator.currentHealth -= finalDamage;
+        if (!IsRangedWeapon)
+    {
+        retargetTimer = 0f; 
+    }
         if (gladiator.currentHealth <= 0)
         {
             int currentNasip = NasipManager.Instance != null ? NasipManager.Instance.currentNasip : 0;
@@ -234,11 +249,10 @@ public class GladiatorAI : MonoBehaviour
                 // MUCİZE GERÇEKLEŞTİ! Ölümü iptal et.
                 gladiator.currentHealth = 1;
 
-                // Ekrana altın rengi yazıyı bas
                 if (DamageTextManager.Instance != null) 
                   DamageTextManager.Instance.ShowCustomText(transform.position, "ALLAH KORUDU!", Color.yellow);
                 
-                // İsteğe bağlı: Kutsal bir ses efekti çal
+                // Kutsal bir ses efekti
                 // AudioManager.Instance.PlaySFX(AudioManager.Instance.miracleSound, 1.0f);
 
                 if (NotificationManager.Instance != null)
@@ -344,22 +358,42 @@ public class GladiatorAI : MonoBehaviour
     
     void FindNearestTarget()
     {
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag(enemyTag);
+        Gladiator[] allEnemies = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
         float minDst = Mathf.Infinity;
-        GameObject nearest = null;
+        Transform bestTarget = null;
         
-        foreach (GameObject e in enemies)
+        foreach (Gladiator e in allEnemies)
         {
-            var ai = e.GetComponent<GladiatorAI>();
-           if (ai != null && !ai.isDead && ai.isInBattle)
+            // Eğer bizimle aynı takımdaysa es geç (Tag kontrolü yerine dinamik kontrol daha iyidir ama kendi mantığına göre uyarlayabilirsin)
+            if (e.gameObject.CompareTag(this.gameObject.tag)) continue; 
+
+            GladiatorAI ai = e.GetComponent<GladiatorAI>();
+            if (ai != null && !ai.isDead && ai.isInBattle)
             {
                 float dst = Vector3.Distance(transform.position, e.transform.position);
-                if (dst < minDst) { minDst = dst; nearest = e; }
+                if (dst < minDst) 
+                { 
+                    minDst = dst; 
+                    bestTarget = e.transform; 
+                }
             }
         }
-        target = nearest != null ? nearest.transform : null;
-    }
 
+        // Eğer şu an bir hedefimiz YOKSA veya YENİ HEDEF eskisine göre bariz şekilde daha yakındaysa değiştir!
+        if (target == null)
+        {
+            target = bestTarget;
+        }
+        else if (bestTarget != null && bestTarget != target)
+        {
+            float currentTargetDst = Vector3.Distance(transform.position, target.position);
+            // Kararsızlığı (Ping-pong) önlemek için: Yeni düşman %30 daha yakınsa dön!
+            if (minDst < currentTargetDst * 0.7f) 
+            {
+                target = bestTarget;
+            }
+        }
+    }
    public void ReviveForCamp()
     {
         if (isDead) return;

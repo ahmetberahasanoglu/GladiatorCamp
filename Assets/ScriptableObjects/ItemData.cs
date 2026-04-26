@@ -25,4 +25,6 @@ public class ItemData : ScriptableObject
     public int bonusDefense;
     public int bonusSpeed;
     public int bonusStamina;
+    public float weaponRange = 2.0f; // Kılıç  2 Mızrak  3.5 Yay 10 
+    public bool isRanged = false; 
 }

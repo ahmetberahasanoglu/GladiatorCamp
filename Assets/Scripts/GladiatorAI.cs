@@ -7,19 +7,17 @@ public class GladiatorAI : MonoBehaviour
     private NavMeshAgent agent;
     private Gladiator gladiator; 
     private GladiatorTraining training; 
-    private GladiatorInventory inventory; // YENİ: Silahı okumak için eklendi
+    private GladiatorInventory inventory; 
     private ActivityPoint currentPoint; 
     private float activityTimer;
 
     [Header("Efektler ve Menzilli Saldırı")]
     public GameObject deathEffectPrefab;
-    public GameObject arrowPrefab; // YENİ: Fırlatılacak ok prefabi
-    public Transform arrowSpawnPoint; // YENİ: Okun çıkacağı yer (Okçunun eli veya yayı)
+    public GameObject arrowPrefab; 
+    public Transform arrowSpawnPoint; 
 
     [Header("Özellikler")]
     public string enemyTag = "Enemy"; 
-    
-    [Tooltip("Attack animasyonunun saniye cinsinden uzunluğu")]
     public float baseAttackAnimLength = 1.733f; 
 
     [Header("Durum")]
@@ -36,38 +34,32 @@ public class GladiatorAI : MonoBehaviour
     private Coroutine _attackCoroutine;
     private Coroutine _hitStunCoroutine;
 
+    // --- DURUM EFEKTLERİ (YENİ: Zehir ve Ateş) ---
+    private float poisonDuration = 0f;
+    private float poisonDamagePerTick = 0f;
+    private float poisonTimer = 0f;
+
+    private float fireDuration = 0f;
+    private float fireDamagePerTick = 0f;
+    private float fireTimer = 0f;
+
     // --- DİNAMİK STAT OKUYUCULAR ---
     private float CurrentAttackSpeed => 1f + (gladiator.data.speed * 0.02f);
     private float CurrentPoise => 1f + (gladiator.data.stamina * 0.05f);
     private float CurrentMoveSpeed => 3.5f + (gladiator.data.speed * 0.05f);
+    
     [Header("Yapay Zeka (Radar)")]
-    public float retargetInterval = 1.0f; // Askerin etrafını tekrar tarama süresi
+    public float retargetInterval = 1.0f; 
     private float retargetTimer = 0f;
 
-    // YENİ: SİHİRLİ MENZİL OKUYUCU
-    // Artık sabit bir menzil yok. Elindeki silaha bakar, ona göre menzilini ve saldırı tipini anlar.
     private float CurrentAttackRange
     {
-        get
-        {
-            if (inventory != null && inventory.weapon != null)
-            {
-                return inventory.weapon.weaponRange; // ItemData içine ekleyeceğimiz değişken
-            }
-            return 2.0f; // Silahsızsa varsayılan yakın dövüş
-        }
+        get { return (inventory != null && inventory.weapon != null) ? inventory.weapon.weaponRange : 2.0f; }
     }
 
     private bool IsRangedWeapon
     {
-        get
-        {
-            if (inventory != null && inventory.weapon != null)
-            {
-                return inventory.weapon.isRanged; // ItemData içine ekleyeceğimiz değişken
-            }
-            return false;
-        }
+        get { return (inventory != null && inventory.weapon != null) ? inventory.weapon.isRanged : false; }
     }
 
     [Header("Savaş Durumu")]
@@ -78,60 +70,51 @@ public class GladiatorAI : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         gladiator = GetComponent<Gladiator>();
         training = GetComponent<GladiatorTraining>();
-        inventory = GetComponent<GladiatorInventory>(); // Envanteri bağla
+        inventory = GetComponent<GladiatorInventory>(); 
     }
 
     void Start()
     {
         animator = GetComponentInChildren<Animator>();
-        if (animator == null) Debug.LogWarning(gameObject.name + " objesinde Animator bulunamadı!");
-        
         StartCoroutine(LifeCycleRoutine());
     }
     
-   void Update()
+    void Update()
     {
-        // 1. Temel Kontroller (Ölüysek veya savaşmıyorsak hiçbir şey yapma)
-        if (isDead || BattleManager.Instance.state != BattleState.Fighting || !isInBattle || isGettingHit) return;
+        if (isDead) return;
 
-        // 2. Dinamik Hız ve Menzil Ayarları
+        // --- YENİ: ZAMANLA HASAR (DoT) MOTORU ---
+        HandleStatusEffects();
+
+        if (BattleManager.Instance.state != BattleState.Fighting || !isInBattle || isGettingHit) return;
+
         agent.speed = CurrentMoveSpeed;
         agent.stoppingDistance = CurrentAttackRange * 0.8f; 
 
-        // --- YENİ EKLENEN RADAR KISMI BAŞLANGICI ---
-        retargetTimer -= Time.deltaTime; // Radar sayacını geriye saydır
+        retargetTimer -= Time.deltaTime; 
 
-        // Önceki hedefimiz öldüyse onu aklımızdan silelim
         if (target != null)
         {
             GladiatorAI targetAI = target.GetComponent<GladiatorAI>();
-            if (targetAI != null && targetAI.isDead)
-            {
-                target = null; 
-            }
+            if (targetAI != null && targetAI.isDead) target = null; 
         }
         
-        // Eğer HEDEFİMİZ YOKSA veya RADAR SÜRESİ DOLDUYSA etrafı tekrar tara!
         if (target == null || retargetTimer <= 0f)
         {
             FindNearestTarget();
-            retargetTimer = retargetInterval; // Taramayı yaptık, sayacı başa sar (örn: 1 saniye)
+            retargetTimer = retargetInterval; 
         }
-        // --- RADAR KISMI BİTİŞİ ---
 
-        // Taramaya rağmen hala hedef yoksa (düşman kalmadıysa) dur
         if (target == null)
         {
             if (animator) animator.SetBool("isRunning", false);
             return;
         }
 
-        // 3. Mesafe Ölçümü ve Savaş Mantığı (BURASI SENİN ESKİ KODUNLA BİREBİR AYNI)
         float distance = Vector3.Distance(transform.position, target.position);
 
         if (distance <= CurrentAttackRange)
         {
-            // --- MENZİLDEYİZ ---
             if (agent.isActiveAndEnabled) agent.isStopped = true;
             if (animator) animator.SetBool("isRunning", false);
 
@@ -147,7 +130,6 @@ public class GladiatorAI : MonoBehaviour
         }
         else
         {
-       
             if (!isAttacking)
             {
                 if (agent.isActiveAndEnabled)
@@ -160,31 +142,56 @@ public class GladiatorAI : MonoBehaviour
         }
     }
 
-   IEnumerator AttackRoutine()
+    // --- YENİ: ZEHİR VE ATEŞ YANMA İŞLEMLERİ ---
+    private void HandleStatusEffects()
+    {
+        // Zehir İşleyişi
+        if (poisonDuration > 0)
+        {
+            poisonTimer += Time.deltaTime;
+            if (poisonTimer >= 1.0f) // Saniyede 1 kere vur
+            {
+                TakeDamage(poisonDamagePerTick, false, true); // isDoT = true
+                poisonDuration -= 1.0f;
+                poisonTimer = 0f;
+            }
+        }
+
+        // Ateş (Yanma) İşleyişi
+        if (fireDuration > 0)
+        {
+            fireTimer += Time.deltaTime;
+            if (fireTimer >= 1.0f)
+            {
+                TakeDamage(fireDamagePerTick, false, true); // isDoT = true
+                fireDuration -= 1.0f;
+                fireTimer = 0f;
+            }
+        }
+    }
+
+    // Dışarıdan Efekt Uygulama Metodları
+    public void ApplyPoison(float dps, float duration) { poisonDamagePerTick = dps; poisonDuration = duration; }
+    public void ApplyBurn(float dps, float duration) { fireDamagePerTick = dps; fireDuration = duration; }
+
+    IEnumerator AttackRoutine()
     {
         isAttacking = true;
-        
         float currentSpd = CurrentAttackSpeed;
         if (animator) 
         {
-         
             animator.SetBool("IsRanged", IsRangedWeapon); 
-            
             animator.SetFloat("AttackSpeedMultiplier", currentSpd);
             animator.SetTrigger("Attack");
         }
-
         yield return new WaitForSeconds(baseAttackAnimLength / currentSpd);
-        
         lastAttackTime = Time.time;
         isAttacking = false;
     }
 
-   
     public void ExecuteAttackEvent()
     {
         if (target == null || isDead) return;
-
 
         float attackDamage = gladiator.data.strength * 2f + (gladiator.data.level * 2);
         bool isCrit = Random.Range(0, 100) < gladiator.data.speed;
@@ -192,23 +199,20 @@ public class GladiatorAI : MonoBehaviour
 
         if (IsRangedWeapon)
         {
-     
             if (arrowPrefab != null && arrowSpawnPoint != null)
             {
-       
                 Vector3 aimDirection = (target.position + Vector3.up * 1f) - arrowSpawnPoint.position;
                 GameObject arrow = Instantiate(arrowPrefab, arrowSpawnPoint.position, Quaternion.LookRotation(aimDirection));
-
                 Projectile projectile = arrow.GetComponent<Projectile>();
                 if (projectile != null)
                 {
-                    projectile.Setup(target, attackDamage, isCrit);
+                    // Ok hedefe çarptığında bizim yerimize ProcessOnHitEffects'i çağıracak
+                    projectile.Setup(target, attackDamage, isCrit, this); 
                 }
             }
         }
         else
         {
-    
             float currentDist = Vector3.Distance(transform.position, target.position);
             if (currentDist <= CurrentAttackRange * 1.5f) 
             {
@@ -216,14 +220,87 @@ public class GladiatorAI : MonoBehaviour
                 if (enemyAI != null && !enemyAI.isDead && gladiator.data != null)
                 {   
                     enemyAI.TakeDamage(attackDamage, isCrit);
+                    ProcessOnHitEffects(enemyAI, attackDamage); // YENİ: Vuruş gerçekleştiğinde Sinerjiyi çalıştır
                 }
             }
         }
     }
 
+    // --- YENİ: SİNERJİ VE EFSANEVİ SET MOTORU ---
+    public void ProcessOnHitEffects(GladiatorAI enemyAI, float baseDamage)
+    {
+        if (inventory == null || inventory.activeSetPieceCount < 3) return; // Set tamamlanmadıysa çık
 
+        SoldierTrait myTrait = gladiator.data.trait;
 
-    public void TakeDamage(float incomingDamage, bool isCritical = false)
+        // 1. ZEHİR SETİ
+        if (inventory.activeSet == ItemSetType.Poison)
+        {
+            float poisonDps = baseDamage * 0.2f; // Hasarın %20'si kadar zehir
+            float pDuration = 3f;
+
+            if (myTrait == SoldierTrait.Obur) // SİNERJİ: Asitli Mide
+            {
+                poisonDps *= 2f; 
+                pDuration = 5f;
+            }
+            enemyAI.ApplyPoison(poisonDps, pDuration);
+        }
+        // 2. ATEŞ SETİ
+        else if (inventory.activeSet == ItemSetType.Fire)
+        {
+            float burnDps = baseDamage * 0.3f;
+            enemyAI.ApplyBurn(burnDps, 2f);
+
+            if (myTrait == SoldierTrait.Yetenekli) // SİNERJİ: Cehennem Ustası (Alan Hasarı)
+            {
+                Collider[] hitEnemies = Physics.OverlapSphere(enemyAI.transform.position, 2.5f);
+                foreach (var hit in hitEnemies)
+                {
+                    if (hit.CompareTag(enemyTag))
+                    {
+                        GladiatorAI nearbyEnemy = hit.GetComponent<GladiatorAI>();
+                        if (nearbyEnemy != null && nearbyEnemy != enemyAI && !nearbyEnemy.isDead)
+                        {
+                            nearbyEnemy.TakeDamage(baseDamage * 0.4f, false, true); // Etrafa %40 sıçrama hasarı
+                        }
+                    }
+                }
+            }
+        }
+        // 3. İNANÇ SETİ
+        else if (inventory.activeSet == ItemSetType.Faith)
+        {
+            float healAmount = baseDamage * 0.2f; // Hasarın %20'si kadar şifa
+            float healRadius = 3.0f;
+
+            if (myTrait == SoldierTrait.Dindar) // SİNERJİ: Kutsal İrade
+            {
+                healAmount *= 2f;
+                healRadius = 6.0f; // Etki alanı devasa olur
+            }
+
+            // Etraftaki DOSTLARI bul ve iyileştir
+            Collider[] allies = Physics.OverlapSphere(transform.position, healRadius);
+            foreach (var hit in allies)
+            {
+                if (hit.CompareTag(this.gameObject.tag)) // Kendi takımımdansa
+                {
+                    Gladiator ally = hit.GetComponent<Gladiator>();
+                    if (ally != null && ally.currentHealth > 0)
+                    {
+                        ally.currentHealth = Mathf.Min(ally.currentHealth + healAmount, ally.maxHealth);
+                        if (ally.healthBar != null) ally.healthBar.UpdateBar(ally.currentHealth, ally.maxHealth);
+                        
+                        // Opsiyonel: Şifa texti gösterilebilir (+20) yeşil renkte
+                    }
+                }
+            }
+        }
+    }
+
+    // YENİ: isDoT parametresi eklendi!
+    public void TakeDamage(float incomingDamage, bool isCritical = false, bool isDoT = false)
     {
         if (isDead || gladiator.data == null) return;
         
@@ -234,51 +311,44 @@ public class GladiatorAI : MonoBehaviour
         float finalDamage = incomingDamage * reduction;
 
         gladiator.currentHealth -= finalDamage;
-        if (!IsRangedWeapon)
-    {
-        retargetTimer = 0f; 
-    }
+        if (!IsRangedWeapon && !isDoT) // Zehir yerken radarı bozma
+        {
+            retargetTimer = 0f; 
+        }
+
         if (gladiator.currentHealth <= 0)
         {
             int currentNasip = NasipManager.Instance != null ? NasipManager.Instance.currentNasip : 0;
-            
-            // Eğer oyuncunun Nasip'i çok yüksekse (Örn: 5 veya 6) VE %15 şans tutarsa...
-            // (Eğer asker "MySoldier" değil de düşmansa, ona nasip işlemiememeli)
-            if (currentNasip >= 5 && gladiator.CompareTag("MySoldier") && Random.Range(0, 100) < 15)
+            if (currentNasip >= 5 && gladiator.CompareTag("MySoldier") && Random.Range(0, 100) < 15 && !isDoT)
             {
-                // MUCİZE GERÇEKLEŞTİ! Ölümü iptal et.
                 gladiator.currentHealth = 1;
-
                 if (DamageTextManager.Instance != null) 
                   DamageTextManager.Instance.ShowCustomText(transform.position, "ALLAH KORUDU!", Color.yellow);
-                
-                // Kutsal bir ses efekti
-                // AudioManager.Instance.PlaySFX(AudioManager.Instance.miracleSound, 1.0f);
-
                 if (NotificationManager.Instance != null)
                     NotificationManager.Instance.Show($"<color=yellow>MUCİZE!</color> {gladiator.data.gladiatorName} Nasibi sayesinde ölümden döndü!", NotificationType.Success);
             }
         }
-        if (gladiator.healthBar != null) gladiator.healthBar.UpdateBar(gladiator.currentHealth, gladiator.maxHealth);
 
+        if (gladiator.healthBar != null) gladiator.healthBar.UpdateBar(gladiator.currentHealth, gladiator.maxHealth);
         if (DamageTextManager.Instance != null) DamageTextManager.Instance.ShowDamage(transform.position, finalDamage, isCritical ? 1 : 0);
-        AudioManager.Instance.PlaySFX(AudioManager.Instance.hitSound, isCritical ? 1.0f : 0.6f);
+        
+        if (!isDoT) AudioManager.Instance.PlaySFX(AudioManager.Instance.hitSound, isCritical ? 1.0f : 0.6f);
+
         if (gladiator.currentHealth > 0)
         {
-            // 1. Kural: Son sendelemenin üzerinden yeterli zaman (Stamina'ya bağlı Poise) geçmiş olmalı.
+            // ZAMANLA HASAR (DoT) YİYORSA ASLA SENDELEME (HITSTUN) YAŞATMA!
+            if (isDoT) return; 
+
             bool isPoiseCooldownReady = Time.time > lastHitStunTime + CurrentPoise;
-            
-            // 2. Kural: Ya asker şu an saldırmıyor olacak, YA DA yediği darbe Kritik (Çok Ağır) olacak!
             bool isPoiseBroken = !isAttacking || isCritical;
 
             if (isPoiseCooldownReady && isPoiseBroken && !isGettingHit)
             {
-                // Eğer adam kılıç savururken KRİTİK yediyse, o saldırı acıdan dolayı iptal olur!
                 if (isAttacking)
                 {
                     if (_attackCoroutine != null) StopCoroutine(_attackCoroutine);
                     isAttacking = false;
-                    if (animator) animator.ResetTrigger("Attack"); // Kılıç savurmayı çöpe at
+                    if (animator) animator.ResetTrigger("Attack"); 
                 }
                 AudioManager.Instance.PlaySFX(AudioManager.Instance.gruntSound, 0.8f);
                 if (animator) 
@@ -289,7 +359,6 @@ public class GladiatorAI : MonoBehaviour
 
                 if (_hitStunCoroutine != null) StopCoroutine(_hitStunCoroutine);
                 _hitStunCoroutine = StartCoroutine(HitStunRoutine());
-                
                 lastHitStunTime = Time.time; 
             }
         }

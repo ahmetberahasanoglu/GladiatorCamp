@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class GladiatorInventory : MonoBehaviour
 {
@@ -8,6 +9,11 @@ public class GladiatorInventory : MonoBehaviour
     public ItemData helmet;
     public ItemData shield;
 
+    [Header("Efsanevi Set Sistemi (YENİ)")]
+    [Tooltip("Askerin üzerinde anlık olarak aktif olan set bonusu")]
+    public ItemSetType activeSet = ItemSetType.None; 
+    public int activeSetPieceCount = 0; // Kaç parça takılı olduğunu tutar
+
     public JanissaryData data; 
     private int baseStr, baseDef, baseSpd, baseSta, baseMor;
     private bool isInitialized = false;
@@ -16,11 +22,11 @@ public class GladiatorInventory : MonoBehaviour
     {
        InitializeBaseStats();
 
-       // Oyun başladığında üstünde bir şeyler varsa görselini de aç
        if (weapon != null) ToggleMesh(weapon.targetMeshName, true);
        if (armor != null) ToggleMesh(armor.targetMeshName, true);
        if (helmet != null) ToggleMesh(helmet.targetMeshName, true);
        if (shield != null) ToggleMesh(shield.targetMeshName, true);
+       
        RecalculateStats();
        Gladiator gladiator = GetComponent<Gladiator>();
        if (gladiator != null)
@@ -56,7 +62,6 @@ public class GladiatorInventory : MonoBehaviour
             case ItemType.Helmet: helmet = item; break;
         }
 
-        // Sadece hesaplama yapmadan giyiliyorsa bile görseli aç
         ToggleMesh(item.targetMeshName, true);
     }
 
@@ -69,47 +74,32 @@ public class GladiatorInventory : MonoBehaviour
             if (data == null) return;
         }
         Gladiator gladiator = GetComponent<Gladiator>();
-     
 
         ItemData oldItem = null; 
 
         switch (newItem.type)
         {
-            case ItemType.Weapon:
-                oldItem = weapon; 
-                weapon = newItem; 
-                break;
-            case ItemType.Armor:
-                oldItem = armor;
-                armor = newItem;
-                break;
-            case ItemType.Shield:
-                oldItem = shield;
-                shield = newItem;
-                break;
-            case ItemType.Helmet:
-                oldItem = helmet;
-                helmet = newItem;
-                break;
+            case ItemType.Weapon: oldItem = weapon; weapon = newItem; break;
+            case ItemType.Armor:  oldItem = armor; armor = newItem; break;
+            case ItemType.Shield: oldItem = shield; shield = newItem; break;
+            case ItemType.Helmet: oldItem = helmet; helmet = newItem; break;
         }
 
         if (oldItem != null)
         {
             InventoryStorage.Instance.AddItem(oldItem);
             NotificationManager.Instance.Show($"{oldItem.itemID} depoya geri gönderildi.", NotificationType.Info);
-            
-            // --- ESKİ EŞYANIN GÖRSELİNİ KAPAT ---
             ToggleMesh(oldItem.targetMeshName, false);
         }
 
-        // --- YENİ EŞYANIN GÖRSELİNİ AÇ ---
         ToggleMesh(newItem.targetMeshName, true);
 
         RecalculateStats();
-           if (gladiator != null)
+        
+        if (gladiator != null)
         {
             gladiator.RecalculateMaxHealth();
-           gladiator.RefreshStats(); // Eğer UI yenilenmiyorsa bu satırı da aktif edebilirsin
+            gladiator.RefreshStats(); 
         }
     }
 
@@ -125,41 +115,33 @@ public class GladiatorInventory : MonoBehaviour
             case ItemType.Shield: removedItem = shield; shield = null; break;
         }
 
-        // --- ÇIKARILAN EŞYANIN GÖRSELİNİ KAPAT ---
-        if (removedItem != null)
-        {
-            ToggleMesh(removedItem.targetMeshName, false);
-        }
+        if (removedItem != null) ToggleMesh(removedItem.targetMeshName, false);
 
         RecalculateStats();
+        
         Gladiator gladiator = GetComponent<Gladiator>();
         if (gladiator != null)
         {
             gladiator.RecalculateMaxHealth();
             gladiator.RefreshStats();
         }
-
     }
 
-    // --- YENİ: SİHİRLİ GÖRSEL DEĞİŞTİRİCİ ---
     private void ToggleMesh(string meshName, bool state)
     {
         if (string.IsNullOrEmpty(meshName)) return;
 
-        // Karakterin altındaki tüm objeleri (kapalılar dahil) tarar ve ismi eşleşeni bulur
         Transform[] allChildren = GetComponentsInChildren<Transform>(true); 
         foreach (Transform child in allChildren)
         {
             if (child.name == meshName)
             {
                 child.gameObject.SetActive(state);
-                return; // Bulduk, işlemi bitir
+                return; 
             }
         }
-        
         Debug.LogWarning($"<color=yellow>DİKKAT:</color> Karakterin içinde '{meshName}' adında bir model bulunamadı!");
     }
-    // ------------------------------------------
 
     void RecalculateStats()
     {
@@ -172,8 +154,46 @@ public class GladiatorInventory : MonoBehaviour
         AddBonus(armor);
         AddBonus(helmet);
         AddBonus(shield);
+        
+        // --- YENİ: SET DURUMUNU KONTROL ET ---
+        CalculateSetBonus();
+
         GetComponent<Gladiator>().RefreshStats();
     }
+
+    // --- YENİ: SET DEDEKTİFİ ---
+    void CalculateSetBonus()
+    {
+        activeSet = ItemSetType.None;
+        activeSetPieceCount = 0;
+
+        // Üzerimizdeki setleri saymak için geçici sayaçlar
+        int fireCount = 0;
+        int poisonCount = 0;
+        int faithCount = 0;
+
+        // Eşyaları kontrol et ve sayaçları artır
+        CheckAndCountSet(weapon, ref fireCount, ref poisonCount, ref faithCount);
+        CheckAndCountSet(armor, ref fireCount, ref poisonCount, ref faithCount);
+        CheckAndCountSet(helmet, ref fireCount, ref poisonCount, ref faithCount);
+        CheckAndCountSet(shield, ref fireCount, ref poisonCount, ref faithCount);
+
+        // Hangi setten en az 3 parça varsa, onu "Aktif Set" olarak belirle
+        if (fireCount >= 3) { activeSet = ItemSetType.Fire; activeSetPieceCount = fireCount; }
+        else if (poisonCount >= 3) { activeSet = ItemSetType.Poison; activeSetPieceCount = poisonCount; }
+        else if (faithCount >= 3) { activeSet = ItemSetType.Faith; activeSetPieceCount = faithCount; }
+    }
+
+    // Set türünü okuyup ilgili sayacı artıran yardımcı metod
+    void CheckAndCountSet(ItemData item, ref int fCount, ref int pCount, ref int faCount)
+    {
+        if (item == null) return;
+        
+        if (item.setType == ItemSetType.Fire) fCount++;
+        else if (item.setType == ItemSetType.Poison) pCount++;
+        else if (item.setType == ItemSetType.Faith) faCount++;
+    }
+    // ------------------------------------
 
     public ItemData GetEquippedItem(ItemType type)
     {

@@ -8,7 +8,7 @@ public class InventoryUIManager : MonoBehaviour
 
     [Header("Paneller")]
     public GameObject inventoryPanel;
-    public Transform contentParent; // Liste
+    public Transform contentParent; 
     public InventorySlotUI slotPrefab;
     
     [Header("Toplam Stat Textleri")]
@@ -16,10 +16,14 @@ public class InventoryUIManager : MonoBehaviour
     public TextMeshProUGUI totalStrengthText;
     public TextMeshProUGUI totalSpeedText;
     public TextMeshProUGUI totalStaminaText;
-    [Header("Yeni Eklenenler")]
-    public ItemDetailPanel detailPanel; // Sağdaki detay penceresi
     
-    // Karakterin üstündekileri gösteren 4 slot
+    // --- YENİ EKLENEN UI ELEMENTİ ---
+    [Tooltip("Set durumunu ve sinerjiyi gösterecek Text objesi")]
+    public TextMeshProUGUI setBonusText; 
+
+    [Header("Yeni Eklenenler")]
+    public ItemDetailPanel detailPanel; 
+    
     public EquippedSlotUI weaponSlot;
     public EquippedSlotUI armorSlot;
     public EquippedSlotUI helmetSlot;
@@ -31,34 +35,30 @@ public class InventoryUIManager : MonoBehaviour
     {
         Instance = this;
         inventoryPanel.SetActive(false);
-        detailPanel.gameObject.SetActive(false); // Başta kapalı
+        detailPanel.gameObject.SetActive(false); 
     }
+
     public void UnequipItem(ItemType type)
     {
         if (_currentGladiator == null) return;
 
-        // 1. Askerin üstündeki eşyayı bul ve referansını al
         ItemData itemToRemove = _currentGladiator.GetEquippedItem(type);
 
         if (itemToRemove != null)
         {
-            // 2. Eşyayı askerden tamamen çıkart (Değişkeni null yap)
             _currentGladiator.RemoveItem(type); 
-
-            // 3. Çıkarılan eşyayı ana depoya (InventoryStorage) geri gönder
             InventoryStorage.Instance.AddItem(itemToRemove);
             
             if (NotificationManager.Instance != null)
                 NotificationManager.Instance.Show($"{itemToRemove.itemID} depoya kaldırıldı.", NotificationType.Info);
             
-            // 4. Ekrandaki slotları ve depoyu yenile
-           RefreshList();     // Depodaki eşyalar güncellensin (Çıkarılan eşya listeye eklendi)
+            RefreshList();    
             RefreshEquipped();
         }
     }
-public void RefreshEquipped()
+
+    public void RefreshEquipped()
     {
-   
          if (_currentGladiator == null) return;
         
         weaponSlot.Setup(_currentGladiator.weapon);
@@ -66,38 +66,76 @@ public void RefreshEquipped()
         helmetSlot.Setup(_currentGladiator.helmet);
         shieldSlot.Setup(_currentGladiator.shield);
 
-        
-        int totalDef = 0;
-        if (_currentGladiator.helmet) totalDef += _currentGladiator.helmet.bonusDefense;
-        if (_currentGladiator.armor) totalDef += _currentGladiator.armor.bonusDefense;
-        if (_currentGladiator.shield) totalDef += _currentGladiator.shield.bonusDefense;
-        int totalStr=0;
+        int totalDef = 0, totalStr = 0, totalSpeed = 0, totalStamina = 0;
+
+        if (_currentGladiator.helmet) { totalDef += _currentGladiator.helmet.bonusDefense; totalSpeed += _currentGladiator.helmet.bonusSpeed; totalStamina += _currentGladiator.helmet.bonusStamina; }
+        if (_currentGladiator.armor) { totalDef += _currentGladiator.armor.bonusDefense; totalSpeed += _currentGladiator.armor.bonusSpeed; totalStamina += _currentGladiator.armor.bonusStamina; }
+        if (_currentGladiator.shield) { totalDef += _currentGladiator.shield.bonusDefense; totalSpeed += _currentGladiator.shield.bonusSpeed; totalStamina += _currentGladiator.shield.bonusStamina; }
         if (_currentGladiator.weapon) totalStr += _currentGladiator.weapon.bonusStrength;
-        int totalSpeed=0;
-        if(_currentGladiator.armor) totalSpeed += _currentGladiator.armor.bonusSpeed;
-        if(_currentGladiator.helmet) totalSpeed += _currentGladiator.helmet.bonusSpeed;
-        if(_currentGladiator.shield) totalSpeed += _currentGladiator.shield.bonusSpeed;
-        int totalStamina=0;
-        if(_currentGladiator.armor) totalStamina += _currentGladiator.armor.bonusStamina;
-        if(_currentGladiator.shield) totalStamina += _currentGladiator.shield.bonusStamina;
-        if(_currentGladiator.helmet) totalStamina += _currentGladiator.helmet.bonusStamina;
-    
 
         totalArmorText.text = "Armor: " + totalDef;
         totalStrengthText.text = "Strength: " + totalStr;
         totalSpeedText.text = "Speed: " + totalSpeed;
         totalStaminaText.text = "Stamina: " + totalStamina;
-   
+
+        // --- YENİ: SET BİLGİSİ VE SİNERJİ HESAPLAMA ---
+        UpdateSetBonusUI();
     }
+
+    // Ekrandaki 1/3, 2/3 yazılarını ve Sinerjileri günceller
+    private void UpdateSetBonusUI()
+    {
+        if (setBonusText == null || _currentGladiator == null) return;
+
+        int fireCount = 0, poisonCount = 0, faithCount = 0;
+
+        CountSetPieces(_currentGladiator.weapon, ref fireCount, ref poisonCount, ref faithCount);
+        CountSetPieces(_currentGladiator.armor, ref fireCount, ref poisonCount, ref faithCount);
+        CountSetPieces(_currentGladiator.helmet, ref fireCount, ref poisonCount, ref faithCount);
+        CountSetPieces(_currentGladiator.shield, ref fireCount, ref poisonCount, ref faithCount);
+
+        string setText = "";
+        
+        // Renkli ve şık bir gösterim
+        if (fireCount > 0) setText += $"Ateş Seti: <color=#FF5733>{fireCount}/3</color>\n";
+        if (poisonCount > 0) setText += $"Zehir Seti: <color=#33FF57>{poisonCount}/3</color>\n";
+        if (faithCount > 0) setText += $"İnanç Seti: <color=#F0E68C>{faithCount}/3</color>\n";
+
+        if (setText == "") setText = "<color=#888888>Aktif Set Yok</color>";
+
+        // --- FITRAT VE SET SİNERJİSİ KONTROLÜ ---
+        // Askerin fıtratının JanissaryData (data) içinde 'trait' adında bir değişken olduğunu varsayıyoruz
+        if (_currentGladiator.data != null)
+        {
+            SoldierTrait currentTrait = _currentGladiator.data.trait; 
+
+            if (currentTrait == SoldierTrait.Obur && poisonCount >= 3)
+                setText += "\n<b><color=#33FF57>SİNERJİ AKTİF: Asitli Mide (Obur+Zehir)</color></b>";
+                
+            else if (currentTrait == SoldierTrait.Dindar && faithCount >= 3)
+                setText += "\n<b><color=#F0E68C>SİNERJİ AKTİF: Kutsal İrade (Dindar+İnanç)</color></b>";
+                
+            else if (currentTrait == SoldierTrait.Yetenekli && fireCount >= 3)
+                setText += "\n<b><color=#FF5733>SİNERJİ AKTİF: Cehennem Ustas (Yetenekli+Ateş)</color></b>";
+        }
+
+        setBonusText.text = setText;
+    }
+
+    private void CountSetPieces(ItemData item, ref int f, ref int p, ref int fa)
+    {
+        if (item == null) return;
+        if (item.setType == ItemSetType.Fire) f++;
+        else if (item.setType == ItemSetType.Poison) p++;
+        else if (item.setType == ItemSetType.Faith) fa++;
+    }
+
     public void OpenInventoryFor(GladiatorInventory gladiator)
     {
         _currentGladiator = gladiator;
         inventoryPanel.SetActive(true);
-        
-        RefreshList();      // Depodaki eşyalar
-        RefreshEquipped();  // Üstündeki eşyalar
-        
-        // Detay panelini kapat (Yeni açılışta bir şey seçili değil)
+        RefreshList();      
+        RefreshEquipped();  
         detailPanel.gameObject.SetActive(false);
     }
 
@@ -114,32 +152,19 @@ public void RefreshEquipped()
         foreach (var item in InventoryStorage.Instance.storedItems)
         {
             var slot = Instantiate(slotPrefab, contentParent);
-            
-            // DİKKAT: Tıklanınca artık 'EquipItem' DEĞİL, 'ShowDetails' çağırıyoruz.
-            // slot.Setup fonksiyonunu güncellememiz gerekecek (Aşağıda belirttim)
             slot.Setup(item, () => OnItemSelected(item));
         }
     }
 
-   
-
-    // Listeden bir şeye tıklanınca
     void OnItemSelected(ItemData item)
     {
-        // Detay panelini aç ve karşılaştır
         detailPanel.ShowDetails(item, _currentGladiator);
     }
 
-    // Detay panelindeki "Kuşan" butonuna basılınca çalışır (Public yaptık)
     public void EquipItem(ItemData item)
     {
-        // 1. Depodan sil
         InventoryStorage.Instance.RemoveItem(item);
-        
-        // 2. Giydir (Eski eşya otomatik depoya gider - Önceki kodumuzda yapmıştık)
         _currentGladiator.Equip(item);
-
-        // 3. Her şeyi yenile
         RefreshList();
         RefreshEquipped();
     }

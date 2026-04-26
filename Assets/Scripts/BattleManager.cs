@@ -443,6 +443,11 @@ private void ChangeEnvironment(BattleEnvironment envType)
         StartCoroutine(CinematicTransitionRoutine(campCameraPos));
         
         state = BattleState.Idle;
+        BattlePowerUI powerUI = FindFirstObjectByType<BattlePowerUI>();
+         if(powerUI != null)
+    {
+            powerUI.ResetGameSpeed();
+    }
 
         // --- 2. SORUNUN ÇÖZÜMÜ: TOP PANELİ ZORLA GÜNCELLE ---
         // Askerlerin levelleri veya sayıları değişmiş olabilir. 

@@ -8,10 +8,38 @@ public class BattlePowerUI : MonoBehaviour
     public Slider powerBalanceSlider; 
     public TextMeshProUGUI playerTotalHpText;
     public TextMeshProUGUI enemyTotalHpText;
+    public TextMeshProUGUI speedButtonText;
 
     [Header("Ayarlar")]
     public float sliderSpeed = 5f; // Barın yumuşak kayma hızı
+    public int currentSpeedLevel = 1;
 
+public void ChangeGameSpeed()
+{
+    currentSpeedLevel++;
+    
+    if(currentSpeedLevel > 2)
+    {
+        currentSpeedLevel = 1; 
+    }
+
+    Time.timeScale = currentSpeedLevel;
+    speedButtonText.text = currentSpeedLevel + "x";
+}
+public void ResetGameSpeed()
+    {
+        currentSpeedLevel = 1;
+        Time.timeScale = 1f;
+        if(speedButtonText != null) speedButtonText.text = "1x";
+    }
+
+    // YENİ: GÜVENLİK KİLİDİ
+    // Bu UI objesi kapanırsa, yok edilirse veya sahne değişirse otomatik tetiklenir.
+    // Böylece kamp ekranına asla 2x hızında dönmezsin.
+    private void OnDisable()
+    {
+        Time.timeScale = 1f;
+    }
     void Update()
     {
         // 1. KİLİT: Savaşta değilsek boşuna hesaplama yapıp bilgisayarı yorma

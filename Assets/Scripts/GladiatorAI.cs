@@ -401,6 +401,12 @@ public class GladiatorAI : MonoBehaviour
         while (true)
         {
             if (isDead) yield break; 
+            if (isInBattle || (BattleManager.Instance != null && BattleManager.Instance.state == BattleState.Fighting))
+            {
+                if (currentPoint != null) LeavePoint(); // Savaşı gördüğü an elindeki işi/çorbayı bıraksın
+                yield return new WaitForSeconds(0.5f); // Savaş bitene kadar yarım saniyede bir kontrol et
+                continue; // Aşağıdaki yürüme ve kamp kodlarını KESİNLİKLE çalıştırma!
+            }
 
             if (gladiator.isOnMission || (training != null && training.IsTraining) || (gladiator.data != null && gladiator.data.currentActivity == SoldierActivity.Working&&gladiator.data.currentActivity==SoldierActivity.Praying))
             {

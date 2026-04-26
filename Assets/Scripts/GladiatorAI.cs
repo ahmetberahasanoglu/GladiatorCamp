@@ -7,17 +7,18 @@ public class GladiatorAI : MonoBehaviour
     private NavMeshAgent agent;
     private Gladiator gladiator; 
     private GladiatorTraining training; 
+    private GladiatorInventory inventory; // YENİ: Silahı okumak için eklendi
     private ActivityPoint currentPoint; 
     private float activityTimer;
 
-    [Header("Efektler")]
+    [Header("Efektler ve Menzilli Saldırı")]
     public GameObject deathEffectPrefab;
+    public GameObject arrowPrefab; // YENİ: Fırlatılacak ok prefabi
+    public Transform arrowSpawnPoint; // YENİ: Okun çıkacağı yer (Okçunun eli veya yayı)
 
     [Header("Özellikler")]
     public string enemyTag = "Enemy"; 
-    public float attackRange = 2.0f;  
     
-    // YENİ: Animasyonunun tam uzunluğunu buraya yaz (1.733f)
     [Tooltip("Attack animasyonunun saniye cinsinden uzunluğu")]
     public float baseAttackAnimLength = 1.733f; 
 
@@ -35,11 +36,36 @@ public class GladiatorAI : MonoBehaviour
     private Coroutine _attackCoroutine;
     private Coroutine _hitStunCoroutine;
 
-    // --- SİHİRLİ KISIM: DİNAMİK STAT OKUYUCULAR ---
-    // Artık bu değerler Start'ta değil, çağrıldıkları HER AN gladyatörün anlık datasına bakarak hesaplanır!
+    // --- DİNAMİK STAT OKUYUCULAR ---
     private float CurrentAttackSpeed => 1f + (gladiator.data.speed * 0.02f);
     private float CurrentPoise => 1f + (gladiator.data.stamina * 0.05f);
     private float CurrentMoveSpeed => 3.5f + (gladiator.data.speed * 0.05f);
+
+    // YENİ: SİHİRLİ MENZİL OKUYUCU
+    // Artık sabit bir menzil yok. Elindeki silaha bakar, ona göre menzilini ve saldırı tipini anlar.
+    private float CurrentAttackRange
+    {
+        get
+        {
+            if (inventory != null && inventory.weapon != null)
+            {
+                return inventory.weapon.weaponRange; // ItemData içine ekleyeceğimiz değişken
+            }
+            return 2.0f; // Silahsızsa varsayılan yakın dövüş
+        }
+    }
+
+    private bool IsRangedWeapon
+    {
+        get
+        {
+            if (inventory != null && inventory.weapon != null)
+            {
+                return inventory.weapon.isRanged; // ItemData içine ekleyeceğimiz değişken
+            }
+            return false;
+        }
+    }
 
     [Header("Savaş Durumu")]
     public bool isInBattle = false; 
@@ -49,6 +75,7 @@ public class GladiatorAI : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         gladiator = GetComponent<Gladiator>();
         training = GetComponent<GladiatorTraining>();
+        inventory = GetComponent<GladiatorInventory>(); // Envanteri bağla
     }
 
     void Start()
@@ -56,18 +83,19 @@ public class GladiatorAI : MonoBehaviour
         animator = GetComponentInChildren<Animator>();
         if (animator == null) Debug.LogWarning(gameObject.name + " objesinde Animator bulunamadı!");
         
-        agent.stoppingDistance = attackRange * 0.8f; 
-        
         StartCoroutine(LifeCycleRoutine());
     }
     
     void Update()
     {
-      if (isDead || BattleManager.Instance.state != BattleState.Fighting || !isInBattle || isGettingHit) return;
+        if (isDead || BattleManager.Instance.state != BattleState.Fighting || !isInBattle || isGettingHit) return;
 
-        // Yürüme hızını sürekli güncelle (Eşya vs. takılırsa anında hızlansın)
         agent.speed = CurrentMoveSpeed;
-if (target != null)
+        
+        // YENİ: Durma mesafesini silahın menziline göre SÜREKLİ güncelle!
+        agent.stoppingDistance = CurrentAttackRange * 0.8f; 
+
+        if (target != null)
         {
             GladiatorAI targetAI = target.GetComponent<GladiatorAI>();
             if (targetAI != null && targetAI.isDead)
@@ -75,6 +103,7 @@ if (target != null)
                 target = null; 
             }
         }
+        
         if (target == null)
         {
             FindNearestTarget();
@@ -87,19 +116,16 @@ if (target != null)
 
         float distance = Vector3.Distance(transform.position, target.position);
 
-        if (distance <= attackRange)
+        if (distance <= CurrentAttackRange)
         {
             // --- MENZİLDEYİZ ---
             if (agent.isActiveAndEnabled) agent.isStopped = true;
             if (animator) animator.SetBool("isRunning", false);
 
-            // Hedefe Dön
             Vector3 direction = (target.position - transform.position).normalized;
             direction.y = 0;
             if(direction != Vector3.zero) transform.rotation = Quaternion.LookRotation(direction);
 
-            // YENİ SALDIRI MANTIĞI: Eğer şu an saldırmıyorsa ve bir önceki saldırı bittiyse VUR!
-            // (0.1f -> İki saldırı arasına robot gibi durmasın diye koyduğumuz çok minik bir nefes alma payı)
             if (!isAttacking && Time.time > lastAttackTime + (0.1f / CurrentAttackSpeed))
             {
                 if (_attackCoroutine != null) StopCoroutine(_attackCoroutine);
@@ -109,7 +135,7 @@ if (target != null)
         else
         {
             // --- KOVALAMA ---
-            if (!isAttacking) // Sadece saldırmıyorsa yürüyebilir!
+            if (!isAttacking)
             {
                 if (agent.isActiveAndEnabled)
                 {
@@ -125,7 +151,6 @@ if (target != null)
     {
         isAttacking = true;
         
-        // Hızı o anki statlardan çek ve Animator'a yolla
         float currentSpd = CurrentAttackSpeed;
         if (animator) 
         {
@@ -133,37 +158,56 @@ if (target != null)
             animator.SetTrigger("Attack");
         }
 
-        // COOLDOWN ÇÖPE GİTTİ! Artık kılıcın savrulma süresi kadar bekliyoruz.
-        // Eğer animasyon 1.733 saniyeyse ve askerin hızı 2x ise, burası sadece 0.86 saniye bekler!
         yield return new WaitForSeconds(baseAttackAnimLength / currentSpd);
         
         lastAttackTime = Time.time;
         isAttacking = false;
     }
 
-    // Animasyondaki iğne (Event) tetiklendiğinde burası çalışır
-    public void ExecuteMeleeHit()
+    // YENİ: Ortak Saldırı İğnesi (Animation Event burayı çağırmalı)
+    public void ExecuteAttackEvent()
     {
-        if (target != null && !isDead)
+        if (target == null || isDead) return;
+
+        // Hasarı burada hesaplıyoruz (Hem ok hem kılıç için geçerli)
+        float attackDamage = gladiator.data.strength * 2f + (gladiator.data.level * 2);
+        bool isCrit = Random.Range(0, 100) < gladiator.data.speed;
+        if (isCrit) attackDamage *= 1.5f; 
+
+        if (IsRangedWeapon)
         {
+            // --- MENZİLLİ SALDIRI (OK FIRLAT) ---
+            if (arrowPrefab != null && arrowSpawnPoint != null)
+            {
+                // Oku hedefe doğru bakacak şekilde yarat
+                Vector3 aimDirection = (target.position + Vector3.up * 1f) - arrowSpawnPoint.position;
+                GameObject arrow = Instantiate(arrowPrefab, arrowSpawnPoint.position, Quaternion.LookRotation(aimDirection));
+                
+                // Oku fırlat
+                Projectile projectile = arrow.GetComponent<Projectile>();
+                if (projectile != null)
+                {
+                    projectile.Setup(target, attackDamage, isCrit);
+                }
+            }
+        }
+        else
+        {
+            // --- YAKIN DÖVÜŞ (KILIÇ/MIZRAK) ---
             float currentDist = Vector3.Distance(transform.position, target.position);
-            if (currentDist <= attackRange * 1.5f) 
+            // Menzilin biraz fazlasına (x1.5) tolerans tanıyoruz ki adam 1 adım kaçtı diye vuruş boşa gitmesin
+            if (currentDist <= CurrentAttackRange * 1.5f) 
             {
                 GladiatorAI enemyAI = target.GetComponent<GladiatorAI>();
                 if (enemyAI != null && !enemyAI.isDead && gladiator.data != null)
                 {   
-                    
-                    float attackDamage = gladiator.data.strength * 2f;//1.5'di güncelledim
-                    attackDamage = attackDamage + (gladiator.data.level * 2);
-
-                    bool isCrit = Random.Range(0, 100) < gladiator.data.speed;
-                    if (isCrit) attackDamage *= 1.5f; 
-
                     enemyAI.TakeDamage(attackDamage, isCrit);
                 }
             }
         }
     }
+
+    // ... (TakeDamage, Die, HitStunRoutine, ReviveForCamp, LifeCycleRoutine fonksiyonları BİREBİR AYNI KALACAK) ...
 
     public void TakeDamage(float incomingDamage, bool isCritical = false)
     {

@@ -147,13 +147,16 @@ public class GladiatorAI : MonoBehaviour
         }
     }
 
-    IEnumerator AttackRoutine()
+   IEnumerator AttackRoutine()
     {
         isAttacking = true;
         
         float currentSpd = CurrentAttackSpeed;
         if (animator) 
         {
+         
+            animator.SetBool("IsRanged", IsRangedWeapon); 
+            
             animator.SetFloat("AttackSpeedMultiplier", currentSpd);
             animator.SetTrigger("Attack");
         }

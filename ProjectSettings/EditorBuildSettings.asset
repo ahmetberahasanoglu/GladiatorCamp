@@ -11,7 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/CampScene.unity
     guid: 0f59d598a86b82c4aa77ab17b432167c
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/ArcheryMiniGame.unity
     guid: 23147dbfda8892343826ee6c5386a542
   m_configObjects:

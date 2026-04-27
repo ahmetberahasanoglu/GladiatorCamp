@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   itemID: Kipcak Helmet
   type: 3
+  setType: 3
   icon: {fileID: 2060371336, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}
   price: 0
   targetMeshName: kask2
@@ -21,3 +22,5 @@ MonoBehaviour:
   bonusDefense: 30
   bonusSpeed: 10
   bonusStamina: 15
+  weaponRange: 2
+  isRanged: 0

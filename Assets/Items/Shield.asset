@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   itemID: Wooden Shield
   type: 2
+  setType: 2
   icon: {fileID: 21300000, guid: 044c90d3453c31d4e9994247a085c17e, type: 3}
   price: 100
   targetMeshName: Shield1
@@ -21,3 +22,5 @@ MonoBehaviour:
   bonusDefense: 20
   bonusSpeed: -1
   bonusStamina: 2
+  weaponRange: 2
+  isRanged: 0

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   itemID: Yatagan
   type: 0
+  setType: 3
   icon: {fileID: 21300000, guid: 8d4db37289966354884e9a040abab705, type: 3}
   price: 100
   targetMeshName: "K\u0131l\u0131c"
@@ -21,3 +22,5 @@ MonoBehaviour:
   bonusDefense: 0
   bonusSpeed: 0
   bonusStamina: 0
+  weaponRange: 2
+  isRanged: 0

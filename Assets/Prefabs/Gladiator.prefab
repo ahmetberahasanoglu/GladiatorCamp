@@ -729,6 +729,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d917012af73fce4f9cc7b038675e414, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GladiatorAI
+  poisonVFXPrefab: {fileID: 4425129568585013132, guid: bbeeb0ddc21369746aaaae5c5c1c09cf, type: 3}
+  fireVFXPrefab: {fileID: 7251879486380165639, guid: c2f6a8962aac3814aa56cb9647c93470, type: 3}
+  healVFXPrefab: {fileID: 1590415177872986601, guid: acdb90624a404aa438447006f1026065, type: 3}
   deathEffectPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
   arrowPrefab: {fileID: 2330921226067030540, guid: 20bb95f069dcc0249a4738162871e42f, type: 3}
   arrowSpawnPoint: {fileID: 8836211747445951740}
@@ -736,6 +739,7 @@ MonoBehaviour:
   baseAttackAnimLength: 1.5
   target: {fileID: 0}
   isDead: 0
+  retargetInterval: 1
   isInBattle: 0
 --- !u!114 &8161922304838044321
 MonoBehaviour:
@@ -753,6 +757,8 @@ MonoBehaviour:
   armor: {fileID: 0}
   helmet: {fileID: 0}
   shield: {fileID: 0}
+  activeSet: 0
+  activeSetPieceCount: 0
   data: {fileID: 0}
 --- !u!114 &4050755522903660733
 MonoBehaviour:

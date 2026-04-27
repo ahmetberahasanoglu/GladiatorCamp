@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   itemID: Scimitar
   type: 0
+  setType: 2
   icon: {fileID: 21300000, guid: 23bb69e6efb356440ab15768f86b3d92, type: 3}
   price: 150
   targetMeshName: Mizrak

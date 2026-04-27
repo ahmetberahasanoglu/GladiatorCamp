@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   itemID: "Z\u0131rh-\u0131 Cev\u015Fen"
   type: 1
+  setType: 3
   icon: {fileID: 1841601764, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}
   price: 0
   targetMeshName: cape1
@@ -21,3 +22,5 @@ MonoBehaviour:
   bonusDefense: 50
   bonusSpeed: 0
   bonusStamina: 15
+  weaponRange: 2
+  isRanged: 0

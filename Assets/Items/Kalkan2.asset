@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   itemID: Rattan
   type: 2
+  setType: 1
   icon: {fileID: -153356289, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}
   price: 0
   targetMeshName: Shield2
@@ -21,3 +22,5 @@ MonoBehaviour:
   bonusDefense: 10
   bonusSpeed: 0
   bonusStamina: 10
+  weaponRange: 2
+  isRanged: 0

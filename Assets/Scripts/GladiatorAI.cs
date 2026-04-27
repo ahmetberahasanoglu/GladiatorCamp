@@ -11,6 +11,15 @@ public class GladiatorAI : MonoBehaviour
     private ActivityPoint currentPoint; 
     private float activityTimer;
 
+    [Header("Sinerji Efektleri (VFX)")]
+    public GameObject poisonVFXPrefab;
+    public GameObject fireVFXPrefab;
+    public GameObject healVFXPrefab;
+
+
+    private GameObject activePoisonVFX;
+    private GameObject activeFireVFX;
+
     [Header("Efektler ve Menzilli Saldırı")]
     public GameObject deathEffectPrefab;
     public GameObject arrowPrefab; 
@@ -143,17 +152,20 @@ public class GladiatorAI : MonoBehaviour
     }
 
     // --- YENİ: ZEHİR VE ATEŞ YANMA İŞLEMLERİ ---
-    private void HandleStatusEffects()
+  private void HandleStatusEffects()
     {
         // Zehir İşleyişi
         if (poisonDuration > 0)
         {
             poisonTimer += Time.deltaTime;
-            if (poisonTimer >= 1.0f) // Saniyede 1 kere vur
+            if (poisonTimer >= 1.0f)
             {
-                TakeDamage(poisonDamagePerTick, false, true); // isDoT = true
+                TakeDamage(poisonDamagePerTick, false, true); 
                 poisonDuration -= 1.0f;
                 poisonTimer = 0f;
+                
+                // YENİ: Süre bittiyse efekti sil
+                if (poisonDuration <= 0 && activePoisonVFX != null) Destroy(activePoisonVFX);
             }
         }
 
@@ -163,16 +175,38 @@ public class GladiatorAI : MonoBehaviour
             fireTimer += Time.deltaTime;
             if (fireTimer >= 1.0f)
             {
-                TakeDamage(fireDamagePerTick, false, true); // isDoT = true
+                TakeDamage(fireDamagePerTick, false, true); 
                 fireDuration -= 1.0f;
                 fireTimer = 0f;
+
+                // YENİ: Süre bittiyse efekti sil
+                if (fireDuration <= 0 && activeFireVFX != null) Destroy(activeFireVFX);
             }
         }
     }
 
-    // Dışarıdan Efekt Uygulama Metodları
-    public void ApplyPoison(float dps, float duration) { poisonDamagePerTick = dps; poisonDuration = duration; }
-    public void ApplyBurn(float dps, float duration) { fireDamagePerTick = dps; fireDuration = duration; }
+   public void ApplyPoison(float dps, float duration) 
+    { 
+        poisonDamagePerTick = dps; 
+        poisonDuration = duration; 
+        
+        // Eğer üstümüzde zaten zehir efekti yoksa, yenisini yarat ve içimize (child) al
+        if (activePoisonVFX == null && poisonVFXPrefab != null)
+        {
+            activePoisonVFX = Instantiate(poisonVFXPrefab, transform.position + Vector3.up, Quaternion.identity, transform);
+        }
+    }
+
+    public void ApplyBurn(float dps, float duration) 
+    { 
+        fireDamagePerTick = dps; 
+        fireDuration = duration; 
+        
+        if (activeFireVFX == null && fireVFXPrefab != null)
+        {
+            activeFireVFX = Instantiate(fireVFXPrefab, transform.position + Vector3.up, Quaternion.identity, transform);
+        }
+    }
 
     IEnumerator AttackRoutine()
     {
@@ -291,7 +325,11 @@ public class GladiatorAI : MonoBehaviour
                     {
                         ally.currentHealth = Mathf.Min(ally.currentHealth + healAmount, ally.maxHealth);
                         if (ally.healthBar != null) ally.healthBar.UpdateBar(ally.currentHealth, ally.maxHealth);
-                        
+                        if (healVFXPrefab != null)
+                        {
+                            GameObject healVFX = Instantiate(healVFXPrefab, ally.transform.position, Quaternion.identity);
+                            Destroy(healVFX, 1.5f);
+                        }    
                         // Opsiyonel: Şifa texti gösterilebilir (+20) yeşil renkte
                     }
                 }

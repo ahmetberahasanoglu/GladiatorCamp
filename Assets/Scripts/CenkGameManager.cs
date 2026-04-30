@@ -28,19 +28,19 @@ public class CenkGameManager : MonoBehaviour
     public GameObject[] enemyCrowns;
 
     [Header("Pes Etme Ayarları")]
-    public TextMeshProUGUI surrenderButtonText; // Unity Editöründen butonun içindeki Text objesini sürükleyeceğiz
-    private bool isFirstTurn = true; // Oyun yeni mi başladı?
+    public TextMeshProUGUI surrenderButtonText; 
+    private bool isFirstTurn = true; 
 
-    [Header("Kart Sayacı (YENİ)")]
-    public TextMeshProUGUI playerCardCountText; // Örn: 1/3 yazacak
-    public TextMeshProUGUI enemyCardCountText;  // Örn: 2/3 yazacak
-    private const int MAX_CARDS_PER_ROUND = 3;  // Sınırımız
+    [Header("Kart Sayacı")]
+    public TextMeshProUGUI playerCardCountText; 
+    public TextMeshProUGUI enemyCardCountText;  
+    private const int MAX_CARDS_PER_ROUND = 3;  
 
     [Header("Prefab ve Görseller")]
     public GameObject cardPrefab;
-    public Sprite[] cardSprites; // YENİ: Kart resimlerini buradan atayacağız
+    public Sprite[] cardSprites; 
 
-    // KART VERİTABANI (Sıralama çok önemli!)
+    // KART VERİTABANI
     private string[] cardNames = { "Kılıçlı Er", "Zırhlı Yaya", "Uzun Yay", "Arbaletçi", "Hafif Süvari", "Ağır Sipahi" };
     private int[] cardPowers = { 3, 5, 4, 6, 5, 8 };
 
@@ -50,7 +50,7 @@ public class CenkGameManager : MonoBehaviour
     private bool isPlayerTurn;
 
     [Header("Günlük Sınır")]
-    public bool hasPlayedToday = false; // Bugün oynandı mı?
+    public bool hasPlayedToday = false; 
     
     private List<CenkCardUI> enemyHandCards = new List<CenkCardUI>();
 
@@ -59,9 +59,9 @@ public class CenkGameManager : MonoBehaviour
         Instance = this;
         if (cenkPanel != null) cenkPanel.SetActive(false);
     }
+
     void Start()
     {
-        
         if (DayManager.Instance != null)
         {
             DayManager.Instance.OnNewDay += ResetDailyPlayLimit;
@@ -78,7 +78,7 @@ public class CenkGameManager : MonoBehaviour
 
     void ResetDailyPlayLimit()
     {
-        hasPlayedToday = false; // Yeni gün doğdu, tekrar oynayabilir!
+        hasPlayedToday = false; 
     }
 
     public void OpenMinigame()
@@ -91,7 +91,8 @@ public class CenkGameManager : MonoBehaviour
         foreach(var c in playerCrowns) c.SetActive(false);
         foreach(var c in enemyCrowns) c.SetActive(false);
 
-        ClearArea(playerHandArea); ClearArea(enemyHandArea);
+        ClearArea(playerHandArea); 
+        ClearArea(enemyHandArea);
         enemyHandCards.Clear();
         
         for (int i = 0; i < 7; i++)
@@ -100,6 +101,10 @@ public class CenkGameManager : MonoBehaviour
             CenkCardUI enemyCard = CreateRandomCard(enemyHandArea, false);
             enemyHandCards.Add(enemyCard);
         }
+
+        // BUG 2 ÇÖZÜMÜ: isFirstTurn sadece oyun İLK açıldığında true olmalıdır!
+        isFirstTurn = true; 
+        if (surrenderButtonText != null) surrenderButtonText.text = "Çık";
 
         StartNewRound();
     }
@@ -115,10 +120,7 @@ public class CenkGameManager : MonoBehaviour
         
         passButton.interactable = true;
         infoText.text = "Yeni Raunt! Sıra Sende.";
-        UpdateScoresAndCounters(); // İlk başta 0/3 yazsın
-        // (Oyunun başladığı fonksiyonun içine ekle)
-        isFirstTurn = true;
-        if (surrenderButtonText != null) surrenderButtonText.text = "Çık";
+        UpdateScoresAndCounters(); 
     }
 
     CenkCardUI CreateRandomCard(Transform parentArea, bool isPlayer)
@@ -127,7 +129,6 @@ public class CenkGameManager : MonoBehaviour
         GameObject obj = Instantiate(cardPrefab, parentArea);
         CenkCardUI card = obj.GetComponent<CenkCardUI>();
         
-        // YENİ: İndekse göre doğru resmi bul ve karta gönder
         Sprite selectedSprite = null;
         if (cardSprites != null && cardSprites.Length > r)
         {
@@ -142,20 +143,19 @@ public class CenkGameManager : MonoBehaviour
     public void PlayerPlaysCard(CenkCardUI playedCard)
     {
         if (!isPlayerTurn || playerPassed) return;
-        // (Oyuncunun hamle yaptığı fonksiyonun içine ekle)
-    if (isFirstTurn)
-    {
-        isFirstTurn = false;
-        if (surrenderButtonText != null) surrenderButtonText.text = "Çekil (-5)";
-    }
-        // Kartı sahaya sür
+        
+        if (isFirstTurn)
+        {
+            isFirstTurn = false;
+            if (surrenderButtonText != null) surrenderButtonText.text = "Çekil (-5)";
+        }
+        
         playedCard.transform.SetParent(playerBoardArea);
         playedCard.cardButton.interactable = false;
 
         UpdateScoresAndCounters();
         isPlayerTurn = false;
 
-        // --- YENİ: OTOMATİK PAS KONTROLÜ ---
         if (playerBoardArea.childCount >= MAX_CARDS_PER_ROUND)
         {
             playerPassed = true;
@@ -173,6 +173,14 @@ public class CenkGameManager : MonoBehaviour
     public void OnPassButtonClicked()
     {
         if (!isPlayerTurn) return;
+
+        // BUG 3 ÇÖZÜMÜ: Oyuncu pas dediğinde de maça katılmış demektir, ceza başlar.
+        if (isFirstTurn)
+        {
+            isFirstTurn = false;
+            if (surrenderButtonText != null) surrenderButtonText.text = "Çekil (-5)";
+        }
+
         playerPassed = true;
         passButton.interactable = false;
         infoText.text = "Pas geçtin. Rakip bekleniyor...";
@@ -189,11 +197,9 @@ public class CenkGameManager : MonoBehaviour
             yield break;
         }
 
-        // Düşünme efekti
         if (!playerPassed) infoText.text = "Rakip düşünüyor...";
         yield return new WaitForSeconds(1.2f);
 
-        // AI MANTIĞI KONTROLÜ
         if (enemyHandCards.Count == 0 || enemyBoardArea.childCount >= MAX_CARDS_PER_ROUND || (playerPassed && enemyTotalScore > playerTotalScore))
         {
             enemyPassed = true;
@@ -203,7 +209,6 @@ public class CenkGameManager : MonoBehaviour
             yield break;
         }
 
-        // AI Kart Oynar
         int r = Random.Range(0, enemyHandCards.Count);
         CenkCardUI cardToPlay = enemyHandCards[r];
         enemyHandCards.RemoveAt(r);
@@ -214,7 +219,6 @@ public class CenkGameManager : MonoBehaviour
         infoText.text = "Rakip kart oynadı.";
         UpdateScoresAndCounters();
         
-        // Oyuncunun yazıyı okuması için 1 saniye bekle
         yield return new WaitForSeconds(1.0f);
 
         if (!playerPassed)
@@ -224,22 +228,19 @@ public class CenkGameManager : MonoBehaviour
         }
         else
         {
-            // Oyuncu pas geçtiyse AI kendi kendine oynamaya devam eder
             StartCoroutine(EnemyTurnRoutine());
         }
     }
 
-    // --- SİNERJİ, SKOR VE SAYAÇ (YENİLENDİ) ---
+    // --- SİNERJİ, SKOR VE SAYAÇ ---
     void UpdateScoresAndCounters()
     {
-        // Puanları Hesapla
         playerTotalScore = CalculateRowScore(playerBoardArea);
         enemyTotalScore = CalculateRowScore(enemyBoardArea);
 
         playerScoreText.text = $"Puan: {playerTotalScore}";
         enemyScoreText.text = $"Puan: {enemyTotalScore}";
 
-        // Sayaçları Güncelle (0/3, 1/3 vb.)
         if (playerCardCountText != null) 
             playerCardCountText.text = $"{playerBoardArea.childCount}/{MAX_CARDS_PER_ROUND}";
         
@@ -247,31 +248,25 @@ public class CenkGameManager : MonoBehaviour
             enemyCardCountText.text = $"{enemyBoardArea.childCount}/{MAX_CARDS_PER_ROUND}";
     }
 
-   int CalculateRowScore(Transform row)
+    int CalculateRowScore(Transform row)
     {
         CenkCardUI[] cardsInRow = row.GetComponentsInChildren<CenkCardUI>();
         int rowScore = 0;
 
-        // Kartları isimlerine göre grupluyoruz (Senin harika LINQ çözümün)
         var groupedCards = cardsInRow.GroupBy(c => c.cardName);
 
         foreach (var group in groupedCards)
         {
-          
             int count = group.Count();
-            
-           
             int multiplier = count; 
 
             foreach (CenkCardUI card in group)
             {
                 card.currentPower = card.basePower * multiplier;
                 card.UpdateVisuals(); 
-                
                 rowScore += card.currentPower;
             }
         }
-        
         return rowScore;
     }
 
@@ -333,7 +328,7 @@ public class CenkGameManager : MonoBehaviour
             infoText.text = "<color=red>CENK'İ KAYBETTİN!</color>";
         }
     }
-// --- YENİ: PES ETME FONKSİYONU ---
+
     public void SurrenderGame()
     {
         if (closeButton.activeSelf) return;
@@ -343,40 +338,38 @@ public class CenkGameManager : MonoBehaviour
         if (passButton != null) passButton.interactable = false;
         closeButton.SetActive(true);
 
-        // --- YENİ EKLENEN KONTROL ---
         if (isFirstTurn)
         {
-            // OYUN BAŞLAMADAN ÇIKTI (CEZA YOK)
             infoText.text = "Masadan kalktın.";
-            
             if (NotificationManager.Instance != null)
-            {
                 NotificationManager.Instance.Show("Savaşa başlamadan masadan ayrıldın.", NotificationType.Info);
-            }
         }
         else
         {
-            // OYUN BAŞLADI VE PES ETTİ (CEZA VAR)
             infoText.text = "<color=red>PES ETTİN!</color> Masadan çekildin.";
-            
             if (CampMoraleManager.Instance != null) 
-            {
                 CampMoraleManager.Instance.ChangeMorale(-5); 
-            }
 
             if (NotificationManager.Instance != null)
-            {
                 NotificationManager.Instance.Show("Savaştan çekildin. Askerlerin morali bozuldu (-5)", NotificationType.Warning);
-            }
         }
     }
+
     public void CloseMinigame()
     {
         cenkPanel.SetActive(false);
     }
 
+    // BUG 1 ÇÖZÜMÜ: YENİ CLEAR AREA
     void ClearArea(Transform area)
     {
-        foreach (Transform child in area) Destroy(child.gameObject);
+        // Tahtadaki kartları yok etmeden önce ebeveynlikten çıkarıyoruz. 
+        // Böylece UpdateScoresAndCounters çağrıldığında bu kartları "0" olarak görür.
+        while (area.childCount > 0)
+        {
+            Transform child = area.GetChild(0);
+            child.SetParent(null); 
+            Destroy(child.gameObject);
+        }
     }
 }

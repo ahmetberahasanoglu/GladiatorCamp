@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 872777d28f1ec70429103b9364761e4f, type: 3}
   m_Name: BigSword
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemID: Scimitar
+  itemID: Scimitar/Inanc
   type: 0
-  setType: 2
+  setType: 3
   icon: {fileID: 21300000, guid: 23bb69e6efb356440ab15768f86b3d92, type: 3}
   price: 150
   targetMeshName: Mizrak

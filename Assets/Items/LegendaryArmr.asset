@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 872777d28f1ec70429103b9364761e4f, type: 3}
   m_Name: LegendaryArmr
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemID: "Z\u0131rh-\u0131 Cev\u015Fen"
+  itemID: "Z\u0131rh-\u0131 Cev\u015Fen/Inanc"
   type: 1
   setType: 3
   icon: {fileID: 1841601764, guid: 5e9dded188d2d7d41a484179456be6b5, type: 3}

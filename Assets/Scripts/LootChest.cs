@@ -4,11 +4,11 @@ using System.Collections;
 
 public class LootChest : MonoBehaviour
 {
-    // Diğer scriptlerden kolayca ulaşmak için Singleton yapıyoruz
+
     public static LootChest Instance; 
 
     [Header("Görsel ve Ses Efektleri")]
-    public GameObject chestVisuals;          // YENİ: Sandığın 3D modelini buraya sürükleyeceğiz
+    public GameObject chestVisuals;         
     public ParticleSystem coinBurstParticle; 
    // public AudioSource coinSound;            
     

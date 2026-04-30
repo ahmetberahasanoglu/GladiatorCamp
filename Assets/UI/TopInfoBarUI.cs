@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
+using Mono.Cecil;
 
 public class TopInfoBarUI : MonoBehaviour
 {
@@ -82,6 +83,30 @@ public class TopInfoBarUI : MonoBehaviour
         {
           
             dayFillBar.fillAmount = Mathf.Clamp01((float)day / DayManager.Instance.maxDays);
+        }
+    }
+    // TopInfoBarUI.cs içine ekle
+    public void UpdateExpeditionRiskUI(int tempGold, int tempRep)
+    {
+        // Asıl altın miktarını al (Örn: 500)
+        int currentGold = MoneyManager.Instance.gold; // ResourceManager.Instance.currentGold vs.
+        int currentRep = ReputationManager.Instance.GetReputation();   // ReputationManager.Instance.currentReputation vs.
+
+        // Eğer seferdeysek ve çantamızda altın varsa parantez içinde göster
+        if (ExpeditionManager.Instance.isExpeditionActive)
+        {
+            string goldBonus = tempGold > 0 ? $" <color=yellow>(+{tempGold})</color>" : "";
+            string repBonus = tempRep > 0 ? $" <color=green>(+{tempRep})</color>" : tempRep < 0 ? $" <color=red>({tempRep})</color>" : "";
+
+            // Text'lerine yazdır (Değişken isimleri kendi scriptine göre uyarla)
+            // goldText.text = currentGold.ToString() + goldBonus;
+            // repText.text = currentRep.ToString() + repBonus;
+        }
+        else
+        {
+            // Seferde değilsek normal göster
+            // goldText.text = currentGold.ToString();
+            // repText.text = currentRep.ToString();
         }
     }
 

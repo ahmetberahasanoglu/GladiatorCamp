@@ -31,16 +31,18 @@ public class MapManager : MonoBehaviour
     public GameObject linePrefab; 
     public Transform lineContainer; 
     public static string sessionLastNode = "";
-public bool isMapOpen = false;
-[Header("Sis ve Çizgi Ayarları")]
+    public bool isMapOpen = false;
+
+    [Header("Sis ve Çizgi Ayarları")]
     public List<MapNode> visitedNodes = new List<MapNode>();
     private List<MapLine> allLines = new List<MapLine>();
+
     void Awake()
     {
         Instance = this;
     }
 
-   void Start()
+    void Start()
     {
         DrawAllConnections();
         LoadPlayerPosition();
@@ -58,9 +60,47 @@ public bool isMapOpen = false;
         }
     }
     
-   public void ShowMap()
+    // YENİ: Kampa Dönüş Metodu (Butondan çağrılacak)
+    public void ReturnToCamp()
+    {
+        if (ExpeditionManager.Instance != null && ExpeditionManager.Instance.isExpeditionActive)
+        {
+            ExpeditionManager.Instance.ReturnToCampSafely();
+        }
+
+        // Haritayı sıfırla (Böylece oyuncu haritayı bir daha açtığında baştan başlar)
+        ResetMapProgress();
+        HideMap();
+    }
+    
+    // YENİ: Harita Sıfırlayıcı
+    public void ResetMapProgress()
+    {
+        currentNode = null;
+        previousNode = null;
+        sessionLastNode = "";
+        sessionPreviousNode = "";
+        visitedNodes.Clear();
+
+        // İkonu en başa (görünmez/kamp kısmına) at
+        playerIcon.anchoredPosition = new Vector2(-800f, 0f); 
+
+        UpdateMapVisibility();
+        Debug.Log("Harita sıfırlandı. Yeni sefer için hazır.");
+    }
+
+    public void ShowMap()
     {
         CloseAllOpenPanels();
+
+        // YENİ: Eğer halihazırda bir seferde değilsek (yani kamptan yeni çıkıyorsak)
+        if (ExpeditionManager.Instance != null && !ExpeditionManager.Instance.isExpeditionActive)
+        {
+            // Eğer yeni çıkıyorsa harita progress'ini de sıfırlayalım ki eski sisli yerler olmasın
+            ResetMapProgress(); 
+            ExpeditionManager.Instance.StartExpedition();
+        }
+
         mapPanel.SetActive(true);
         topPanel.SetActive(false);
         isMapOpen = true;
@@ -68,7 +108,8 @@ public bool isMapOpen = false;
         AudioManager.Instance.PlayMap();
         UpdateMapVisibility();
     }
-public void UpdateMapVisibility()
+
+    public void UpdateMapVisibility()
     {
         // 1. ÇİZGİLERİ GÜNCELLE
         foreach (var line in allLines)
@@ -88,8 +129,7 @@ public void UpdateMapVisibility()
             }
         }
 
-        // 2. NODE'LARI GÜNCELLE (HATA BURADA ÇÖZÜLÜYOR)
-        // FindObjectsInactive.Include sayesinde mapPanel kapalı olsa bile Node'ları bulur!
+        // 2. NODE'LARI GÜNCELLE
         var allNodes = FindObjectsByType<MapNode>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         
         foreach (var node in allNodes)
@@ -111,23 +151,23 @@ public void UpdateMapVisibility()
                 node.SetState(NodeState.Locked);
             }
 
-            // Tıklanabilirliği her halükarda tekrar zorla (Garanti olsun)
             if (node.nodeButton != null)
             {
                 node.nodeButton.interactable = IsMoveValid(node);
             }
         }
     }
-   void DrawAllConnections()
+
+    void DrawAllConnections()
     {
-        var allNodes = FindObjectsOfType<MapNode>();
+        var allNodes = FindObjectsByType<MapNode>(FindObjectsSortMode.None);
         foreach (var node in allNodes)
         {
             foreach (var target in node.outgoingPaths)
             {
                 if (target != null)
                 {
-                    CreateVisualLine(node, target); // Artık RectTransform değil direkt Node yolluyoruz
+                    CreateVisualLine(node, target); 
                 }
             }
         }
@@ -158,7 +198,6 @@ public void UpdateMapVisibility()
             img.pixelsPerUnitMultiplier = 2f; 
         }
 
-        // YENİ: Çizgiyi hafızaya alıyoruz ki sonra parlatabilelim
         MapLine ml = lineObj.AddComponent<MapLine>();
         ml.startNode = start;
         ml.endNode = end;
@@ -166,7 +205,6 @@ public void UpdateMapVisibility()
         allLines.Add(ml);
     }
     
-
     void LoadPlayerPosition()
     {
         if (!string.IsNullOrEmpty(sessionLastNode))
@@ -187,9 +225,14 @@ public void UpdateMapVisibility()
                 }
             }
         }
+        else
+        {
+            // Oyuna ilk girişte ikonu başlangıca al
+            playerIcon.anchoredPosition = new Vector2(-800f, 0f);
+        }
     }
 
- public void SelectNode(MapNode targetNode)
+    public void SelectNode(MapNode targetNode)
     {
         if (!IsMoveValid(targetNode))
         {
@@ -202,7 +245,6 @@ public void UpdateMapVisibility()
             previousNode = currentNode;
             sessionPreviousNode = previousNode.gameObject.name;
             
-            // YENİ: Eski konumu "Ziyaret Edilenler" listesine ekle
             if (!visitedNodes.Contains(currentNode))
             {
                 visitedNodes.Add(currentNode);
@@ -220,7 +262,19 @@ public void UpdateMapVisibility()
         }
         return currentNode.outgoingPaths.Contains(target);
     }
-   public void RetreatToPreviousNode()
+
+    // YENİ: Sürgün Yediğimizde / Askerler Öldüğünde Tetiklenir
+    public void ExpeditionFailedFromMap()
+    {
+        if (ExpeditionManager.Instance != null)
+        {
+            ExpeditionManager.Instance.FailExpedition();
+        }
+        ResetMapProgress();
+        HideMap();
+    }
+
+    public void RetreatToPreviousNode()
     {
         if (previousNode != null)
         {
@@ -230,42 +284,25 @@ public void UpdateMapVisibility()
             sessionLastNode = sessionPreviousNode;
             playerIcon.anchoredPosition = previousNode.GetComponent<RectTransform>().anchoredPosition + iconOffset;
 
-            // Geri döndüğümüz için burayı ziyaret edilenlerden çıkarıyoruz ki etrafı tekrar aydınlansın
             if (visitedNodes.Contains(previousNode)) visitedNodes.Remove(previousNode);
         }
         else
         {
-            // İLK NODE'DA YENİLGİ DURUMU: Tamamen en başa dön
-            Debug.Log("İlk savaş kaybedildi, seferin en başına dönülüyor.");
-            currentNode = null;
-            sessionLastNode = "";
-            playerIcon.anchoredPosition = new Vector2(-800f, 0f); // Haritanın sol dışına (Kamp tarafına) atar
+            Debug.Log("İlk savaş kaybedildi, sefer başarısız.");
+            ExpeditionFailedFromMap();
+            return;
         }
 
-        // Çekildikten sonra haritayı gizliyken bile güvenle güncelle
         UpdateMapVisibility(); 
     }
+
     public void CloseAllOpenPanels()
     {
-     
-        if (InventoryUIManager.Instance != null) 
-        {
-            InventoryUIManager.Instance.CloseInventory();
-        }
-
-     
-        if (GladiatorSelector.Instance != null) 
-        {
-            GladiatorSelector.Instance.ClearSelection();
-        }
-
-       
-        if (TrainingUIManager.Instance != null)
-        {
-            TrainingUIManager.Instance.SetCurrentGladiator(null);
-        }
-
+        if (InventoryUIManager.Instance != null) InventoryUIManager.Instance.CloseInventory();
+        if (GladiatorSelector.Instance != null) GladiatorSelector.Instance.ClearSelection();
+        if (TrainingUIManager.Instance != null) TrainingUIManager.Instance.SetCurrentGladiator(null);
     }
+
     public IEnumerator MoveIconRoutine(MapNode targetNode)
     {
         RectTransform targetRect = targetNode.GetComponent<RectTransform>();
@@ -298,15 +335,17 @@ public void UpdateMapVisibility()
             yield return null;
         }
 
-
         playerIcon.anchoredPosition = targetPos;
         playerIcon.rotation = Quaternion.Euler(0, 0, 0); 
         
         Debug.Log($"Yolculuk Tamamlandı! Gidilen yer: {targetNode.nodeType}");
         
-
         sessionLastNode = targetNode.gameObject.name;
         UpdateMapVisibility();
+        if (ExpeditionManager.Instance != null && ExpeditionManager.Instance.isExpeditionActive)
+        {
+            ExpeditionManager.Instance.AdvanceEncounter();
+        }
         TriggerEvent(targetNode);
     }
 

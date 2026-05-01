@@ -7,7 +7,7 @@ public class ExpeditionManager : MonoBehaviour
 
     [Header("Sefer Durumu")]
     public bool isExpeditionActive = false;
-    public int currentEncounterCount = 0; // Haritada atılan adım sayısı
+    public int currentEncounterCount = 0; 
 
     [Header("Geçici Sefer Çantası")]
     public int tempGold = 0;
@@ -20,13 +20,11 @@ public class ExpeditionManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    // Haritaya ilk çıkıldığında çağrılır
     public void StartExpedition()
     {
         isExpeditionActive = true;
         currentEncounterCount = 0;
         
-        // Çantayı sıfırla
         tempGold = 0;
         tempReputation = 0;
         tempItems.Clear();
@@ -35,7 +33,7 @@ public class ExpeditionManager : MonoBehaviour
         UpdateTopBarUI();
     }
 
-    // Savaş veya olay kazanıldığında ganimetleri çantaya atar
+    // Savaş, Olay veya Sandık bittiğinde çağrılacak!
     public void AddLoot(int goldReward, int repReward, List<ItemData> itemRewards = null)
     {
         tempGold += goldReward;
@@ -46,29 +44,47 @@ public class ExpeditionManager : MonoBehaviour
             tempItems.AddRange(itemRewards);
         }
 
-        // Haritada atılan adımı (Encounter) 1 artır ve günü geçir
-        currentEncounterCount++;
-        if (DayManager.Instance != null) DayManager.Instance.NextDay(1); // Her encounter = 1 Gün
-
         UpdateTopBarUI();
+    }
+
+    // YENİ: Haritada atılan her adımda zamanı geçirir. 
+    // MapManager içindeki MoveIconRoutine bittiğinde çağıracağız.
+    public void AdvanceEncounter()
+    {
+        if (!isExpeditionActive) return;
+
+        currentEncounterCount++;
         
-        // 5. Encounter kontrolü (Ata Yadigarı / Meta Progression için)
+        // 1 Düğüm = 1 Gün. Askerlerin maaşı ödenir, moraller hesaplanır!
+        if (MoneyManager.Instance != null)
+        {
+            MoneyManager.Instance.EndOfDay(1);
+        }
+
+        // 5. Encounter meta-progression (Ata Yadigarı) kontrolü
         if (currentEncounterCount % 5 == 0)
         {
-            TriggerRelicChoice();
+            Debug.Log("<color=yellow>MİRAS ZAMANI!</color> 5 Encounter geçildi.");
+            // MetaProgressionManager.Instance.ShowRelicSelectionUI();
         }
     }
 
-    // OYUNCU KAMPA DÖNME KARARI ALDIĞINDA ÇALIŞIR
+    // --- KAMPA DÖNÜŞ (BAŞARILI) ---
     public void ReturnToCampSafely()
     {
         if (!isExpeditionActive) return;
 
-        // 1. Kazançları asıl depolara aktar
-        // (Buradaki ResourceManager, CurrencyManager vs. senin kendi oyunundaki yöneticilerdir)
-        // Örnek: ResourceManager.Instance.AddGold(tempGold);
-        // Örnek: ReputationManager.Instance.AddReputation(tempReputation);
+        // 1. Altınları Kasaya Aktar
+        if (tempGold > 0) MoneyManager.Instance.Add(tempGold);
+        else if (tempGold < 0) MoneyManager.Instance.Spend(Mathf.Abs(tempGold)); 
 
+        // 2. İtibarı İncele ve Aktar (Eğer 0'a düşerse SÜRGÜN YER!)
+        if (tempReputation != 0)
+        {
+            ReputationManager.Instance.ChangeReputation(tempReputation);
+        }
+
+        // 3. Eşyaları Depoya Aktar
         if (InventoryStorage.Instance != null)
         {
             foreach (var item in tempItems)
@@ -77,48 +93,54 @@ public class ExpeditionManager : MonoBehaviour
             }
         }
 
-        // 2. Kamp Gazetesini / Özet Ekranını Göster
-        ShowExpeditionSummary(true);
+        // 4. Gazeteyi Göster (Sürgün yemediysek)
+        if (ReputationManager.Instance.GetReputation() > 0)
+        {
+            ShowExpeditionSummary(true);
+        }
 
-        // 3. Seferi bitir ve çantayı boşalt
         ResetExpedition();
     }
 
-    // KERVANSARAY MANTIĞI (%10 Komisyonla güvenli aktarım)
+    // --- KERVANSARAY MANTIĞI (%10 Komisyon) ---
     public void SendLootViaCaravan()
     {
+        if (tempGold <= 0 && tempItems.Count == 0) return;
+
         int fee = Mathf.RoundToInt(tempGold * 0.1f);
         int safeGold = tempGold - fee;
 
-        // Geçici altını ve eşyaları ana kampa gönder
-        // ResourceManager.Instance.AddGold(safeGold);
+        if (safeGold > 0) MoneyManager.Instance.Add(safeGold);
+
         if (InventoryStorage.Instance != null)
         {
             foreach (var item in tempItems) InventoryStorage.Instance.AddItem(item);
         }
 
         if (NotificationManager.Instance != null)
-            NotificationManager.Instance.Show($"Kervan yola çıktı! (-{fee} Altın Kesinti)", NotificationType.Success);
+            NotificationManager.Instance.Show($"Kervan yola çıktı! (-{fee} Akçe Kesinti)", NotificationType.Success);
 
-        // Gönderilenleri çantadan sil, ama sefer devam ediyor (İtibar hariç, itibar kampa dönünce işlenir)
+        // Gönderilenler çantadan silinir, sefer devam eder. (İtibar GÖNDERİLEMEZ!)
         tempGold = 0;
         tempItems.Clear();
         UpdateTopBarUI();
     }
 
-    // ASKERLER ÖLÜR VEYA İTİBAR 0 OLURSA ÇALIŞIR (GAME OVER / SÜRGÜN)
+    // --- SEFER BAŞARISIZ (ÖLÜM VEYA İFLAS) ---
     public void FailExpedition()
     {
         if (!isExpeditionActive) return;
 
-        // Çantadaki her şey (Altın, Eşyalar) BOŞA GİTTİ!
+        // Altın ve Eşyalar HARİTADA KALDI! (Çöpe gitti)
         
-        // Yenilgi gazetesini göster
-        ShowExpeditionSummary(false);
+        // Ancak Kötü Şöhret (Negatif İtibar) kampa ulaşır!
+        if (tempReputation < 0)
+        {
+            ReputationManager.Instance.ChangeReputation(tempReputation);
+        }
 
+        ShowExpeditionSummary(false);
         ResetExpedition();
-        
-        // Padişahın sürgün fermanı tetiklenebilir...
     }
 
     private void ResetExpedition()
@@ -131,28 +153,18 @@ public class ExpeditionManager : MonoBehaviour
         UpdateTopBarUI();
     }
 
-    // UI'daki o gerilimli yazıyı (Örn: Altın 500 (+100)) güncellemek için
     private void UpdateTopBarUI()
     {
-        if (TopInfoBarUI.Instance != null)
-        {
-            // Bu metodu TopInfoBarUI scriptinin içine ekleyeceğiz
-            TopInfoBarUI.Instance.UpdateExpeditionRiskUI(tempGold, tempReputation);
-        }
-    }
-
-    private void TriggerRelicChoice()
-    {
-        Debug.Log("5 Encounter geçildi! Ata Yadigarı seçme ekranı açılmalı.");
-        // MetaProgressionManager.Instance.ShowRelicSelectionUI();
+        // Eğer TopInfoBarUI scriptin varsa, oraya bu geçici değerleri gönder.
+        // Örnek: TopInfoBarUI.Instance.UpdateRisk(tempGold, tempReputation);
     }
 
     private void ShowExpeditionSummary(bool isVictory)
     {
         string title = isVictory ? "Ordu Kampa Döndü!" : "Seferde Felaket!";
         string detail = isVictory 
-            ? $"Kazanılan Altın: {tempGold}\nKazanılan İtibar: {tempReputation}\nToplanan Eşya: {tempItems.Count}" 
-            : "Tüm ganimetler haritada kaybedildi...";
+            ? $"Ganimet: {tempGold} Akçe\nİtibar Değişimi: {tempReputation}\nToplanan Eşya: {tempItems.Count}" 
+            : "Tüm ganimetler kaybedildi! Sadece yaralılar döndü...";
             
         // NewspaperManager.Instance.ShowHeadline(title, detail);
     }

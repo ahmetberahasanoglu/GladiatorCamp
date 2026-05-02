@@ -372,7 +372,7 @@ private void ChangeEnvironment(BattleEnvironment envType)
         
         if (skillPanel != null) skillPanel.SetActive(false);
         topPanel.SetActive(true);
-        if (MapManager.Instance != null) MapManager.Instance.HideMap(); 
+        if (MapManager.Instance != null) MapManager.Instance.ShowMap(); 
 
         // SAVAŞ KAZANILDI MI? (Sadece kazandıysak Gazi unvanı ve Ekstra Moral vereceğiz)
         bool wasVictorious = (state == BattleState.Won);

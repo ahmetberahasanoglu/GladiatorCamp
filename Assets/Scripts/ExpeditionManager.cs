@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
+
 
 public class ExpeditionManager : MonoBehaviour
 {
@@ -13,6 +15,9 @@ public class ExpeditionManager : MonoBehaviour
     public int tempGold = 0;
     public int tempReputation = 0;
     public List<ItemData> tempItems = new List<ItemData>();
+    public static event Action OnEncounterAdvanced;
+    [Header("UI Referansları")]
+    public TMPro.TextMeshProUGUI relicProgressText;
 
     void Awake()
     {
@@ -33,7 +38,7 @@ public class ExpeditionManager : MonoBehaviour
         UpdateTopBarUI();
     }
 
-    // Savaş, Olay veya Sandık bittiğinde çağrılacak!
+  
     public void AddLoot(int goldReward, int repReward, List<ItemData> itemRewards = null)
     {
         tempGold += goldReward;
@@ -62,49 +67,45 @@ public class ExpeditionManager : MonoBehaviour
 
      
 
-        // 5. Encounter meta-progression (Ata Yadigarı) kontrolü
-       // 5. Encounter meta-progression (Ata Yadigarı) kontrolü
-        if (currentEncounterCount % 5 == 0)
-        {
-            Debug.Log("<color=yellow>MİRAS ZAMANI!</color> 5 Encounter geçildi.");
-            MetaProgressionManager.Instance.TriggerRelicChoice(); 
-        }
-       
-    BuildingClickable[] allBuildings = FindObjectsByType<BuildingClickable>(FindObjectsSortMode.None);
-    foreach (var building in allBuildings)
-    {
-        building.AdvanceConstructionTimer();
-    }
+       OnEncounterAdvanced?.Invoke();
+        UpdateTopBarUI();
     }
 
-    // --- KAMPA DÖNÜŞ (BAŞARILI) ---
+  
     public void ReturnToCampSafely()
     {
         if (!isExpeditionActive) return;
 
-        // 1. Altınları Kasaya Aktar
         if (tempGold > 0) MoneyManager.Instance.Add(tempGold);
         else if (tempGold < 0) MoneyManager.Instance.Spend(Mathf.Abs(tempGold)); 
 
-        // 2. İtibarı İncele ve Aktar (Eğer 0'a düşerse SÜRGÜN YER!)
-        if (tempReputation != 0)
-        {
-            ReputationManager.Instance.ChangeReputation(tempReputation);
-        }
+        if (tempReputation != 0) ReputationManager.Instance.ChangeReputation(tempReputation);
 
-        // 3. Eşyaları Depoya Aktar
         if (InventoryStorage.Instance != null)
         {
-            foreach (var item in tempItems)
-            {
-                InventoryStorage.Instance.AddItem(item);
-            }
+            foreach (var item in tempItems) InventoryStorage.Instance.AddItem(item);
         }
 
-        // 4. Gazeteyi Göster (Sürgün yemediysek)
-        if (ReputationManager.Instance.GetReputation() > 0)
+        // YENİ: KAZANILAN MİRAS HAKLARINI HESAPLA VE KAMPA YAZDIR
+        int earnedRelics = currentEncounterCount / 5;
+        if (earnedRelics > 0 && MetaProgressionManager.Instance != null)
         {
-            ShowExpeditionSummary(true);
+            MetaProgressionManager.Instance.AddPendingRelics(earnedRelics);
+        }
+
+        ResetExpedition();
+    }
+    public void FailExpedition()
+    {
+        if (!isExpeditionActive) return;
+
+        if (tempReputation < 0) ReputationManager.Instance.ChangeReputation(tempReputation);
+
+        // Ölsek bile kazandığımız miras hakları bizimle gelir!
+        int earnedRelics = currentEncounterCount / 5;
+        if (earnedRelics > 0 && MetaProgressionManager.Instance != null)
+        {
+            MetaProgressionManager.Instance.AddPendingRelics(earnedRelics);
         }
 
         ResetExpedition();
@@ -134,22 +135,7 @@ public class ExpeditionManager : MonoBehaviour
         UpdateTopBarUI();
     }
 
-    // --- SEFER BAŞARISIZ (ÖLÜM VEYA İFLAS) ---
-    public void FailExpedition()
-    {
-        if (!isExpeditionActive) return;
-
-        // Altın ve Eşyalar HARİTADA KALDI! (Çöpe gitti)
-        
-        // Ancak Kötü Şöhret (Negatif İtibar) kampa ulaşır!
-        if (tempReputation < 0)
-        {
-            ReputationManager.Instance.ChangeReputation(tempReputation);
-        }
-
-        ShowExpeditionSummary(false);
-        ResetExpedition();
-    }
+   
 
     private void ResetExpedition()
     {
@@ -163,8 +149,13 @@ public class ExpeditionManager : MonoBehaviour
 
     private void UpdateTopBarUI()
     {
-        // Eğer TopInfoBarUI scriptin varsa, oraya bu geçici değerleri gönder.
-        // Örnek: TopInfoBarUI.Instance.UpdateRisk(tempGold, tempReputation);
+        // 1/5 Görselini ayarlama
+        if (relicProgressText != null)
+        {
+            int currentStep = currentEncounterCount % 5;
+            int earned = currentEncounterCount / 5;
+            relicProgressText.text = $"Miras: {currentStep}/5\n<size=70%>(Kazanılan: {earned})</size>";
+        }
     }
 
     private void ShowExpeditionSummary(bool isVictory)

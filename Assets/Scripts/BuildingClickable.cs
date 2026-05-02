@@ -54,7 +54,19 @@ public class BuildingClickable : MonoBehaviour
     {
         if (_renderer != null) _renderer.material.color = _originalColor;
     }
+// BuildingClickable.cs içine ekle
+    void OnEnable()
+    {
+        ExpeditionManager.OnEncounterAdvanced += AdvanceConstructionTimer;
+    }
 
+    void OnDisable()
+    {
+        ExpeditionManager.OnEncounterAdvanced -= AdvanceConstructionTimer;
+    }
+
+    // Fonksiyonu şu şekilde değiştir:
+   
     public void OnMouseDown()
     {
         if (EventSystem.current.IsPointerOverGameObject()) return;
@@ -156,19 +168,15 @@ public class BuildingClickable : MonoBehaviour
 
         if (currentRemainingEncounters <= 0)
         {
-            // İnşaat Bitti
             currentState = BuildingState.Built;
-            UpdateVisuals();
-
-            // Efekti şimdi patlat!
             if (buildEffectPrefab != null)
             {
                 Vector3 spawnPos = transform.position + effectOffset;
-                GameObject vfx = Instantiate(buildEffectPrefab, spawnPos, Quaternion.identity);
-                Destroy(vfx, 3f);
+                Destroy(Instantiate(buildEffectPrefab, spawnPos, Quaternion.identity), 3f);
             }
-
             NotificationManager.Instance.Show($"Müjde! {buildingName} inşası tamamlandı!", NotificationType.Success);
         }
+        
+        UpdateVisuals(); 
     }
 }

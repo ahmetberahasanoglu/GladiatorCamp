@@ -61,7 +61,7 @@ public class RepairPanelManager : MonoBehaviour
         if (_currentTarget != null)
         {
             // Binanın kendi içindeki tamir fonksiyonunu çalıştır
-            _currentTarget.RepairBuilding();
+            _currentTarget.StartRepair();
             
             // Paneli kapat
             ClosePanel();

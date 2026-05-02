@@ -81,5 +81,11 @@ public class RunManager : MonoBehaviour
 
         // Morali ve Erzağı da sıfırlayabilirsin (SupplyManager varsa ekle)
         if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(50 - CampMoraleManager.Instance.currentMorale);
+
+       
+    if (MetaProgressionManager.Instance != null)
+    {
+        MetaProgressionManager.Instance.ApplyStartingRelics();
+    }
     }
 }

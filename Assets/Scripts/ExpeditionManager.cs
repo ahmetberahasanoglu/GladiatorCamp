@@ -62,11 +62,18 @@ public class ExpeditionManager : MonoBehaviour
         }
 
         // 5. Encounter meta-progression (Ata Yadigarı) kontrolü
+       // 5. Encounter meta-progression (Ata Yadigarı) kontrolü
         if (currentEncounterCount % 5 == 0)
         {
             Debug.Log("<color=yellow>MİRAS ZAMANI!</color> 5 Encounter geçildi.");
-            // MetaProgressionManager.Instance.ShowRelicSelectionUI();
+            MetaProgressionManager.Instance.TriggerRelicChoice(); 
         }
+       
+    BuildingClickable[] allBuildings = FindObjectsByType<BuildingClickable>(FindObjectsSortMode.None);
+    foreach (var building in allBuildings)
+    {
+        building.AdvanceConstructionTimer();
+    }
     }
 
     // --- KAMPA DÖNÜŞ (BAŞARILI) ---

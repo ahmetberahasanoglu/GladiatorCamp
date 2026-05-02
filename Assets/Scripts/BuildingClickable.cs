@@ -1,8 +1,10 @@
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using TMPro;
 
-public enum BuildingState { Locked, Ruined, Built }
+// YENİ: UnderConstruction (İnşa Halinde) durumu eklendi!
+public enum BuildingState { Locked, Ruined, UnderConstruction, Built }
 
 public class BuildingClickable : MonoBehaviour
 {
@@ -12,19 +14,26 @@ public class BuildingClickable : MonoBehaviour
     public BuildingState currentState = BuildingState.Built;
     public int repairCost = 1000;
 
+    [Header("UI Bilgilendirme (3D Yazı)")]
+    public TextMeshProUGUI statusText;
+
+    [Header("İnşaat Süresi (Roguelite)")]
+    public int requiredEncounters = 3; 
+    public int currentRemainingEncounters = 0; 
+
     [Header("Görseller (Modeller)")]
     public GameObject ruinedModel; 
     public GameObject builtModel;  
+    public GameObject constructionModel; // Opsiyonel: İnşaat halinde görünmesi için iskele modeli (Yoksa ruined kalır)
 
     [Header("Renk Değişimi")]
     public Color highlightColor = Color.yellow;
     private Renderer _renderer; 
     private Color _originalColor;
 
-    // --- YENİ EKLENEN KISIM: EFEKT ---
     [Header("Efektler (Juiciness)")]
-    public GameObject buildEffectPrefab; // İnşaat toz bulutu / parlaması
-    public Vector3 effectOffset = new Vector3(0, 2f, 0); // Efektin yerden ne kadar yukarıda çıkacağı
+    public GameObject buildEffectPrefab; 
+    public Vector3 effectOffset = new Vector3(0, 2f, 0); 
 
     [Header("Olaylar")]
     public UnityEvent OnBuiltClick;   
@@ -35,7 +44,6 @@ public class BuildingClickable : MonoBehaviour
         UpdateVisuals();
     }
 
-    // --- MOUSE ETKİLEŞİMLERİ ---
     void OnMouseEnter()
     {
         if (EventSystem.current.IsPointerOverGameObject()) return;
@@ -51,8 +59,7 @@ public class BuildingClickable : MonoBehaviour
     {
         if (EventSystem.current.IsPointerOverGameObject()) return;
         if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
-        NotificationManager.Instance.Show($"{buildingName} tıklandı. ", NotificationType.Info);
-
+        
         switch (currentState)
         {
             case BuildingState.Ruined:
@@ -62,12 +69,18 @@ public class BuildingClickable : MonoBehaviour
                 }
                 break;
 
+            case BuildingState.UnderConstruction:
+                // YENİ: İnşaat halindeyken tıklanırsa kalan süreyi gösterir!
+                NotificationManager.Instance.Show($"{buildingName} inşa ediliyor... Tamamlanmasına {currentRemainingEncounters} sefer (adım) kaldı.", NotificationType.Warning);
+                break;
+
             case BuildingState.Built:
+                NotificationManager.Instance.Show($"{buildingName} binasına girdin.", NotificationType.Info);
                 OnBuiltClick?.Invoke();
                 break;
             
             case BuildingState.Locked:
-             NotificationManager.Instance.Show("Bu bina henüz kilitli!", NotificationType.Info);
+                NotificationManager.Instance.Show("Bu bina henüz kilitli!", NotificationType.Info);
                 break;
         }
     }
@@ -76,52 +89,86 @@ public class BuildingClickable : MonoBehaviour
     {
         if (ruinedModel != null) ruinedModel.SetActive(currentState == BuildingState.Ruined);
         if (builtModel != null) builtModel.SetActive(currentState == BuildingState.Built);
+        if (constructionModel != null) constructionModel.SetActive(currentState == BuildingState.UnderConstruction);
         
         GameObject activeModel = null;
         if (currentState == BuildingState.Built) activeModel = builtModel;
         else if (currentState == BuildingState.Ruined) activeModel = ruinedModel;
+        else if (currentState == BuildingState.UnderConstruction) 
+        {
+            activeModel = constructionModel != null ? constructionModel : ruinedModel; // İskele modeli yoksa harabeyi göster
+        }
 
         if (activeModel != null)
         {
             _renderer = activeModel.GetComponentInChildren<Renderer>();
-
-            if (_renderer != null)
-            {
-                _originalColor = _renderer.material.color;
-            }
-            else
-            {
-                Debug.LogWarning($"{buildingName} objesinin aktif modelinde Renderer bulunamadı!");
-            }
+            if (_renderer != null) _originalColor = _renderer.material.color;
         }
+        UpdateStatusText();
     }
 
-    public void RepairBuilding()
+
+    public void StartRepair()
     {
         if (MoneyManager.Instance != null && MoneyManager.Instance.gold >= repairCost)
         {
             MoneyManager.Instance.Spend(repairCost); 
             
-            currentState = BuildingState.Built;
+            // İnşaatı Başlat
+            currentState = BuildingState.UnderConstruction;
+            currentRemainingEncounters = requiredEncounters;
             UpdateVisuals(); 
 
-            // --- YENİ EKLENEN KISIM: EFEKTİ YARAT ---
-            if (buildEffectPrefab != null)
-            {
-                // Efekti binanın merkezinden biraz yukarıda oluştur (Offset ile)
-                Vector3 spawnPos = transform.position + effectOffset;
-                GameObject vfx = Instantiate(buildEffectPrefab, spawnPos, Quaternion.identity);
-                
-                // Oyunu kastırmaması için 3 saniye sonra sil
-                Destroy(vfx, 3f);
-            }
-            // ----------------------------------------
-
-            NotificationManager.Instance.Show("Bina tamir edildi!", NotificationType.Info);
+            NotificationManager.Instance.Show($"{buildingName} inşaatı başladı! {requiredEncounters} sefer adımından sonra hazır olacak.", NotificationType.Info);
         }
         else
         {
             NotificationManager.Instance.Show("Hazine tam takır! Yeterli akçe yok.", NotificationType.Error);
+        }
+    }
+    private void UpdateStatusText()
+    {
+        if (statusText == null) return;
+
+        switch (currentState)
+        {
+            case BuildingState.Locked:
+                statusText.text = $"<color=#888888>{buildingName}\n<size=70%>(Kilitli)</size></color>";
+                break;
+            case BuildingState.Ruined:
+                statusText.text = $"{buildingName}\n<size=70%>(Harabe)</size>";
+                break;
+            case BuildingState.UnderConstruction:
+                statusText.text = $"<color=yellow>{buildingName}\n<size=70%>({currentRemainingEncounters} Sefer Kaldı)</size></color>";
+                break;
+            case BuildingState.Built:
+                statusText.text = $"<color=white>{buildingName}</color>"; 
+                break;
+        }
+    }
+
+   
+    public void AdvanceConstructionTimer()
+    {
+        if (currentState != BuildingState.UnderConstruction) return;
+
+        currentRemainingEncounters--;
+
+        if (currentRemainingEncounters <= 0)
+        {
+            // İnşaat Bitti
+            currentState = BuildingState.Built;
+            UpdateVisuals();
+
+            // Efekti şimdi patlat!
+            if (buildEffectPrefab != null)
+            {
+                Vector3 spawnPos = transform.position + effectOffset;
+                GameObject vfx = Instantiate(buildEffectPrefab, spawnPos, Quaternion.identity);
+                Destroy(vfx, 3f);
+            }
+
+            NotificationManager.Instance.Show($"Müjde! {buildingName} inşası tamamlandı!", NotificationType.Success);
         }
     }
 }

@@ -55,11 +55,12 @@ public class ExpeditionManager : MonoBehaviour
 
         currentEncounterCount++;
         
-        // 1 Düğüm = 1 Gün. Askerlerin maaşı ödenir, moraller hesaplanır!
-        if (MoneyManager.Instance != null)
+        if (DayManager.Instance != null)
         {
-            MoneyManager.Instance.EndOfDay(1);
+            DayManager.Instance.NextDay(1); 
         }
+
+     
 
         // 5. Encounter meta-progression (Ata Yadigarı) kontrolü
        // 5. Encounter meta-progression (Ata Yadigarı) kontrolü

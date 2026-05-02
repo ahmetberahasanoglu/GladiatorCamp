@@ -73,7 +73,6 @@ public class MapManager : MonoBehaviour
         HideMap();
     }
     
-    // YENİ: Harita Sıfırlayıcı
     public void ResetMapProgress()
     {
         currentNode = null;
@@ -82,8 +81,8 @@ public class MapManager : MonoBehaviour
         sessionPreviousNode = "";
         visitedNodes.Clear();
 
-        // İkonu en başa (görünmez/kamp kısmına) at
-        playerIcon.anchoredPosition = new Vector2(-800f, 0f); 
+
+        SnapToStartPoint();
 
         UpdateMapVisibility();
         Debug.Log("Harita sıfırlandı. Yeni sefer için hazır.");
@@ -108,7 +107,41 @@ public class MapManager : MonoBehaviour
         AudioManager.Instance.PlayMap();
         UpdateMapVisibility();
     }
+// MapManager.cs içine bu yeni metodu ekle:
+    void SnapToStartPoint()
+    {
+        // Haritadaki StartPoint node'unu bul
+        MapNode[] allNodes = FindObjectsByType<MapNode>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        MapNode startNode = null;
 
+        foreach(var node in allNodes)
+        {
+            if(node.nodeType == NodeType.StartPoint)
+            {
+                startNode = node;
+                break;
+            }
+        }
+
+        // Eğer StartPoint türünde bir node yoksa, startingNodes listesinin ilk elemanını zorla al
+        if (startNode == null && startingNodes != null && startingNodes.Count > 0)
+        {
+            startNode = startingNodes[0];
+        }
+
+        // İkonu bulduğumuz başlangıç noktasına tam olarak oturt
+        if (startNode != null)
+        {
+            currentNode = startNode;
+            playerIcon.anchoredPosition = startNode.GetComponent<RectTransform>().anchoredPosition + iconOffset;
+            sessionLastNode = startNode.gameObject.name;
+            
+            if (!visitedNodes.Contains(startNode)) visitedNodes.Add(startNode);
+        }
+    }
+   
+
+   
     public void UpdateMapVisibility()
     {
         // 1. ÇİZGİLERİ GÜNCELLE
@@ -217,19 +250,14 @@ public class MapManager : MonoBehaviour
                 if (savedNode != null)
                 {
                     currentNode = savedNode;
-                    
                     playerIcon.anchoredPosition = savedNode.GetComponent<RectTransform>().anchoredPosition + iconOffset;
-                    
                     Debug.Log("Sahneler arası dönüş: " + sessionLastNode + " noktasına dönüldü.");
                     return;
                 }
             }
         }
-        else
-        {
-            // Oyuna ilk girişte ikonu başlangıca al
-            playerIcon.anchoredPosition = new Vector2(-800f, 0f);
-        }
+        
+        SnapToStartPoint();
     }
 
     public void SelectNode(MapNode targetNode)

@@ -31,7 +31,7 @@ public class MetaProgressionManager : MonoBehaviour
 
     // UI Paneli için referans (Sonraki adımda bağlayacağız)
     public RelicSelectionUI relicSelectionUI;
-
+public int pendingRelicPicks = 0;
     void Awake()
     {
         if (Instance == null) Instance = this;
@@ -70,12 +70,29 @@ public class MetaProgressionManager : MonoBehaviour
     {
         return currentSaveData.unlockedRelics.Contains(type);
     }
+    public void AddPendingRelics(int count)
+    {
+        pendingRelicPicks += count;
+        CheckPendingRelics(); // Kuyruğu kontrol etmeye başla
+    }
+
+    // Kuyrukta seçim hakkı varsa ekranı açar
+    public void CheckPendingRelics()
+    {
+        if (pendingRelicPicks > 0)
+        {
+            TriggerRelicChoice();
+        }
+        else
+        {
+            if (relicSelectionUI != null) relicSelectionUI.ClosePanel();
+        }
+    }
 
     // --- YENİ YADİGAR SEÇİMİ (3 SEÇENEK) ---
     // ExpeditionManager'dan her 5 encounter'da bir burası çağrılacak
-    public void TriggerRelicChoice()
+   private void TriggerRelicChoice()
     {
-        // Tüm yadigarları al, bizde OLMAYANLARI filtrele
         List<RelicType> allRelics = System.Enum.GetValues(typeof(RelicType)).Cast<RelicType>().ToList();
         allRelics.Remove(RelicType.None);
 
@@ -83,11 +100,12 @@ public class MetaProgressionManager : MonoBehaviour
 
         if (availableRelics.Count == 0)
         {
-            Debug.Log("Açılacak başka yadigar kalmadı! Zaten çok güçlüyüz.");
+            Debug.Log("Tüm yadigarlar açıldı!");
+            pendingRelicPicks = 0; // Hepsini açtıysa kuyruğu sıfırla
+            CheckPendingRelics();
             return;
         }
 
-        // Rastgele 3 tane seç (Eğer 3'ten az kaldıysa olanları ver)
         List<RelicType> options = new List<RelicType>();
         int optionsCount = Mathf.Min(3, availableRelics.Count);
 
@@ -95,17 +113,13 @@ public class MetaProgressionManager : MonoBehaviour
         {
             int randomIndex = Random.Range(0, availableRelics.Count);
             options.Add(availableRelics[randomIndex]);
-            availableRelics.RemoveAt(randomIndex); // Aynı seçenek iki kere gelmesin
+            availableRelics.RemoveAt(randomIndex); 
         }
 
-        // Arayüzü (UI) açıp seçenekleri gönder
-        if (relicSelectionUI != null)
-        {
-            relicSelectionUI.ShowOptions(options);
-        }
+        if (relicSelectionUI != null) relicSelectionUI.ShowOptions(options);
     }
 
-    // Oyuncu UI'dan bir butona tıkladığında bu çalışır ve kalıcı kaydeder!
+    // Oyuncu seçimi yaptığında çağrılır
     public void UnlockRelic(RelicType chosenRelic)
     {
         if (!HasRelic(chosenRelic))
@@ -114,13 +128,14 @@ public class MetaProgressionManager : MonoBehaviour
             SaveMetaProgress();
             
             if (NotificationManager.Instance != null)
-                NotificationManager.Instance.Show("Yeni Ata Yadigarı Kuşanıldı: " + chosenRelic.ToString(), NotificationType.Success);
+                NotificationManager.Instance.Show("Ata Yadigarı Kuşanıldı: " + chosenRelic.ToString(), NotificationType.Success);
             
-            // Opsiyonel: Yadigarı aldığı an etkisini göstermesi için anlık bir metot da çağrılabilir.
+            // YENİ: Seçim yapıldı, sıradakine geç!
+            pendingRelicPicks--;
+            CheckPendingRelics();
         }
     }
 
-    // SÜRGÜN SONRASI (YENİ OYUNA BAŞLARKEN) ÇAĞRILACAK METOT
     public void ApplyStartingRelics()
     {
         // Örn: Zengin Ata yadigarı varsa kasaya para ekle

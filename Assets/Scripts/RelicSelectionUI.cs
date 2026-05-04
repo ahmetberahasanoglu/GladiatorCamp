@@ -5,9 +5,8 @@ using System.Collections.Generic;
 
 public class RelicSelectionUI : MonoBehaviour
 {
-    public GameObject relicPanel; // Tüm ekranı kaplayan karartılmış panel
+    public GameObject relicPanel; 
     
-    [Header("Butonlar (En fazla 3 adet)")]
     public Button[] relicButtons; 
     public TextMeshProUGUI[] relicTitleTexts;
     public TextMeshProUGUI[] relicDescTexts;
@@ -20,11 +19,7 @@ public class RelicSelectionUI : MonoBehaviour
     public void ShowOptions(List<RelicType> options)
     {
         relicPanel.SetActive(true);
-        
-        // Oyunun arkada akmasını durdurmak iyi bir fikirdir (Roguelike klasiği)
-        // Time.timeScale = 0f; 
 
-        // Bütün butonları önce kapat, sadece seçenek sayısı kadarını aç
         for (int i = 0; i < relicButtons.Length; i++)
         {
             relicButtons[i].gameObject.SetActive(false);
@@ -36,27 +31,24 @@ public class RelicSelectionUI : MonoBehaviour
             relicButtons[i].gameObject.SetActive(true);
             RelicType currentRelic = options[i];
 
-            // Yadigarın İsmini ve Açıklamasını Doldur
             relicTitleTexts[i].text = GetRelicName(currentRelic);
             relicDescTexts[i].text = GetRelicDescription(currentRelic);
 
-            // Butona tıklandığında ne olacağını ayarla
             relicButtons[i].onClick.AddListener(() => OnRelicSelected(currentRelic));
         }
     }
 
     private void OnRelicSelected(RelicType chosenRelic)
     {
-        // Time.timeScale = 1f; // Zamanı geri başlat
-
-        // MetaProgressionManager'a bunu kaydetmesini söyle
+        // Seçimi yöneticiye bildir. O sıradakine geçip geçmeyeceğine karar verir.
         MetaProgressionManager.Instance.UnlockRelic(chosenRelic);
-
-        // Paneli Kapat
-        relicPanel.SetActive(false);
     }
 
-    // İsim Sözlüğü
+    // Eğer kuyrukta bir şey kalmadıysa Yönetici bu metodu çağırıp paneli kapatır
+    public void ClosePanel()
+    {
+        relicPanel.SetActive(false);
+    }
     private string GetRelicName(RelicType type)
     {
         switch (type)

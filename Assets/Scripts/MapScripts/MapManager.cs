@@ -52,7 +52,7 @@ public class MapManager : MonoBehaviour
     public void HideMap()
     {
         mapPanel.SetActive(false);
-        topPanel.SetActive(true);
+        //topPanel.SetActive(true);
         isMapOpen = false;
         if (LootChest.Instance != null)
         {
@@ -101,7 +101,7 @@ public class MapManager : MonoBehaviour
         }
 
         mapPanel.SetActive(true);
-        topPanel.SetActive(false);
+        //topPanel.SetActive(false);
         isMapOpen = true;
        
         AudioManager.Instance.PlayMap();

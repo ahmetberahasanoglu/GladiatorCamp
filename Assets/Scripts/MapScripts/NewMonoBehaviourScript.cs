@@ -20,5 +20,6 @@ public enum NodeType
     FirstBattle,
     NasibEncounter,
     DervishEncounter,
-    CaravanEncounter
+    CaravanEncounter,
+    KervanEncounter
 }

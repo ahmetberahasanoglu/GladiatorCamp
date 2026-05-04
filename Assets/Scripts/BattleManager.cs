@@ -316,7 +316,7 @@ private void ChangeEnvironment(BattleEnvironment envType)
         }
     }
 
-    public void EndBattle(bool isVictory)
+   public void EndBattle(bool isVictory)
     {
         state = isVictory ? BattleState.Won : BattleState.Lost;
 
@@ -330,32 +330,49 @@ private void ChangeEnvironment(BattleEnvironment envType)
             int moraleReward = 10 + (_currentDifficulty * 5);              // Zor savaş kazanmak daha çok moral verir
             int repReward = 5 * _currentDifficulty;                        // İtibar artışı
 
+            // YENİ: Oyuncuya nelerin çantaya gittiğini, nelerin anında işlendiğini UI'da belli ediyoruz
             if (lootText != null)
-                lootText.text = $"ZAFER!\n\n+{goldReward} Akçe\n+{foodReward} Erzak\n+{repReward} İtibar\n+{moraleReward} Moral";
+                lootText.text = $"ZAFER!\n\n<color=yellow>+{goldReward} Akçe (Çantaya)</color>\n<color=green>+{repReward} İtibar (Çantaya)</color>\n+{foodReward} Erzak\n+{moraleReward} Moral";
 
-      
-            if (MoneyManager.Instance != null) MoneyManager.Instance.Add(goldReward);
+            // --- 1. ÇANTAYA GİDENLER (Riske Atılanlar) ---
+            if (ExpeditionManager.Instance != null && ExpeditionManager.Instance.isExpeditionActive)
+            {
+                // Kazanılan altın ve itibarı geçici sefere gönder!
+                ExpeditionManager.Instance.AddLoot(goldReward, repReward);
+            }
+            else
+            {
+                // Eğer bir bug olur da seferde değilken savaşırsak direkt verilsin (Güvenlik Önlemi)
+                if (MoneyManager.Instance != null) MoneyManager.Instance.Add(goldReward);
+                if (ReputationManager.Instance != null) ReputationManager.Instance.ChangeReputation(repReward);
+            }
+
             if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(moraleReward);
-            ReputationManager.Instance.ChangeReputation(repReward);
-            SupplyManager.Instance.BuyFood(foodReward);
-            // İLERİDE EKLENECEK SİSTEMLER İÇİN HAZIR ALTYAPI:
-            // if (ResourceManager.Instance != null) ResourceManager.Instance.AddFood(foodReward);
-            // if (ReputationManager.Instance != null) ReputationManager.Instance.AddReputation(repReward);
+            if (SupplyManager.Instance != null) SupplyManager.Instance.BuyFood(foodReward);
 
             lootPanel.SetActive(true); 
         }
         else
         {
-
+            // YENİLGİ DURUMU
             int moralePenalty = -20 - (_currentDifficulty * 5); 
             int repPenalty = -10;
 
             if (defeatText != null)
-                defeatText.text = $"AĞIR YENİLGİ...\n\nOtağ yasa boğuldu.\n{moralePenalty} Moral\n{repPenalty} İtibar";
+                defeatText.text = $"AĞIR YENİLGİ...\n\nOtağ yasa boğuldu.\n<color=red>{moralePenalty} Moral</color>\n<color=red>{repPenalty} İtibar (Çantaya)</color>";
 
+            // Moral anında düşer
             if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(moralePenalty);
-            if (ReputationManager.Instance != null) ReputationManager.Instance.ChangeReputation(repPenalty);
-         
+            
+   
+            if (ExpeditionManager.Instance != null && ExpeditionManager.Instance.isExpeditionActive)
+            {
+                ExpeditionManager.Instance.AddLoot(0, repPenalty);
+            }
+            else
+            {
+                if (ReputationManager.Instance != null) ReputationManager.Instance.ChangeReputation(repPenalty);
+            }
 
             defeatPanel.SetActive(true); 
         }

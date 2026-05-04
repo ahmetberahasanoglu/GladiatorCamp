@@ -156,6 +156,10 @@ public class ExpeditionManager : MonoBehaviour
             int earned = currentEncounterCount / 5;
             relicProgressText.text = $"Miras: {currentStep}/5\n<size=70%>(Kazanılan: {earned})</size>";
         }
+        if (ExpeditionBagUI.Instance != null)
+        {
+            ExpeditionBagUI.Instance.UpdateBagUI(tempGold, tempReputation, tempItems.Count);
+        }
     }
 
     private void ShowExpeditionSummary(bool isVictory)

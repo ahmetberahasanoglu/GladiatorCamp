@@ -83,6 +83,7 @@ public class MapEventManager : MonoBehaviour
             case NodeType.NasibEncounter:   SetupNasibEvent(); break;
             case NodeType.DervishEncounter:   SetupDervishEvent(); break;
             case NodeType.CaravanEncounter:   SetupCaravanEvent(); break;
+            case NodeType.KervanEncounter:   SetupKervansarayEvent(); break;
         }
     }
 
@@ -641,6 +642,51 @@ private void ResolveVillageBattle(int difficulty)
         });
 
        
+    }
+    public void SetupKervansarayEvent()
+    {
+        titleText.text = "Güvenilir Tüccar Kervanı";
+        if(merchant != null) eventImage.sprite = merchant; // İstersen kervan için yeni bir sprite ekleyebilirsin
+
+        // O anki geçici çantadaki altını ve eşyaları çekelim
+        int currentLootGold = 0;
+        int currentLootItems = 0;
+        
+        if (ExpeditionManager.Instance != null)
+        {
+            currentLootGold = ExpeditionManager.Instance.tempGold;
+            currentLootItems = ExpeditionManager.Instance.tempItems.Count;
+        }
+
+        descText.text = "Ağır silahlı muhafızlar tarafından korunan büyük bir ticaret kervanına denk geldin. Kervanbaşı sana seslendi:\n\n<color=#FFD700>\"Uç Beyi! Kampa doğru gidiyoruz. Dilersen ganimetlerini %10 komisyon karşılığında senin adına güvenle otağına ulaştırabiliriz.\"</color>\n\n";
+
+        if (currentLootGold <= 0 && currentLootItems <= 0)
+        {
+            descText.text += "<color=red>Ancak şu an sefer çantanda gönderecek hiçbir ganimetin yok.</color>";
+            
+            CreateButton("Teşekkür Et ve Ayrıl", () => { ClosePanel(); });
+        }
+        else
+        {
+            int fee = Mathf.RoundToInt(currentLootGold * 0.1f);
+            int safeGold = currentLootGold - fee;
+            
+            descText.text += $"<color=yellow>Çantandaki Altın: {currentLootGold}\nKesinti (%10): -{fee}\nKampa Ulaşacak: {safeGold}</color>";
+
+            CreateButton($"Ganimetleri Yolla (Komisyon: {fee} Akçe)", () => 
+            {
+                // Çantayı kampa postala
+                ExpeditionManager.Instance.SendLootViaCaravan();
+                
+                foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+                
+                descText.text = "<color=green>GÜVENDESİN!</color>\n\nKervan muhafızları ganimetlerini teslim aldı. Artık haritada başına ne gelirse gelsin, bu eşyalar ve altınlar kampındaki hazinede seni bekliyor olacak.\n\n<size=85%>(Hafifleyen çantanla yola daha cesur devam edebilirsin!)</size>";
+                
+                CreateButton("Yola Devam Et", () => { ClosePanel(); });
+            });
+
+            CreateButton("Vazgeç (Ganimetleri Kendin Taşı)", () => { ClosePanel(); });
+        }
     }
     void SetupBattleEvent()
     {

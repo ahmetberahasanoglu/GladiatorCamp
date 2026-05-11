@@ -120,6 +120,12 @@ public class BuildingClickable : MonoBehaviour
     }
 
 
+public int GetEffectiveCost() {
+    if (MetaProgressionManager.Instance != null && MetaProgressionManager.Instance.HasRelic(RelicType.DemirDovucu)) {
+        return Mathf.RoundToInt(repairCost * 0.8f);     
+    }
+    return repairCost;
+}
     public void StartRepair()
     {
         if (MoneyManager.Instance != null && MoneyManager.Instance.gold >= repairCost)

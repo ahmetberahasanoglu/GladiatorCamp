@@ -10,6 +10,7 @@ public class GladiatorAI : MonoBehaviour
     private GladiatorInventory inventory; 
     private ActivityPoint currentPoint; 
     private float activityTimer;
+    
 
     [Header("Sinerji Efektleri (VFX)")]
     public GameObject poisonVFXPrefab;
@@ -61,6 +62,11 @@ public class GladiatorAI : MonoBehaviour
     public float retargetInterval = 1.0f; 
     private float retargetTimer = 0f;
 
+    [Header("Savaş Öncesi (Intro)")]
+    public float battleStartDelay = 0f; 
+    private float _delayTimer = 0f;
+[Header("Birim Özellikleri")]
+    public bool isBeast = false; 
     private float CurrentAttackRange
     {
         get { return (inventory != null && inventory.weapon != null) ? inventory.weapon.weaponRange : 2.0f; }
@@ -92,10 +98,23 @@ public class GladiatorAI : MonoBehaviour
     {
         if (isDead) return;
 
-        // --- YENİ: ZAMANLA HASAR (DoT) MOTORU ---
+      
         HandleStatusEffects();
 
         if (BattleManager.Instance.state != BattleState.Fighting || !isInBattle || isGettingHit) return;
+
+
+        if (_delayTimer < battleStartDelay)
+        {
+            _delayTimer += Time.deltaTime;
+            
+            // Bekleme süresince ajanı durdur ve koşma animasyonunu kapat
+            if (agent != null && agent.isActiveAndEnabled) agent.isStopped = true; 
+            if (animator) animator.SetBool("isRunning", false);
+            
+            return; 
+        }
+
 
         agent.speed = CurrentMoveSpeed;
         agent.stoppingDistance = CurrentAttackRange * 0.8f; 
@@ -429,9 +448,26 @@ public class GladiatorAI : MonoBehaviour
     public void Die()
     {
         if (isDead) return; 
-        AudioManager.Instance.PlaySFX(AudioManager.Instance.deathSound, 1.0f);
+   
         isDead = true;
-        isAttacking = false; 
+         if (AudioManager.Instance != null)
+        {
+            if (isBeast)
+            {
+                // YENİ: AudioManager'a ayı/hayvan ölme sesi eklemelisin
+                AudioManager.Instance.PlaySFX(AudioManager.Instance.beastDeath, 1.0f);
+            }
+            else
+            {
+                AudioManager.Instance.PlaySFX(AudioManager.Instance.deathSound, 1.0f);
+            }
+        }
+        isInBattle = false;
+        if (_attackCoroutine != null)
+        {
+            StopCoroutine(_attackCoroutine);
+            isAttacking = false;
+        }
         
         if (TopInfoBarUI.Instance != null) TopInfoBarUI.Instance.UpdateCapacity();
         if (GladiatorSelector.Instance != null) GladiatorSelector.Instance.DeselectIfDead(this.gameObject);
@@ -443,8 +479,11 @@ public class GladiatorAI : MonoBehaviour
         }
         GetComponent<Collider>().enabled = false; 
 
-        if (animator) animator.SetTrigger("Die");
-
+        if (animator) {
+            animator.SetBool("isRunning", false);
+            animator.ResetTrigger("Attack");
+            animator.SetTrigger("Die");
+        }
         gladiator.currentHealth = 0; 
         if (gladiator.healthBar != null) gladiator.healthBar.gameObject.SetActive(false); 
 

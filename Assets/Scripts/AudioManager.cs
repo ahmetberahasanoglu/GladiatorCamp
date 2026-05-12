@@ -40,14 +40,19 @@ public class AudioManager : MonoBehaviour
     [Header("Savaş Sesleri")]
     public AudioClip swordSwoosh; // Bu zaten vardı
     public AudioClip swordHit; // Bu zaten vardı
-    public AudioClip hitSound;    // Kılıcın ete/zırha çarpma sesi
-    public AudioClip gruntSound;  // Askerin acı çekme/inleme sesi
-    public AudioClip deathSound;  // Ölüm çığlığı/yere yığılma sesi
+    public AudioClip hitSound;    
+    public AudioClip gruntSound;  
+    public AudioClip deathSound;  
     public AudioClip woodSound;
     public AudioClip cheerSound;
-    public AudioClip trainHitSound; // Talimhanede kılıç/odun vurma sesi
-    public AudioClip eatFoodSound;  // Gün sonu erzak yendiğinde tok bir ses
-    public AudioClip mapMoveSound;  // Haritada ikon hareket ederken (At toynağı vs.)
+    public AudioClip trainHitSound;
+    public AudioClip eatFoodSound;
+    public AudioClip mapMoveSound;
+    public AudioClip bearRoar;  
+    public AudioClip beastHit;  
+    public AudioClip bearHit;  
+    public AudioClip beastDeath;  
+
     [Range(0f, 1f)] public float actionVolume = 0.9f;
     
     void Awake()

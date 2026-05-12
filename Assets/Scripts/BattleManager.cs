@@ -89,18 +89,35 @@ public class BattleManager : MonoBehaviour
         if (skillPanel != null) skillPanel.SetActive(false);
         
     }
+    [Header("Vahşi Hayvan (Ayı)")]
+    public GameObject bearPrefab; 
+    private bool _isBearBattle = false; 
 
-   public void StartBattle(int enemyCount, int difficulty, BattleEnvironment envType)
+  
+    public void StartBearBattle(int bearCount, int difficulty, BattleEnvironment envType)
     {
-        Debug.Log("BattleManager: Taktik Ekranı Açılıyor...");
+        Debug.Log("BattleManager: Ayı Savaşı Taktik Ekranı Açılıyor...");
         
-        _currentEnemyCount = enemyCount;
+        _currentEnemyCount = bearCount; // Genelde 1 veya 2 ayı olur
         _currentDifficulty = difficulty;
         pendingEnv = envType;
+        _isBearBattle = true; // Savaş başladığında Ayı doğurmasını söyler
 
         if (MapManager.Instance != null) MapManager.Instance.HideMap();
 
-        // UI'a "Bu normal savaş, şu kadar düşman var" diyoruz
+        if (squadSelectionUI != null) 
+            squadSelectionUI.OpenPanel(false, bearCount, difficulty); // Taktik ekranını normal açar
+    }
+
+   public void StartBattle(int enemyCount, int difficulty, BattleEnvironment envType)
+    {     
+        _currentEnemyCount = enemyCount;
+        _currentDifficulty = difficulty;
+        pendingEnv = envType;
+         _isBearBattle = false;
+        if (MapManager.Instance != null) MapManager.Instance.HideMap();
+
+   
         if (squadSelectionUI != null) 
             squadSelectionUI.OpenPanel(false, enemyCount, difficulty);
         else 
@@ -158,7 +175,7 @@ public class BattleManager : MonoBehaviour
             }
         }
         int row = 0;
-        float spacing = 2.0f; 
+        float spacing = 4.0f; 
 
         // Seçilen 3 askeri sırasıyla diziyoruz (Index 0 = En ön, Index 2 = En arka)
         foreach(var soldier in selectedSquad)
@@ -236,13 +253,11 @@ private void ChangeEnvironment(BattleEnvironment envType)
             Debug.LogWarning($"DİKKAT: {envType} için bir Environment Profile bulunamadı!");
         }
     }
-    void SpawnEnemyArmy(int count)
+   void SpawnGenericEnemyArray(GameObject prefabToSpawn, int count)
     {
-        if (enemyPrefab == null) return;
+        if (prefabToSpawn == null) return;
 
-        int row = 0;
-        int col = 0;
-        float spacing = 2.0f;
+        int row = 0; int col = 0; float spacing = 2.0f;
 
         for (int i = 0; i < count; i++)
         {
@@ -250,7 +265,7 @@ private void ChangeEnvironment(BattleEnvironment envType)
             spawnPos.x += col * spacing;
             spawnPos.z += row * spacing;
 
-            GameObject newEnemy = Instantiate(enemyPrefab, spawnPos, enemySpawnPoint.rotation);
+            GameObject newEnemy = Instantiate(prefabToSpawn, spawnPos, enemySpawnPoint.rotation);
             
             var agent = newEnemy.GetComponent<UnityEngine.AI.NavMeshAgent>();
             if (agent != null)
@@ -264,22 +279,25 @@ private void ChangeEnvironment(BattleEnvironment envType)
         }
     }
 // Taktik ekranında "Sefer Başlasın" butonuna basılınca UI bu fonksiyonu çağıracak
-    public void ExecuteBattleWithSquad(List<Gladiator> selectedSquad, bool isBossBattle)
+   public void ExecuteBattleWithSquad(List<Gladiator> selectedSquad, bool isBossBattle)
     {
         ChangeEnvironment(pendingEnv);
         AudioManager.Instance.StartBattleAcoustics();
         StartCoroutine(CinematicTransitionRoutine(battleCameraPos));
 
-        // İşte burada o yeni yazdığımız, parametre alan SpawnPlayerArmy'yi çağırıyoruz
         SpawnPlayerArmy(selectedSquad);
 
         if (isBossBattle)
         {
             SpawnBoss();
         }
-        else
+        else if (_isBearBattle) // EĞER AYI SAVAŞIYSA
         {
-            SpawnEnemyArmy(_currentEnemyCount);
+            SpawnGenericEnemyArray(bearPrefab, _currentEnemyCount);
+        }
+        else // EĞER NORMAL SAVAŞSA
+        {
+            SpawnGenericEnemyArray(enemyPrefab, _currentEnemyCount);
         }
 
         state = BattleState.Fighting;

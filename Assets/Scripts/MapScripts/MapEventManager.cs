@@ -103,26 +103,48 @@ public class MapEventManager : MonoBehaviour
         RectTransform rt = buttonContainer.GetComponent<RectTransform>();
         rt.sizeDelta = new Vector2(targetWidth, rt.sizeDelta.y);
     }
-    void SetupVahsi()
+   void SetupVahsi()
     {
-        titleText.text = "Aç Kurt Sürüsü";
-        descText.text = "Ormandan geçerken etrafını aç bir kurt sürüsü sardı! Savaşmak yorucu olacak ama kaçmak da vakit kaybettirir.";
+        titleText.text = "Aç Boz Ayı";
+        descText.text = "Ormanın derinliklerinden devasa bir boz ayı kükreyerek üzerine koşuyor! Askerlerin silahlarına sarıldı. Bu vahşi yaratığı alt edebilirseniz postu ve eti epey para edecektir.";
+        if(wildSprite != null) eventImage.sprite = wildSprite;
 
-        CreateButton("Savaş (-1 Gün, +20 Altın)", () => {
-           
-           
-           int currentPending = PlayerPrefs.GetInt("PendingGold", 0);
-            PlayerPrefs.SetInt("PendingGold", currentPending + 20);
-            PlayerPrefs.Save();
-            NotificationManager.Instance.Show("Kurtları alt ettin ve postlarını sattın.", NotificationType.Success);
-            ClosePanel();
-        });
+        int readySoldiers = GetAvailableSoldierCount();
+    
+        if (readySoldiers == 0)
+        {
+            descText.text += "\n\n<color=red>SAVAŞA HAZIR ASKER YOK!</color>\nHerkes görevde, çalışıyor veya yaralı.";
+        }
+        else
+        {
+            descText.text += $"\n\nSavaşa Hazır Asker: <color=green>{readySoldiers}</color>";
+        }
 
-        CreateButton("Etrafından Dolaşarak Kaç (-2 Gün)", () => {
-            
-           
-            NotificationManager.Instance.Show("Güvenli ama uzun yolu seçtin.", NotificationType.Info);
-            ClosePanel();
+        // SAVAŞ BUTONU
+        GameObject atkBtnObj = Instantiate(buttonPrefab, buttonContainer);
+        atkBtnObj.GetComponentInChildren<TextMeshProUGUI>().text = "Saldır (Kılıçları Çekin)";
+        Button atkBtn = atkBtnObj.GetComponent<Button>();
+        
+        if (readySoldiers == 0)
+        {
+            atkBtn.interactable = false; 
+        }
+        else
+        {
+            atkBtn.onClick.AddListener(() => {
+                ClosePanel();
+                // 1 Adet Ayı, Zorluk: 2, Ortam: Orman
+                BattleManager.Instance.StartBearBattle(1, 2, BattleEnvironment.Forest); 
+            });
+        }
+
+        // KAÇIŞ BUTONU (Zar atma mekaniği hazır vardı)
+        int mevcutNasip = NasipManager.Instance != null ? NasipManager.Instance.currentNasip : 0;
+        CreateButton($"Kaçmayı Dene (Nasip: {mevcutNasip})", () => {
+            // Kaçamazlarsa savaş başlar ama onu da ayı savaşı yapmamız lazım.
+            // O yüzden Kaçış metoduna Bear flag'ini eklemen gerekebilir veya 
+            // şimdilik basitçe kaçış zarını kullandırabilirsin:
+            ResolveEscapeContest(BattleEnvironment.Forest, 1, 2); 
         });
     }
     void SetupNasibEvent()

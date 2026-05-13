@@ -4896,7 +4896,7 @@ GameObject:
   - component: {fileID: 5824670795371433375}
   - component: {fileID: 2990870103442498292}
   m_Layer: 0
-  m_Name: CFXR4 Bouncing Glows Bubble (Blue Purple)
+  m_Name: FocusMarker
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -448,8 +448,12 @@ public class GladiatorAI : MonoBehaviour
     public void Die()
     {
         if (isDead) return; 
-   
+        
         isDead = true;
+        if (BattleManager.Instance != null && BattleManager.Instance.currentFocusTarget == this.transform)
+        {
+            BattleManager.Instance.ClearFocusTarget();
+        }
          if (AudioManager.Instance != null)
         {
             if (isBeast)
@@ -507,6 +511,15 @@ public class GladiatorAI : MonoBehaviour
         Gladiator[] allEnemies = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
         float minDst = Mathf.Infinity;
         Transform bestTarget = null;
+         if (gameObject.CompareTag("MySoldier") && BattleManager.Instance != null && BattleManager.Instance.currentFocusTarget != null)
+        {
+            GladiatorAI focusAI = BattleManager.Instance.currentFocusTarget.GetComponent<GladiatorAI>();
+            if (focusAI != null && !focusAI.isDead)
+            {
+                target = BattleManager.Instance.currentFocusTarget;
+                return; 
+            }
+        }
         
         foreach (Gladiator e in allEnemies)
         {
@@ -524,7 +537,9 @@ public class GladiatorAI : MonoBehaviour
                 }
             }
         }
-
+       
+GladiatorAI[] allUnits = FindObjectsByType<GladiatorAI>(FindObjectsSortMode.None);
+        float bestValue = Mathf.Infinity;
         // Eğer şu an bir hedefimiz YOKSA veya YENİ HEDEF eskisine göre bariz şekilde daha yakındaysa değiştir!
         if (target == null)
         {

@@ -77,7 +77,10 @@ public class BattleManager : MonoBehaviour
     
     // Geçici olarak hafızada tutacağımız savaş bilgileri
     private BattleEnvironment pendingEnv;
- 
+    [Header("Hedef İşaretleme (Focus) Sistemi")]
+    public Transform currentFocusTarget; 
+    public GameObject focusMarkerPrefab; 
+    private GameObject _activeFocusMarker;
 
     void Awake()
     {
@@ -89,11 +92,88 @@ public class BattleManager : MonoBehaviour
         if (skillPanel != null) skillPanel.SetActive(false);
         
     }
+    
     [Header("Vahşi Hayvan (Ayı)")]
     public GameObject bearPrefab; 
     private bool _isBearBattle = false; 
 
-  
+  void Update()
+    {
+        // Sadece savaş devam ediyorsa tıklamaları algıla
+        if (state == BattleState.Fighting)
+        {
+            HandleMouseClick();
+        }
+    }
+    void HandleMouseClick()
+    {
+        // Sol tık basıldığında
+        if (Input.GetMouseButtonDown(0))
+        {
+            Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                // Tıklanan obje düşman mı?
+                if (hit.collider.CompareTag("EnemySoldier"))
+                {
+                    GladiatorAI enemyAI = hit.collider.GetComponent<GladiatorAI>();
+                    if (enemyAI != null && !enemyAI.isDead)
+                    {
+                        SetFocusTarget(hit.collider.transform);
+                    }
+                }
+            }
+        }
+    }
+    public void SetFocusTarget(Transform enemyTransform)
+    {
+        currentFocusTarget = enemyTransform;
+
+        // Varsa tatlı bir "Ping" veya "Hücum" sesi çal
+        // AudioManager.Instance.PlaySFX(AudioManager.Instance.pingSound, 1f);
+
+        // --- GÖRSEL İŞARETLEYİCİYİ YARAT VE DÜŞMANA BAĞLA ---
+        if (_activeFocusMarker == null && focusMarkerPrefab != null)
+        {
+            _activeFocusMarker = Instantiate(focusMarkerPrefab);
+        }
+
+        if (_activeFocusMarker != null)
+        {
+            _activeFocusMarker.SetActive(true);
+            _activeFocusMarker.transform.SetParent(enemyTransform);
+            // Düşmanın ayaklarının altına veya kafasının üstüne yerleştir
+            _activeFocusMarker.transform.localPosition = new Vector3(0, 0.1f, 0); 
+        }
+
+        // --- TÜM ASKERLERE ANINDA EMİR VER ---
+        GladiatorAI[] allUnits = FindObjectsByType<GladiatorAI>(FindObjectsSortMode.None);
+        foreach(var unit in allUnits)
+        {
+            if (unit.CompareTag("MySoldier") && !unit.isDead)
+            {
+                unit.target = enemyTransform; // Hedeflerini zorla değiştir
+                
+                // Koşmaları için NavMesh'i anında uyar
+                var agent = unit.GetComponent<UnityEngine.AI.NavMeshAgent>();
+                if (agent != null && agent.isActiveAndEnabled)
+                {
+                    agent.isStopped = false;
+                    agent.SetDestination(enemyTransform.position);
+                }
+            }
+        }
+    }
+
+    public void ClearFocusTarget()
+    {
+        currentFocusTarget = null;
+        if (_activeFocusMarker != null)
+        {
+            _activeFocusMarker.SetActive(false);
+            _activeFocusMarker.transform.SetParent(null); // Ayrıl
+        }
+    }
     public void StartBearBattle(int bearCount, int difficulty, BattleEnvironment envType)
     {
         Debug.Log("BattleManager: Ayı Savaşı Taktik Ekranı Açılıyor...");

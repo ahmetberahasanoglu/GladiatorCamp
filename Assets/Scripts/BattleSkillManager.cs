@@ -1,156 +1,167 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 using System.Collections.Generic;
+
+[System.Serializable]
+public class SkillSlotUI
+{
+    public Button skillBtn;
+    public Image iconImg;
+    public Image cooldownImg;
+    
+    [HideInInspector] public CommanderSkillData assignedSkill;
+    [HideInInspector] public float currentCooldown = 0f;
+    [HideInInspector] public bool isReady = true;
+    [HideInInspector] public bool isUsedUp = false; // Tek kullanımlıksa takip etmek için
+}
 
 public class BattleSkillManager : MonoBehaviour
 {
     public static BattleSkillManager Instance;
 
-    [Header("Yetenek 1: Şifalı Otlar")]
-    public Button healBtn;
-    public Image healCooldownImg;
-    public float healCooldown = 10f;
-    public int healAmount = 30;
-    private bool isHealReady = true;
-
-    [Header("Yetenek 2: Ok Yağmuru")]
-    public Button arrowBtn;
-    public Image arrowCooldownImg;
-    public float arrowCooldown = 8f;
-    public int arrowDamage = 25;
-    private bool isArrowReady = true;
-
-    [Header("Efektler")]
-    public GameObject healEffectPrefab; // Inspector'dan atamayı unutma!
-    public GameObject arrowEffectPrefab; // Inspector'dan atamayı unutma!
+    [Header("UI Yetenek Slotları (Ekranda gözüken 3 buton)")]
+    public List<SkillSlotUI> skillSlots;
+    
 
     void Awake()
     {
         Instance = this;
     }
 
-    void Start()
-    {
-        if (healBtn != null) healBtn.onClick.AddListener(UseHealSkill);
-        if (arrowBtn != null) arrowBtn.onClick.AddListener(UseArrowSkill);
-        
-        if (healCooldownImg != null) healCooldownImg.fillAmount = 0;
-        if (arrowCooldownImg != null) arrowCooldownImg.fillAmount = 0;
-    }
-
     void Update()
     {
-        if (!isHealReady && healCooldownImg != null)
+        // Her slotun bekleme süresini (Cooldown) ayrı ayrı hesapla
+        foreach (var slot in skillSlots)
         {
-            healCooldownImg.fillAmount -= 1.0f / healCooldown * Time.deltaTime;
-            if (healCooldownImg.fillAmount <= 0) isHealReady = true;
-        }
+            if (slot.assignedSkill == null || slot.isUsedUp) continue;
 
-        if (!isArrowReady && arrowCooldownImg != null)
-        {
-            arrowCooldownImg.fillAmount -= 1.0f / arrowCooldown * Time.deltaTime;
-            if (arrowCooldownImg.fillAmount <= 0) isArrowReady = true;
-        }
-
-        if (healBtn != null) healBtn.interactable = isHealReady;
-        if (arrowBtn != null) arrowBtn.interactable = isArrowReady;
-    }
-
-    // --- YETENEK 1: ŞİFA ---
-    void UseHealSkill()
-    {
-        if (!isHealReady) return;
-
-        Debug.Log("Şifalı Otlar Basıldı!");
-
-        // Prefab kontrolü
-        if (healEffectPrefab == null) Debug.LogWarning("Heal Effect Prefab atanmamış!");
-
-        var allUnits = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
-
-        foreach (var unit in allUnits)
-        {
-            if (unit.gameObject.CompareTag("MySoldier")) 
+            if (!slot.isReady)
             {
-                HealUnit(unit);
+                slot.currentCooldown -= Time.deltaTime;
+                slot.cooldownImg.fillAmount = slot.currentCooldown / slot.assignedSkill.cooldownTime;
+
+                if (slot.currentCooldown <= 0)
+                {
+                    slot.isReady = true;
+                    slot.skillBtn.interactable = true;
+                }
             }
         }
-
-        isHealReady = false;
-        if (healCooldownImg != null) healCooldownImg.fillAmount = 1;
     }
 
-    void HealUnit(Gladiator unit)
+    // Taktik ekranından çıkıp savaşa girildiğinde bu fonksiyon çağrılır!
+    public void LoadSelectedSkills(List<CommanderSkillData> selectedSkills)
     {
-        if (unit.currentHealth <= 0) return;
-
-        unit.currentHealth += healAmount;
-        if (unit.currentHealth > unit.maxHealth) unit.currentHealth = unit.maxHealth;
-
-        if (unit.healthBar != null) unit.healthBar.UpdateBar(unit.currentHealth, unit.maxHealth);
-
-        if (DamageTextManager.Instance != null)
+        for (int i = 0; i < skillSlots.Count; i++)
         {
-            DamageTextManager.Instance.ShowDamage(unit.transform.position, healAmount, 2); 
-        }
+            if (i < selectedSkills.Count && selectedSkills[i] != null)
+            {
+                // Slotu doldur ve görünür yap
+                skillSlots[i].assignedSkill = selectedSkills[i];
+                skillSlots[i].iconImg.sprite = selectedSkills[i].skillIcon;
+                skillSlots[i].iconImg.enabled = true;
+                skillSlots[i].cooldownImg.fillAmount = 0;
+                skillSlots[i].isReady = true;
+                skillSlots[i].isUsedUp = false;
+                skillSlots[i].skillBtn.interactable = true;
+                skillSlots[i].skillBtn.gameObject.SetActive(true);
 
-        // --- EKLENEN KISIM: EFEKT YARATMA (INSTANTIATE) ---
-        if (healEffectPrefab != null)
-        {
-            // Askerin pozisyonunda efekti yarat
-            GameObject vfx = Instantiate(healEffectPrefab, unit.transform.position, Quaternion.identity);
-            
-            // Efekti askerin içine koy (asker hareket ederse efekt de etsin) - Opsiyonel
-            vfx.transform.SetParent(unit.transform);
-
-            // 2 saniye sonra efekti sil ki oyun kasmasın
-            Destroy(vfx, 2.0f);
+                // Butona tıklandığında hangi yeteneğin çalışacağını ayarla
+                int slotIndex = i; // Listener için lokal kopya
+                skillSlots[i].skillBtn.onClick.RemoveAllListeners();
+                skillSlots[i].skillBtn.onClick.AddListener(() => ActivateSkill(slotIndex));
+            }
+            else
+            {
+                // Eğer oyuncu sadece 1 yetenek seçtiyse, diğer slotları gizle
+                skillSlots[i].skillBtn.gameObject.SetActive(false);
+            }
         }
-        // --------------------------------------------------
     }
 
-    // --- YETENEK 2: OK YAĞMURU ---
-    void UseArrowSkill()
+    // Butona basıldığında yeteneğin "Türüne" göre işlem yap
+    void ActivateSkill(int slotIndex)
     {
-        if (!isArrowReady) return;
+        SkillSlotUI slot = skillSlots[slotIndex];
+        CommanderSkillData skillData = slot.assignedSkill;
 
-        Debug.Log("Oklar Yağıyor!");
+        if (!slot.isReady || slot.isUsedUp) return;
 
-        // Prefab kontrolü
-        if (arrowEffectPrefab == null) Debug.LogWarning("Arrow Effect Prefab atanmamış!");
+        Debug.Log(skillData.skillName + " Kullanıldı!");
 
-        var allUnits = FindObjectsOfType<Gladiator>();
+        // YETENEK TÜRLERİ (Senin yazdığın mantıkların aynısı)
+        switch (skillData.skillType)
+        {
+            case CommanderSkillType.HealAll:
+                ExecuteHealAll(skillData);
+                break;
+            case CommanderSkillType.DamageAllEnemies:
+                ExecuteArrowRain(skillData);
+                break;
+        }
 
+        // COOLDOWN VE TEK KULLANIMLIK KONTROLÜ
+        if (skillData.isSingleUse)
+        {
+            slot.isUsedUp = true;
+            slot.skillBtn.interactable = false;
+            slot.iconImg.color = new Color(0.3f, 0.3f, 0.3f); // Karart
+        }
+        else
+        {
+            slot.isReady = false;
+            slot.currentCooldown = skillData.cooldownTime;
+            slot.cooldownImg.fillAmount = 1;
+            slot.skillBtn.interactable = false;
+        }
+    }
+
+    // --- SENİN YAZDIĞIN FONKSİYONLARIN DİNAMİK HALİ ---
+
+    void ExecuteHealAll(CommanderSkillData data)
+    {
+        var allUnits = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
+        foreach (var unit in allUnits)
+        {
+            if (unit.gameObject.CompareTag("MySoldier") && unit.currentHealth > 0) 
+            {
+                unit.currentHealth += data.powerAmount;
+                if (unit.currentHealth > unit.maxHealth) unit.currentHealth = unit.maxHealth;
+                if (unit.healthBar != null) unit.healthBar.UpdateBar(unit.currentHealth, unit.maxHealth);
+
+                if (DamageTextManager.Instance != null)
+                    DamageTextManager.Instance.ShowDamage(unit.transform.position, data.powerAmount, 2); 
+
+                if (data.effectPrefab != null)
+                {
+                    GameObject vfx = Instantiate(data.effectPrefab, unit.transform.position, Quaternion.identity);
+                    vfx.transform.SetParent(unit.transform);
+                    Destroy(vfx, 2.0f);
+                }
+            }
+        }
+    }
+
+    void ExecuteArrowRain(CommanderSkillData data)
+    {
+        var allUnits = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
         foreach (var unit in allUnits)
         {
             if (unit.gameObject.CompareTag("EnemySoldier"))
             {
                 var ai = unit.GetComponent<GladiatorAI>();
-                if (ai != null)
+                if (ai != null && !ai.isDead)
                 {
-                    ai.TakeDamage(arrowDamage, false);
+                    ai.TakeDamage(data.powerAmount, false);
 
-                    // --- EKLENEN KISIM: OK EFEKTİ YARATMA ---
-                    if (arrowEffectPrefab != null)
+                    if (data.effectPrefab != null)
                     {
-                        // Düşmanın kafasının 5 birim üstünde oluşsun
                         Vector3 spawnPos = unit.transform.position + Vector3.up * 0.1f;
-                        
-                        // Efekti yere bakacak şekilde döndür (90 derece)
-                        Quaternion rotation = Quaternion.Euler(90, 0, 0);
-
-                        GameObject vfx = Instantiate(arrowEffectPrefab, spawnPos, rotation);
-                        
-                        // 2 saniye sonra sil
+                        GameObject vfx = Instantiate(data.effectPrefab, spawnPos, Quaternion.Euler(90, 0, 0));
                         Destroy(vfx, 2.0f);
                     }
-                    // ----------------------------------------
                 }
             }
         }
-
-        isArrowReady = false;
-        if (arrowCooldownImg != null) arrowCooldownImg.fillAmount = 1;
     }
 }

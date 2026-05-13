@@ -11795,16 +11795,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd7187b63aa07ec488b8ec6b2f43524d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BattleSkillManager
-  healBtn: {fileID: 309033656}
-  healCooldownImg: {fileID: 1731921208}
-  healCooldown: 5
-  healAmount: 30
-  arrowBtn: {fileID: 1641394929}
-  arrowCooldownImg: {fileID: 1888759454}
-  arrowCooldown: 8
-  arrowDamage: 25
-  healEffectPrefab: {fileID: 8131705234424654713, guid: 349986af3988c0c439b615fec9309533, type: 3}
-  arrowEffectPrefab: {fileID: 4593184484909914552, guid: 49d08218f30232842bb7db29bd5dbe13, type: 3}
+  skillSlots: []
 --- !u!114 &265606906
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27820,6 +27811,8 @@ MonoBehaviour:
   skillPanel: {fileID: 1138378409}
   fadeGroup: {fileID: 560167500}
   squadSelectionUI: {fileID: 1309184490}
+  currentFocusTarget: {fileID: 0}
+  focusMarkerPrefab: {fileID: 5824670795371433373, guid: f6fd568b816c64943a44efc3add3a881, type: 3}
   bearPrefab: {fileID: 8109588309812663795, guid: d51840f66321d5d48b7a235a2a45f6dd, type: 3}
 --- !u!1 &584794684
 GameObject:

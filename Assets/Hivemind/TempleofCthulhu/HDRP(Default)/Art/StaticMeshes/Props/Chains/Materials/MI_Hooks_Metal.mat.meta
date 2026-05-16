@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 4e47def55fc71324b90b376c55f4265f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 306635
+  packageName: 'Modular Dungeon: Temple Of Cthulhu (Dungeon, Modular Dungeon, Temple,
+    Dungeons)'
+  packageVersion: 1.0
+  assetPath: Assets/Hivemind/TempleofCthulhu/HDRP(Default)/Art/StaticMeshes/Props/Chains/Materials/MI_Hooks_Metal.mat
+  uploadId: 765522

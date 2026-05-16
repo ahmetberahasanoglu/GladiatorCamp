@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 4236335a4828d814eb9b8a212f2ea2d1
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 306635
+  packageName: 'Modular Dungeon: Temple Of Cthulhu (Dungeon, Modular Dungeon, Temple,
+    Dungeons)'
+  packageVersion: 1.0
+  assetPath: Assets/Hivemind/TempleofCthulhu/HDRP(Default)/Art/StaticMeshes/Props/TortureChamber/Materials/MI_TortureRack.mat
+  uploadId: 765522

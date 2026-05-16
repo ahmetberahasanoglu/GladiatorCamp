@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: bbdd414e9ca416d499b15a9c242648ae
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 306635
+  packageName: 'Modular Dungeon: Temple Of Cthulhu (Dungeon, Modular Dungeon, Temple,
+    Dungeons)'
+  packageVersion: 1.0
+  assetPath: Assets/Hivemind/TempleofCthulhu/HDRP(Default)/Art/StaticMeshes/ModKit/StoneBlocks/Materials/M_StoneBrick_01.mat
+  uploadId: 765522

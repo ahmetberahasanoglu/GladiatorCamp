@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 2be21a8749801fc47ba34e22e9d9937e
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 306635
+  packageName: 'Modular Dungeon: Temple Of Cthulhu (Dungeon, Modular Dungeon, Temple,
+    Dungeons)'
+  packageVersion: 1.0
+  assetPath: Assets/Hivemind/TempleofCthulhu/HDRP(Default)/Art/StaticMeshes/MainHall/Materials/M_StoneTile_01.mat
+  uploadId: 765522

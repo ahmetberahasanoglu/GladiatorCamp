@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: f929e9e585601ae4d9d58e1dbd52a50f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 306635
+  packageName: 'Modular Dungeon: Temple Of Cthulhu (Dungeon, Modular Dungeon, Temple,
+    Dungeons)'
+  packageVersion: 1.0
+  assetPath: Assets/Hivemind/TempleofCthulhu/HDRP(Default)/Art/StaticMeshes/Props/LightFixtures/Materials/MI_HeavyMetal_B.mat
+  uploadId: 765522

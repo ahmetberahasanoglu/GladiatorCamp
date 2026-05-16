@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using TMPro;
 
 // YENİ: Node'un 3 farklı durumunu tanımlıyoruz
 public enum NodeState { Locked, Accessible, Cleared }
@@ -17,6 +18,7 @@ public class MapNode : MonoBehaviour
     [Header("Görsel")]
     public Button nodeButton;
     public Image iconImage;
+    public TextMeshProUGUI labelText;
 
     void Start()
     {

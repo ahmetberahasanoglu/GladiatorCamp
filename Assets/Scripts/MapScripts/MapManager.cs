@@ -97,6 +97,7 @@ public class MapManager : MonoBehaviour
         {
             // Eğer yeni çıkıyorsa harita progress'ini de sıfırlayalım ki eski sisli yerler olmasın
             ResetMapProgress(); 
+            MapRandomizer.Instance.RandomizeMap();
             ExpeditionManager.Instance.StartExpedition();
         }
 

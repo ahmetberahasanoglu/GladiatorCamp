@@ -4,7 +4,7 @@ using System.Collections;
 
 public class GladiatorAI : MonoBehaviour
 {
-    private NavMeshAgent agent;
+    public NavMeshAgent agent;
     private Gladiator gladiator; 
     private GladiatorTraining training; 
     private GladiatorInventory inventory; 
@@ -32,7 +32,7 @@ public class GladiatorAI : MonoBehaviour
 
     [Header("Durum")]
     public Transform target;
-    private Animator animator;
+    public Animator animator;
     private float lastAttackTime;
     public bool isDead = false;
 

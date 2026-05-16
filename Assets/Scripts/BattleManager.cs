@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using UnityEngine.UI;
 
 public enum BattleState { Idle, Fighting, Won, Lost }
 public enum BattleEnvironment { Forest, Cave, Tower, Winter }
@@ -81,6 +82,9 @@ public class BattleManager : MonoBehaviour
     public Transform currentFocusTarget; 
     public GameObject focusMarkerPrefab; 
     private GameObject _activeFocusMarker;
+    [Header("Geri Çekilme (Retreat) Sistemi")]
+    public Button retreatButton; // Savaş anında ekranda basılacak buton
+    public int baseRetreatPenalty = 30; // 3 kişiyle tam kadro kaçmanın maksimum cezası
 
     void Awake()
     {
@@ -90,6 +94,7 @@ public class BattleManager : MonoBehaviour
     void Start()
     {
         if (skillPanel != null) skillPanel.SetActive(false);
+        if (retreatButton != null) retreatButton.onClick.AddListener(RetreatFromBattle);
         
     }
     
@@ -104,6 +109,64 @@ public class BattleManager : MonoBehaviour
         {
             HandleMouseClick();
         }
+    }
+    public void RetreatFromBattle()
+    {
+        // Sadece savaşırken çekilebiliriz
+        if (state != BattleState.Fighting) return;
+
+        // 1. Sahada hayatta olan askerlerimizi sayalım
+        int aliveSoldiers = 0;
+        var allUnits = FindObjectsByType<GladiatorAI>(FindObjectsSortMode.None);
+        foreach (var unit in allUnits)
+        {
+            if (unit.CompareTag("MySoldier") && !unit.isDead && unit.isInBattle)
+            {
+                aliveSoldiers++;
+            }
+        }
+
+        // 2. Senin Ceza Matematiğin
+        // Formül: (Hayatta Kalan / 3) * Maksimum Ceza. 
+        // Örn (Maks 30 ceza): 3 asker sağsa -30, 2 sağsa -20, 1 sağsa -10 itibar cezası yer!
+        float penaltyMultiplier = (float)aliveSoldiers / 3f; 
+        int calculatedPenalty = Mathf.RoundToInt(baseRetreatPenalty * penaltyMultiplier);
+
+        // 3. Savaşı Durdur ve Herkesi Dondur
+        state = BattleState.Lost; // Geri çekilmek teknik olarak o düğümü kaybetmektir
+        
+        // Varsa geri çekilme borusu çalınabilir
+        // AudioManager.Instance.PlaySFX(AudioManager.Instance.retreatHorn, 1f); 
+
+        foreach (var unit in allUnits)
+        {
+            if(unit.agent != null && unit.agent.isActiveAndEnabled) unit.agent.isStopped = true;
+            if(unit.animator != null) unit.animator.SetBool("isRunning", false);
+            
+            // Eğer saldırı halindelerse onu da iptal edelim
+            unit.GetComponent<GladiatorAI>().StopAllCoroutines(); 
+        }
+
+        if (skillPanel != null) skillPanel.SetActive(false);
+        topPanel.SetActive(true);
+
+        // 4. Yenilgi/Geri Çekilme Ekranını Güncelle
+        if (defeatText != null)
+        {
+            defeatText.text = $"GERİ ÇEKİLME!\n\nAskerlerini son anda sahadan çektin.\n<color=red>-{calculatedPenalty} İtibar (Korkaklık Bedeli)</color>";
+        }
+
+        // 5. Cezayı "Sefer Çantasına" yansıt (Kampa dönmeden uygulanmaz)
+        if (ExpeditionManager.Instance != null && ExpeditionManager.Instance.isExpeditionActive)
+        {
+            ExpeditionManager.Instance.AddLoot(0, -calculatedPenalty);
+        }
+        else if (ReputationManager.Instance != null)
+        {
+            ReputationManager.Instance.ChangeReputation(-calculatedPenalty);
+        }
+
+        defeatPanel.SetActive(true);
     }
     void HandleMouseClick()
     {

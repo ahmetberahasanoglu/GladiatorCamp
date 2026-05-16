@@ -16,6 +16,14 @@ public class SquadSelectionUIManager : MonoBehaviour
     private List<Gladiator> availableRoster = new List<Gladiator>();
     private List<Gladiator> selectedSquad = new List<Gladiator>();
     private bool _isBossBattle;
+    [Header("Komutan Yetenekleri Seçimi")]
+    public List<CommanderSkillData> unlockedSkills; 
+    public Transform skillInventoryArea; 
+    public GameObject skillCardPrefab; 
+    
+    [Header("Seçilen Yetenek Slotları (Max 3)")]
+    public List<Image> selectedSkillSlots; 
+    private List<CommanderSkillData> selectedSkills = new List<CommanderSkillData>();
 
     void Start()
     {
@@ -31,6 +39,7 @@ public class SquadSelectionUIManager : MonoBehaviour
 
         panel.SetActive(true);
         PopulateRoster();
+        PopulateSkills();
     }
 
     void PopulateRoster()
@@ -68,7 +77,75 @@ public class SquadSelectionUIManager : MonoBehaviour
             }
         }
     }
+    void PopulateSkills()
+    {
+        // Önce temizle
+        foreach (Transform child in skillInventoryArea) Destroy(child.gameObject);
+        selectedSkills.Clear();
+        UpdateSkillSlotVisuals();
 
+        // Envanterdeki yetenekleri listele
+        foreach (var skill in unlockedSkills)
+        {
+            GameObject card = Instantiate(skillCardPrefab, skillInventoryArea);
+            
+            // Kartın ikonunu ve adını ayarla
+            Image icon = card.transform.Find("Icon").GetComponent<Image>();
+            TextMeshProUGUI nameText = card.transform.Find("Name").GetComponent<TextMeshProUGUI>();
+            
+            if (icon != null) icon.sprite = skill.skillIcon;
+            if (nameText != null) nameText.text = skill.skillName;
+
+            Button btn = card.GetComponent<Button>();
+            if (btn != null)
+            {
+                btn.onClick.AddListener(() => OnSkillCardClicked(skill, card));
+            }
+        }
+    }
+void OnSkillCardClicked(CommanderSkillData skill, GameObject cardObject)
+    {
+        // Zaten seçiliyse çıkart
+        if (selectedSkills.Contains(skill))
+        {
+            selectedSkills.Remove(skill);
+            cardObject.GetComponent<Image>().color = Color.white; // Seçim iptal rengi
+        }
+        else
+        {
+            // Seçili değilse ve slotta yer varsa (Max 3) ekle
+            if (selectedSkills.Count < 3) // İleride bu 3 sayısını oyuncunun Kamp yükseltmesine göre değişken yapabilirsin
+            {
+                selectedSkills.Add(skill);
+                cardObject.GetComponent<Image>().color = Color.yellow; // Seçildiğini belli et
+            }
+            else
+            {
+                if (NotificationManager.Instance != null)
+                    NotificationManager.Instance.Show("En fazla 3 yetenek kuşanabilirsin!", NotificationType.Warning);
+            }
+        }
+
+        UpdateSkillSlotVisuals();
+    }
+
+    void UpdateSkillSlotVisuals()
+    {
+        // Seçilen yeteneklerin ikonlarını boş yuvalara yerleştir
+        for (int i = 0; i < selectedSkillSlots.Count; i++)
+        {
+            if (i < selectedSkills.Count)
+            {
+                selectedSkillSlots[i].sprite = selectedSkills[i].skillIcon;
+                selectedSkillSlots[i].enabled = true; // İkonu göster
+            }
+            else
+            {
+                selectedSkillSlots[i].sprite = null;
+                selectedSkillSlots[i].enabled = false; // Boşsa gizle veya silik bir arka plan göster
+            }
+        }
+    }
     void OnSoldierCardClicked(Gladiator soldier, GameObject cardObject)
     {
         // Zaten seçiliyse listeden çıkar
@@ -120,6 +197,10 @@ public class SquadSelectionUIManager : MonoBehaviour
     {
         panel.SetActive(false);
        AudioManager.Instance.PlayWarHorn();
+       if (BattleSkillManager.Instance != null)
+        {
+            BattleSkillManager.Instance.LoadSelectedSkills(selectedSkills);
+        }
         BattleManager.Instance.ExecuteBattleWithSquad(selectedSquad, _isBossBattle);
     }
 }

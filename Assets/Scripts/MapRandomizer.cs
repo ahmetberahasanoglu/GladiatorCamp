@@ -1,3 +1,4 @@
+// v2 — ApplyVisuals ile label + sprite güncelleme
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
@@ -97,31 +98,46 @@ public class MapRandomizer : MonoBehaviour
         Debug.Log($"[MapRandomizer] Toplam {depthMap.Count} node bulundu. " +
                   $"Maks derinlik: {maxDepth}");
 
-        // 3. Her node'a tier'ına uygun event ata
+        // 3. BFS'e giremeyen (hiçbir node'a bağlı olmayan) orphan node'ları da topla
+        MapNode[] allNodes = FindObjectsByType<MapNode>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var n in allNodes)
+        {
+            if (!depthMap.ContainsKey(n))
+            {
+                // Bağlantısız node: Tier 1'den rastgele ver, derinlik 1 say
+                depthMap[n] = 1;
+                Debug.LogWarning($"[MapRandomizer] '{n.gameObject.name}' " +
+                                 "hiçbir node'a bağlı değil (orphan). Tier 1 atandı.");
+            }
+        }
+
+        // 4. Her node'a tier'ına uygun event + görsel ata
         foreach (var kvp in depthMap)
         {
             MapNode node = kvp.Key;
             int depth    = kvp.Value;
 
-            // Sabit node'lara dokunma
+            // Sabit node'lara sprite/label güncelle ama type'a dokunma
             if (node.nodeType == NodeType.StartPoint ||
                 node.nodeType == NodeType.Boss)
-                continue;
-
-            // En derin node(lar) → Boss yap (Boss yoksa en uçtakiler boss olur)
-            // Not: Eğer sahnen zaten Boss node'u içeriyorsa bu satır çalışmaz (üstte continue var)
-            // Sadece haritada manuel Boss yoksa bu fallback devreye girer:
-            if (depth == maxDepth && !HasManualBossNode(depthMap))
             {
-                node.nodeType = NodeType.Boss;
-                ApplySprite(node);
+                node.ApplyVisuals(GetSpriteForType(node.nodeType), GetLabel(node.nodeType));
                 continue;
             }
 
-            // Tier seç ve rastgele event ata
+            // Manuel Boss yoksa en derin node'ları Boss yap
+            if (depth == maxDepth && !HasManualBossNode(depthMap))
+            {
+                node.nodeType = NodeType.Boss;
+                node.ApplyVisuals(GetSpriteForType(NodeType.Boss), GetLabel(NodeType.Boss));
+                continue;
+            }
+
+            // Tier seç → görsel uygula
             NodeType chosen = PickFromTier(depth);
             node.nodeType   = chosen;
-            ApplySprite(node);
+            node.ApplyVisuals(GetSpriteForType(chosen), GetLabel(chosen));
         }
 
         Debug.Log("[MapRandomizer] Harita başarıyla rastgeleleştirildi!");
@@ -209,45 +225,66 @@ public class MapRandomizer : MonoBehaviour
     private bool HasManualBossNode(Dictionary<MapNode, int> depthMap)
     {
         foreach (var node in depthMap.Keys)
-            if (node.nodeType == NodeType.Boss)
-                return true;
+            if (node.nodeType == NodeType.Boss) return true;
         return false;
     }
 
-    // ── Yardımcı: Sprite güncelle ───────────────────────────────────────────
-    private void ApplySprite(MapNode node)
+    // ── Label metinleri ─────────────────────────────────────────────────────
+    private string GetLabel(NodeType type) => type switch
+    {
+        NodeType.Battle            => "Savaş",
+        NodeType.FirstBattle       => "Savaş",
+        NodeType.Village           => "Köy",
+        NodeType.KervanEncounter   => "Kervan",
+        NodeType.CaravanEncounter  => "Kervan",
+        NodeType.Zindan            => "Zindan",
+        NodeType.Boss              => "Kızıl Kale",
+        NodeType.Tuccar            => "Tüccar",
+        NodeType.RestArea          => "Dinlenme",
+        NodeType.Treasure          => "Hazine",
+        NodeType.Vahsi             => "Vahşi Hayvan",
+        NodeType.KuleSavas         => "Kule Savaşı",
+        NodeType.Archery           => "Ok Yarışması",
+        NodeType.Atyarisi          => "At Yarışı",
+        NodeType.YagliGures        => "Güreş",
+        NodeType.Dice              => "Zar",
+        NodeType.NasibEncounter    => "Nasip",
+        NodeType.DervishEncounter  => "Derviş",
+        NodeType.Kalkan            => "Savunma",
+        NodeType.StartPoint        => "Kamp",
+        NodeType.Kacak             => "Kaçak",
+        _                          => "?"
+    };
+
+    // ── Sprite seçici ───────────────────────────────────────────────────────
+    private Sprite GetSpriteForType(NodeType type)
     {
         MapEventManager em = MapEventManager.Instance;
-        if (em == null || node.iconImage == null) return;
+        if (em == null) return null;
 
-        node.iconImage.sprite = GetSpriteForType(node.nodeType, em);
-    }
-
-    private Sprite GetSpriteForType(NodeType type, MapEventManager em)
-    {
-        switch (type)
+        return type switch
         {
-            case NodeType.Village:           return em.villageSprite;
-            case NodeType.Battle:            return em.battleSprite;
-            case NodeType.FirstBattle:       return em.battleSprite;
-            case NodeType.Treasure:          return em.treasureSprite;
-            case NodeType.Boss:              return em.bossSprite;
-            case NodeType.Archery:           return em.archerySprite;
-            case NodeType.Atyarisi:          return em.horseSprite;
-            case NodeType.KuleSavas:         return em.towerSprite;
-            case NodeType.Tuccar:            return em.tuccarSprite;
-            case NodeType.Kalkan:            return em.shieldSprite;
-            case NodeType.Zindan:            return em.dungeonSprite;
-            case NodeType.Vahsi:             return em.wildSprite;
-            case NodeType.Dice:              return em.diceSprite;
-            case NodeType.YagliGures:        return em.wrestlingSprite;
-            case NodeType.RestArea:          return em.villageSprite;
-            case NodeType.NasibEncounter:    return em.villageSprite;
-            case NodeType.DervishEncounter:  return em.villageSprite;
-            case NodeType.CaravanEncounter:  return em.merchant;
-            case NodeType.KervanEncounter:   return em.merchant;
-            case NodeType.Kacak:             return em.villageSprite;
-            default:                         return em.villageSprite;
-        }
+            NodeType.Village           => em.villageSprite,
+            NodeType.Battle            => em.battleSprite,
+            NodeType.FirstBattle       => em.battleSprite,
+            NodeType.Treasure          => em.treasureSprite,
+            NodeType.Boss              => em.bossSprite,
+            NodeType.Archery           => em.archerySprite,
+            NodeType.Atyarisi          => em.horseSprite,
+            NodeType.KuleSavas         => em.towerSprite,
+            NodeType.Tuccar            => em.tuccarSprite,
+            NodeType.Kalkan            => em.shieldSprite,
+            NodeType.Zindan            => em.dungeonSprite,
+            NodeType.Vahsi             => em.wildSprite,
+            NodeType.Dice              => em.diceSprite,
+            NodeType.YagliGures        => em.wrestlingSprite,
+            NodeType.RestArea          => em.villageSprite,
+            NodeType.NasibEncounter    => em.villageSprite,
+            NodeType.DervishEncounter  => em.villageSprite,
+            NodeType.CaravanEncounter  => em.merchant,
+            NodeType.KervanEncounter   => em.merchant,
+            NodeType.Kacak             => em.villageSprite,
+            _                          => em.villageSprite,
+        };
     }
 }

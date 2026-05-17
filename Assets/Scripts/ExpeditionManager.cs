@@ -41,13 +41,15 @@ public class ExpeditionManager : MonoBehaviour
   
     public void AddLoot(int goldReward, int repReward, List<ItemData> itemRewards = null)
     {
+        // Relic: BereketliYol / HazineNefesi
+        if (goldReward > 0 && MetaProgressionManager.Instance != null)
+            goldReward = Mathf.RoundToInt(goldReward * MetaProgressionManager.Instance.GetLootGoldMultiplier());
+
         tempGold += goldReward;
         tempReputation += repReward;
 
         if (itemRewards != null)
-        {
             tempItems.AddRange(itemRewards);
-        }
 
         UpdateTopBarUI();
     }
@@ -87,9 +89,12 @@ public class ExpeditionManager : MonoBehaviour
         }
 
         // YENİ: KAZANILAN MİRAS HAKLARINI HESAPLA VE KAMPA YAZDIR
-        int earnedRelics = currentEncounterCount / 5;
-        if (earnedRelics > 0 && MetaProgressionManager.Instance != null)
+        // Relic: EfsaneviHikaye → her milestone'da 2 hak
+        int milestonesEarned = currentEncounterCount / 5;
+        if (milestonesEarned > 0 && MetaProgressionManager.Instance != null)
         {
+            int picksPerMilestone = MetaProgressionManager.Instance.GetRelicPicksPerMilestone();
+            int earnedRelics = milestonesEarned * picksPerMilestone;
             MetaProgressionManager.Instance.AddPendingRelics(earnedRelics);
         }
 
@@ -102,9 +107,11 @@ public class ExpeditionManager : MonoBehaviour
         if (tempReputation < 0) ReputationManager.Instance.ChangeReputation(tempReputation);
 
         // Ölsek bile kazandığımız miras hakları bizimle gelir!
-        int earnedRelics = currentEncounterCount / 5;
-        if (earnedRelics > 0 && MetaProgressionManager.Instance != null)
+        int milestonesEarned = currentEncounterCount / 5;
+        if (milestonesEarned > 0 && MetaProgressionManager.Instance != null)
         {
+            int picksPerMilestone = MetaProgressionManager.Instance.GetRelicPicksPerMilestone();
+            int earnedRelics = milestonesEarned * picksPerMilestone;
             MetaProgressionManager.Instance.AddPendingRelics(earnedRelics);
         }
 
@@ -116,7 +123,12 @@ public class ExpeditionManager : MonoBehaviour
     {
         if (tempGold <= 0 && tempItems.Count == 0) return;
 
-        int fee = Mathf.RoundToInt(tempGold * 0.1f);
+        // Relic: HalkınGözü komisyonu düşürür
+        float commissionRate = MetaProgressionManager.Instance != null
+            ? MetaProgressionManager.Instance.GetCaravanCommissionRate()
+            : 0.10f;
+
+        int fee      = Mathf.RoundToInt(tempGold * commissionRate);
         int safeGold = tempGold - fee;
 
         if (safeGold > 0) MoneyManager.Instance.Add(safeGold);

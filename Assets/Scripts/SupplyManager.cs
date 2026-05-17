@@ -54,6 +54,13 @@ public class SupplyManager : MonoBehaviour
     public void ConsumeDailyFood(int daysPassed)
     {
         int dailyNeededFood = GetExpectedDailyFoodCost();
+
+        // Relic: KutluMide / TuzluEt
+        float foodMult = MetaProgressionManager.Instance != null
+            ? MetaProgressionManager.Instance.GetFoodCostMultiplier()
+            : 1f;
+        dailyNeededFood = Mathf.Max(0, Mathf.RoundToInt(dailyNeededFood * foodMult));
+
         int totalNeededFood = dailyNeededFood * daysPassed;
 
         if (totalNeededFood == 0) return; 

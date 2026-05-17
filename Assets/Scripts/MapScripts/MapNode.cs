@@ -18,7 +18,7 @@ public class MapNode : MonoBehaviour
     [Header("Görsel")]
     public Button nodeButton;
     public Image iconImage;
-    public TextMeshProUGUI labelText;
+    public TextMeshProUGUI labelText; // Inspector'dan bağla
 
     void Start()
     {
@@ -56,6 +56,29 @@ public class MapNode : MonoBehaviour
                 nodeButton.interactable = false;
                 break;
         }
+    }
+
+    /// <summary>
+    /// MapRandomizer tarafından çağrılır. Sprite ve label'ı günceller.
+    /// Sprite null ise iconImage gizlenir, null değilse gösterilir.
+    /// </summary>
+    public void ApplyVisuals(Sprite icon, string label)
+    {
+        if (iconImage != null)
+        {
+            if (icon != null)
+            {
+                iconImage.sprite  = icon;
+                iconImage.enabled = true;
+            }
+            else
+            {
+                iconImage.enabled = false; // sprite yoksa image'ı gizle
+            }
+        }
+
+        if (labelText != null)
+            labelText.text = label;
     }
 
     public void OnNodeClicked()

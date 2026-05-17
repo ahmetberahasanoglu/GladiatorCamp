@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: OkSkill
   m_EditorClassIdentifier: Assembly-CSharp::CommanderSkillData
   skillName: "Ok Ya\u011Fmuru"
-  skillIcon: {fileID: 21300000, guid: 5d4f7f8c18c81b14499cfb251e39af08, type: 3}
-  description: "T\xFCm askerleri iyile\u015Fitrir"
+  skillIcon: {fileID: 21300000, guid: c584f782e9ce03444b6cd36893975997, type: 3}
+  description: "T\xFCm d\xFC\u015Fmanlar\u0131n \xFCzerine ok ya\u011Fd\u0131r\u0131r."
   skillType: 1
   cooldownTime: 10
   powerAmount: 25
-  effectPrefab: {fileID: 0}
+  effectPrefab: {fileID: 8923590646714700985, guid: d59204bdacfe7674e9b8bb4a454fd954, type: 3}
   isSingleUse: 0

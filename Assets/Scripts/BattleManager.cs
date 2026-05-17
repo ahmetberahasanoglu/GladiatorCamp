@@ -126,11 +126,23 @@ public class BattleManager : MonoBehaviour
             }
         }
 
-        // 2. Senin Ceza Matematiğin
-        // Formül: (Hayatta Kalan / 3) * Maksimum Ceza. 
-        // Örn (Maks 30 ceza): 3 asker sağsa -30, 2 sağsa -20, 1 sağsa -10 itibar cezası yer!
-        float penaltyMultiplier = (float)aliveSoldiers / 3f; 
-        int calculatedPenalty = Mathf.RoundToInt(baseRetreatPenalty * penaltyMultiplier);
+        // 2. Ceza Matematiği — Nasip faktörü dahil
+        // Temel formül: (Hayatta Kalan / 3) * Maksimum Ceza
+        // Nasip faktörü: nasip ne kadar yüksekse ceza o kadar düşük
+        //   nasip 0   → nasipMultiplier 1.0 (tam ceza)
+        //   nasip 50  → nasipMultiplier 0.5 (yarı ceza)
+        //   nasip 100 → nasipMultiplier 0.0 (ceza yok — Allah korudu)
+        float penaltyMultiplier = (float)aliveSoldiers / 3f;
+
+        float nasipMultiplier = 1f;
+        if (NasipManager.Instance != null)
+        {
+            float nasipRatio = (float)NasipManager.Instance.currentNasip
+                             / (float)NasipManager.Instance.maxNasip; // 0..1
+            nasipMultiplier = 1f - nasipRatio; // yüksek nasip → düşük ceza
+        }
+
+        int calculatedPenalty = Mathf.RoundToInt(baseRetreatPenalty * penaltyMultiplier * nasipMultiplier);
 
         // 3. Savaşı Durdur ve Herkesi Dondur
         state = BattleState.Lost; // Geri çekilmek teknik olarak o düğümü kaybetmektir
@@ -153,13 +165,31 @@ public class BattleManager : MonoBehaviour
         // 4. Yenilgi/Geri Çekilme Ekranını Güncelle
         if (defeatText != null)
         {
-            defeatText.text = $"GERİ ÇEKİLME!\n\nAskerlerini son anda sahadan çektin.\n<color=red>-{calculatedPenalty} İtibar (Korkaklık Bedeli)</color>";
+            string nasipLine = nasipMultiplier <= 0f
+                ? "\n<color=green>Nasibin yüceydi — ceza almadan kaçtın!</color>"
+                : nasipMultiplier < 0.5f
+                    ? "\n<color=yellow>Nasibin yardımıyla hafif sıyrıldın.</color>"
+                    : "";
+
+            defeatText.text = $"GERİ ÇEKİLME!\n\nAskerlerini son anda sahadan çektin."
+                            + $"\n<color=red>-{calculatedPenalty} İtibar (Korkaklık Bedeli)</color>"
+                            + nasipLine;
         }
 
-        // 5. Cezayı "Sefer Çantasına" yansıt (Kampa dönmeden uygulanmaz)
+        // 5. Cezayı uygula + çantadaki ganimetin yarısını kaybet
+        int lootLoss = 0;
         if (ExpeditionManager.Instance != null && ExpeditionManager.Instance.isExpeditionActive)
         {
+            // İtibar cezası
             ExpeditionManager.Instance.AddLoot(0, -calculatedPenalty);
+
+            // Ganimet kaybı: çantadaki altının yarısı
+            lootLoss = Mathf.RoundToInt(ExpeditionManager.Instance.tempGold * 0.5f);
+            if (lootLoss > 0)
+            {
+                ExpeditionManager.Instance.tempGold -= lootLoss;
+                Debug.Log($"[Retreat] Kaçarken {lootLoss} altın yere düştü.");
+            }
         }
         else if (ReputationManager.Instance != null)
         {

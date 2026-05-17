@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 889b75988316ee94fab8fe0cd2a7337e, type: 3}
   m_Name: "SavasNaras\u0131Skill"
   m_EditorClassIdentifier: Assembly-CSharp::CommanderSkillData
-  skillName: "Ok Ya\u011Fmuru"
+  skillName: "Sars\u0131c\u0131 Sava\u015F Naras"
   skillIcon: {fileID: 21300000, guid: 5d4f7f8c18c81b14499cfb251e39af08, type: 3}
-  description: "T\xFCm askerleri iyile\u015Fitrir"
-  skillType: 1
-  cooldownTime: 10
-  powerAmount: 25
-  effectPrefab: {fileID: 0}
+  description: "D\xFC\u015Fmanlar\u0131 sersemletici bir nara atars\u0131n."
+  skillType: 2
+  cooldownTime: 15
+  powerAmount: 0
+  effectPrefab: {fileID: 8131705234424654713, guid: 349986af3988c0c439b615fec9309533, type: 3}
   isSingleUse: 0

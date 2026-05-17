@@ -271,7 +271,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapNode
   nodeType: 0
-  layerIndex: 0
-  accessibleNodes: []
+  outgoingPaths: []
+  currentState: 0
   nodeButton: {fileID: 4427618156263839566}
   iconImage: {fileID: 2786203933434620814}
+  labelText: {fileID: 7385851814325183887}

@@ -8,16 +8,16 @@ public class SeasonManager : MonoBehaviour
     [Header("Işık Ayarları (Directional Light)")]
     public Light sunLight;
     
-    [Header("1-50 Gün: Yaz / Erken Sonbahar")]
+    [Header("1-10 Gün: Yaz / Erken Sonbahar")]
     public Color summerColor = new Color(1f, 0.95f, 0.8f); // Açık, sıcak sarı
     public float summerIntensity = 1.2f;
 
-    [Header("50-80 Gün: Geç Sonbahar")]
+    [Header("10-20 Gün: Geç Sonbahar")]
     public Color autumnColor = new Color(1f, 0.7f, 0.4f); // Turuncumsu, hüzünlü
     public float autumnIntensity = 0.9f;
     public ParticleSystem autumnLeavesParticle; // Dökülen yapraklar
 
-    [Header("80-100 Gün: Kışın Ayak Sesleri")]
+    [Header("20-30 Gün: Kışın Ayak Sesleri")]
     public Color winterColor = new Color(0.7f, 0.8f, 0.9f); // Soğuk, gri-mavi
     public float winterIntensity = 0.6f;
     public ParticleSystem snowParticle; // Kar yağışı
@@ -27,7 +27,7 @@ public class SeasonManager : MonoBehaviour
     public AudioClip autumnWindClip;
     public AudioClip winterBlizzardClip;
 
-    private int currentPhase = 0; // 1: Yaz, 2: Sonbahar, 3: Kış
+    public int currentPhase = 0; // 1: Yaz, 2: Sonbahar, 3: Kış
 
     void Awake()
     {
@@ -160,14 +160,14 @@ public class SeasonManager : MonoBehaviour
         // Gölgeleri kesinlikle aç (Mağara savaşında kapanmış olabilir)
         sunLight.shadows = LightShadows.Soft;
 
-        if (day < 50)
+        if (day < 10)
         {
             sunLight.color = summerColor;
             sunLight.intensity = summerIntensity;
             RenderSettings.fogDensity = 0.005f;
             RenderSettings.fogColor = summerColor;
         }
-        else if (day >= 50 && day < 80)
+        else if (day >= 10 && day < 20)
         {
             sunLight.color = autumnColor;
             sunLight.intensity = autumnIntensity;

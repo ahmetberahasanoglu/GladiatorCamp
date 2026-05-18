@@ -5,7 +5,7 @@ public class TrainingArea3D : MonoBehaviour
 {
     [Header("Eğitim Ayarları")]
     public string trainingName = "Okçuluk Talimi";
-    public int cost = 30; // Eğitim ücreti
+    public int cost = 50; // Eğitim ücreti
     public int timeCost = 1; // Kaç gün sürecek?
 
     [Header("Görsel Geri Bildirim")]

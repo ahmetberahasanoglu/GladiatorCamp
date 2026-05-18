@@ -65,7 +65,7 @@ public class MoneyManager : MonoBehaviour
             if (soldier.CompareTag("MySoldier") && (ai == null || !ai.isDead))
             {
                 int lvl = (soldier.data != null) ? soldier.data.level : 1;
-                totalWage += (lvl * 5); // Her seviye için 5 Akçe maaş (Örn: Lvl 3 = 15 Akçe)
+                totalWage += (lvl * 10); // Her seviye için 5 Akçe maaş (Örn: Lvl 3 = 15 Akçe)
             }
         }
         return totalWage;

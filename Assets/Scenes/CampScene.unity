@@ -1704,6 +1704,7 @@ MonoBehaviour:
   windAudioSource: {fileID: 0}
   autumnWindClip: {fileID: 0}
   winterBlizzardClip: {fileID: 0}
+  currentPhase: 0
 --- !u!4 &39094834 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 728576751314082672, guid: c2f6a8962aac3814aa56cb9647c93470, type: 3}
@@ -61047,6 +61048,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RunManager
   exilePanel: {fileID: 578565409}
   exileDetailText: {fileID: 904174275}
+  newRunButton: {fileID: 0}
+  relicScreenButton: {fileID: 0}
+  victoryPanel: {fileID: 0}
+  victoryDetailText: {fileID: 0}
+  victoryNewRunButton: {fileID: 0}
+  finalBossSceneName: BattleScene
+  finalBossDifficulty: 5
+  startingGold: 1000
+  startingReputation: 80
+  startingMorale: 80
+  startingFood: 50
 --- !u!1001 &1265237416
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -93497,6 +93509,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2786203933434620814, guid: f0a33d66a49d4fa4790c46f3a2c0ee17, type: 3}
       propertyPath: m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2786203933434620814, guid: f0a33d66a49d4fa4790c46f3a2c0ee17, type: 3}
+      propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3269513492554334412, guid: f0a33d66a49d4fa4790c46f3a2c0ee17, type: 3}

@@ -42,6 +42,15 @@ public class BuildingClickable : MonoBehaviour
     void Start()
     {
         UpdateVisuals();
+        // DayManager burada kesin hazır olur
+        if (DayManager.Instance != null)
+            DayManager.Instance.OnNewDay += AdvanceConstructionTimer;
+    }
+
+    void OnDestroy()
+    {
+        if (DayManager.Instance != null)
+            DayManager.Instance.OnNewDay -= AdvanceConstructionTimer;
     }
 
     void OnMouseEnter()

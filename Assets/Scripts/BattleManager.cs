@@ -516,7 +516,7 @@ private void ChangeEnvironment(BattleEnvironment envType)
 
         if (isVictory)
         {
-            int goldReward = _currentEnemyCount * 50 * _currentDifficulty; // Örn: 5 Düşman * Zorluk 2 = 500 Akçe
+            int goldReward = _currentEnemyCount * 25 * _currentDifficulty; // Örn: 5 Düşman * Zorluk 2 = 500 Akçe
             int foodReward = _currentEnemyCount * 10;                      // Düşman kampından yağmalanan erzak
             int moraleReward = 10 + (_currentDifficulty * 5);              // Zor savaş kazanmak daha çok moral verir
             int repReward = 5 * _currentDifficulty;                        // İtibar artışı

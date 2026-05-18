@@ -8,7 +8,7 @@ public class SupplyManager : MonoBehaviour
     [Header("Erzak Durumu")]
     public int currentFood = 50;   
     public int foodCost = 5;       
-    public int baseFoodPerSoldier = 1; 
+    public int baseFoodPerSoldier = 2; 
 [Header("Kapasite")]
     public int maxFood = 100;
     public event System.Action OnFoodChanged;

@@ -42,15 +42,6 @@ public class BuildingClickable : MonoBehaviour
     void Start()
     {
         UpdateVisuals();
-        // DayManager burada kesin hazır olur
-        if (DayManager.Instance != null)
-            DayManager.Instance.OnNewDay += AdvanceConstructionTimer;
-    }
-
-    void OnDestroy()
-    {
-        if (DayManager.Instance != null)
-            DayManager.Instance.OnNewDay -= AdvanceConstructionTimer;
     }
 
     void OnMouseEnter()
@@ -78,6 +69,7 @@ public class BuildingClickable : MonoBehaviour
    
     public void OnMouseDown()
     {
+        if (UIBlocker.IsPointerOverUI()) return;
         if (EventSystem.current.IsPointerOverGameObject()) return;
         if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
         

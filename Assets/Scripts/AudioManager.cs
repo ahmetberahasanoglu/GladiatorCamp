@@ -52,6 +52,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip beastHit;  
     public AudioClip bearHit;  
     public AudioClip beastDeath;  
+    public AudioClip gaziSoundClip;  
 
     [Range(0f, 1f)] public float actionVolume = 0.9f;
     
@@ -202,4 +203,5 @@ public void PlayTypewriter()
     public void PlayWood() => PlaySFX(woodSound, actionVolume*0.1f);
     public void PlaySword() => PlaySFX(swordSwoosh, 0.8f);
     public void PlayMapMove() => PlaySFX(mapMoveSound, actionVolume);
+    public void PlayGazi() => PlaySFX(mapMoveSound, actionVolume);
 }

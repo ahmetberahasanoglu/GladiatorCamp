@@ -6,11 +6,13 @@ public class ArcheryGameManager : MonoBehaviour
 {
     public static ArcheryGameManager Instance;
 
-    [Header("Oyun Kuralları")]
-    public int maxShots = 5;      // Toplam atış hakkı
-    public int targetScore = 20;  // Bey'in istediği kazanma puanı
+  [Header("Oyun Kuralları")]
+    public int maxShots = 5;      
+    public int targetScore = 20;  
     private int currentShots = 0;
     private int totalScore = 0;
+
+    public bool isGameOver = false; 
 
     [Header("UI Elemanları")]
     public TextMeshProUGUI scoreText; // Sol üstteki Puan yazısı
@@ -29,10 +31,20 @@ public class ArcheryGameManager : MonoBehaviour
         Instance = this;
     }
 
-    void Start()
+   void Start()
     {
+        // YENİ: Oyun başlar başlamaz imleci kesin olarak kilitle ve gizle
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+        
+        isGameOver = false;
+
         UpdateUI();
-        if (resultPanel != null) resultPanel.SetActive(false); // Başlangıçta paneli gizle
+        if (resultPanel != null) resultPanel.SetActive(false);
+
+        int soldierSpeed = PlayerPrefs.GetInt("ArcherySoldierSpeed", 20);
+        if (WindManager.Instance != null)
+            WindManager.Instance.SetSoldierStat(soldierSpeed);
     }
 
     // Ok hedefe saplanınca Arrow.cs burayı çağıracak
@@ -73,6 +85,8 @@ public void ReturnToMap()
     }
     void EndGame()
     {
+      isGameOver = true; 
+
         // Oyuncunun tekrar UI'a tıklayabilmesi için fareyi görünür yapıyoruz
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -88,7 +102,7 @@ public void ReturnToMap()
            // PlayerPrefs.SetInt("PlayerGold", PlayerPrefs.GetInt("PlayerGold", 0) + rewardGold);
            // PlayerPrefs.SetInt("PlayerReputation", PlayerPrefs.GetInt("PlayerReputation", 0) + rewardReputation);
             //PlayerPrefs.Save();
-            MoneyManager.Instance.Add(500);
+          //  MoneyManager.Instance.Add(500);
         }
         else
         {

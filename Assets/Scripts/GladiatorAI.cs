@@ -579,16 +579,19 @@ GladiatorAI[] allUnits = FindObjectsByType<GladiatorAI>(FindObjectsSortMode.None
 
     public void MakeGazi()
     {
-        if (gladiator.data.isGazi) return; // Zaten gaziyse işlemi iptal et
+        if (gladiator.data.isGazi) return;
 
         gladiator.data.isGazi = true;
         gladiator.data.level += 2;
-
-
         gladiator.RecalculateMaxHealth();
 
-        //if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(10);
-        if (NotificationManager.Instance != null) NotificationManager.Instance.Show($"{gladiator.data.gladiatorName} artık bir GAZİ! (+2 Seviye)", NotificationType.Success);
+        // Özel Gazi töreni ekranı
+        if (GaziFeedback.Instance != null)
+            GaziFeedback.Instance.ShowGaziCeremony(gladiator);
+        else if (NotificationManager.Instance != null)
+            NotificationManager.Instance.Show(
+                $"{gladiator.data.gladiatorName} artık bir GAZİ! (+2 Seviye)",
+                NotificationType.Success);
     }
 
     IEnumerator LifeCycleRoutine()
@@ -667,8 +670,10 @@ GladiatorAI[] allUnits = FindObjectsByType<GladiatorAI>(FindObjectsSortMode.None
         {
             currentPoint.isOccupied = false; 
             currentPoint = null;
+            
         }
     }
+    
     
     void OnDestroy()
     {

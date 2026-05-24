@@ -89,16 +89,30 @@ public class GladiatorPanel : MonoBehaviour
             else if (healing != null && healing.IsHealing) 
                 statusText = "<color=green>Şifahanede</color>";
         }
-        int dailyWage = data.level * 5;
+        int dailyWage = data.level * 10;
        string traitText = data.GetTrait();
 
-        // İstatistikleri yan yana alarak dikeyde yer kazandık:
+        // Kişilik aktif efekt göstergesi
+        string traitHint = data.trait switch
+        {
+            SoldierTrait.Obur      => "\n<color=#FF9800><size=85%>⚠ Günde 2 ekstra erzak tüketir</size></color>",
+            SoldierTrait.Dindar    => "\n<color=#64B5F6><size=85%>✦ Dua edince Nasip +2 bonus alır</size></color>",
+            SoldierTrait.Yetenekli => "\n<color=#81C784><size=85%>★ Eğitimden 2 kat stat kazanır</size></color>",
+            _                      => ""
+        };
+
+        // Gazi rozeti — sadece unvan değil, ne anlama geldiği de yazılı
+        string gaziLine = data.isGazi
+            ? "\n<color=#FFD700>GAZİ — Ölümün gözüne baktı, döndü</color>"
+            : "";
+
         infoText.text =
             $"DURUM: {statusText}\n" +
             $"CAN: <color={hpColor}>{currentHp} / {maxHp}</color>\n" +
-            $"{traitText}\n" + 
-            $"STR: {data.strength} \tDEF: {data.defense}\n" + // Yan yana
-            $"SPD: {data.speed} \tSTA: {data.stamina}\n" +    // Yan yana
-            $"Seviye: {data.level} <size=120%>{gaziTitle}</size>\t<color=#FFD700>Ulufe: {dailyWage}</color>";
+            $"{traitText}{traitHint}" +
+            $"{gaziLine}\n" +
+            $"STR: {data.strength} \tDEF: {data.defense}\n" +
+            $"SPD: {data.speed} \tSTA: {data.stamina}\n" +
+            $"Seviye: {data.level}\t<color=#FFD700>Ulufe: {dailyWage}</color>";
     }
 }

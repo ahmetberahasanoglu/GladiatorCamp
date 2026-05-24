@@ -41,15 +41,13 @@ public class ExpeditionManager : MonoBehaviour
   
     public void AddLoot(int goldReward, int repReward, List<ItemData> itemRewards = null)
     {
-        // Relic: BereketliYol / HazineNefesi
-        if (goldReward > 0 && MetaProgressionManager.Instance != null)
-            goldReward = Mathf.RoundToInt(goldReward * MetaProgressionManager.Instance.GetLootGoldMultiplier());
-
         tempGold += goldReward;
         tempReputation += repReward;
 
         if (itemRewards != null)
+        {
             tempItems.AddRange(itemRewards);
+        }
 
         UpdateTopBarUI();
     }
@@ -78,25 +76,47 @@ public class ExpeditionManager : MonoBehaviour
     {
         if (!isExpeditionActive) return;
 
+        // Özet için mevcut değerleri kaydet
+        int summaryGold  = tempGold;
+        int summaryRep   = tempReputation;
+        int summaryItems = tempItems.Count;
+        int summaryDays  = currentEncounterCount;
+
+        // Transferleri yap
         if (tempGold > 0) MoneyManager.Instance.Add(tempGold);
-        else if (tempGold < 0) MoneyManager.Instance.Spend(Mathf.Abs(tempGold)); 
+        else if (tempGold < 0) MoneyManager.Instance.Spend(Mathf.Abs(tempGold));
 
         if (tempReputation != 0) ReputationManager.Instance.ChangeReputation(tempReputation);
 
         if (InventoryStorage.Instance != null)
-        {
             foreach (var item in tempItems) InventoryStorage.Instance.AddItem(item);
+
+        // Miras hakları
+        int picksPerMilestone = MetaProgressionManager.Instance != null
+            ? MetaProgressionManager.Instance.GetRelicPicksPerMilestone() : 1;
+        int earnedRelics = (currentEncounterCount / 5) * picksPerMilestone;
+        if (earnedRelics > 0 && MetaProgressionManager.Instance != null)
+            MetaProgressionManager.Instance.AddPendingRelics(earnedRelics);
+
+        // Asker listesi & hasar kontrolü
+        var soldiers = new System.Collections.Generic.List<Gladiator>();
+        bool hadCasualties = false;
+        foreach (var g in UnityEngine.Object.FindObjectsByType<Gladiator>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (g.CompareTag("MySoldier"))
+            {
+                soldiers.Add(g);
+                if (g.currentHealth <= 0) hadCasualties = true;
+            }
         }
 
-        // YENİ: KAZANILAN MİRAS HAKLARINI HESAPLA VE KAMPA YAZDIR
-        // Relic: EfsaneviHikaye → her milestone'da 2 hak
-        int milestonesEarned = currentEncounterCount / 5;
-        if (milestonesEarned > 0 && MetaProgressionManager.Instance != null)
-        {
-            int picksPerMilestone = MetaProgressionManager.Instance.GetRelicPicksPerMilestone();
-            int earnedRelics = milestonesEarned * picksPerMilestone;
-            MetaProgressionManager.Instance.AddPendingRelics(earnedRelics);
-        }
+        // Özet ekranını göster (miras ekranı CloseSummary'de açılacak)
+        if (ExpeditionSummaryUI.Instance != null)
+            ExpeditionSummaryUI.Instance.ShowSummary(
+                summaryGold, summaryRep, summaryItems,
+                summaryDays, summaryDays, earnedRelics,
+                soldiers, hadCasualties);
 
         ResetExpedition();
     }
@@ -107,11 +127,9 @@ public class ExpeditionManager : MonoBehaviour
         if (tempReputation < 0) ReputationManager.Instance.ChangeReputation(tempReputation);
 
         // Ölsek bile kazandığımız miras hakları bizimle gelir!
-        int milestonesEarned = currentEncounterCount / 5;
-        if (milestonesEarned > 0 && MetaProgressionManager.Instance != null)
+        int earnedRelics = currentEncounterCount / 5;
+        if (earnedRelics > 0 && MetaProgressionManager.Instance != null)
         {
-            int picksPerMilestone = MetaProgressionManager.Instance.GetRelicPicksPerMilestone();
-            int earnedRelics = milestonesEarned * picksPerMilestone;
             MetaProgressionManager.Instance.AddPendingRelics(earnedRelics);
         }
 
@@ -123,12 +141,7 @@ public class ExpeditionManager : MonoBehaviour
     {
         if (tempGold <= 0 && tempItems.Count == 0) return;
 
-        // Relic: HalkınGözü komisyonu düşürür
-        float commissionRate = MetaProgressionManager.Instance != null
-            ? MetaProgressionManager.Instance.GetCaravanCommissionRate()
-            : 0.10f;
-
-        int fee      = Mathf.RoundToInt(tempGold * commissionRate);
+        int fee = Mathf.RoundToInt(tempGold * 0.1f);
         int safeGold = tempGold - fee;
 
         if (safeGold > 0) MoneyManager.Instance.Add(safeGold);

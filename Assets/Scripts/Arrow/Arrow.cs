@@ -3,8 +3,8 @@ using UnityEngine;
 public class Arrow : MonoBehaviour
 {
     private Rigidbody rb;
-    private bool isStuck = false; // Saplandı mı?
-    public AudioClip hitSound; // Ahşaba saplanma sesi
+    private bool isStuck = false;
+    public AudioClip hitSound;
     private AudioSource audioSource;
 
     [Header("Efektler")]
@@ -19,11 +19,21 @@ public class Arrow : MonoBehaviour
 
     void Update()
     {
-        // Ok havada süzülürken hep gittiği yöne baksın (Kavisli uçuş)
         if (!isStuck && rb != null && rb.linearVelocity.sqrMagnitude > 0.1f)
         {
-            //transform.rotation = Quaternion.LookRotation(rb.linearVelocity);
             transform.rotation = Quaternion.LookRotation(rb.linearVelocity) * Quaternion.Euler(90, 0, 0);
+        }
+    }
+
+    // Rüzgar kuvvetini FixedUpdate'te uygula (fizik döngüsüyle senkron)
+    void FixedUpdate()
+    {
+        if (isStuck || rb == null || rb.isKinematic) return;
+
+        if (WindManager.Instance != null)
+        {
+            Vector3 windForce = WindManager.Instance.GetWindForce();
+            rb.AddForce(windForce, ForceMode.Force);
         }
     }
 
@@ -44,6 +54,10 @@ if (collision.transform.root.GetComponent<BowController>() != null || collision.
             rb.isKinematic = true;
             rb.useGravity = false;
         }
+
+        // YENİ: Saplandıktan sonra Trail'i kapat ki iz bırakmaya devam etmesin
+        TrailRenderer trail = GetComponent<TrailRenderer>();
+        if (trail != null) trail.emitting = false;
         
         // Ok, çarptığı objenin çocuğu olsun (Hedef tahtası hareket etse bile üstünde kalır)
         transform.SetParent(collision.transform);

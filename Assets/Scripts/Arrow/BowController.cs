@@ -12,11 +12,12 @@ public class BowController : MonoBehaviour
     public Transform arrowSpawnPoint;
     public float maxShootForce = 40f;
     
-    [Header("Germe ve Titreme")]
+  [Header("Germe ve Titreme")]
     public float timeToMaxDraw = 1.5f;
     private float currentDrawTime = 0f;
     private bool isDrawing = false;
     public float swayAmount = 2f;
+    public float windSwayEffect = 0.5f; 
 
     [Header("Görsel ve İşitsel Hissiyat (Game Feel)")]
     public RectTransform crosshair;
@@ -34,17 +35,33 @@ public class BowController : MonoBehaviour
     public float pullDistance = 0.8f; // Oku geriye doğru ne kadar çekeceğiz?
     private GameObject loadedArrow;   // O an elimizde (yayda) tuttuğumuz ok
 
-    void Start()
+    
+
+   void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
         if (crosshair != null) originalCrosshairScale = crosshair.localScale;
-        if (mainCamera == null) mainCamera = Camera.main; // Kamerayı otomatik bul
+        if (mainCamera == null) mainCamera = Camera.main; 
+
+       
+        if (arrowPrefab != null && arrowSpawnPoint != null)
+        {
+            GameObject fakeArrow = Instantiate(arrowPrefab, arrowSpawnPoint.position, arrowSpawnPoint.rotation);
+            fakeArrow.transform.SetParent(arrowSpawnPoint);
+            Destroy(fakeArrow); 
+        }
     }
 
-    void Update()
+   void Update()
     {
+      
+        if (ArcheryGameManager.Instance != null && ArcheryGameManager.Instance.isGameOver)
+        {
+            return; 
+        }
+
         Aim();
         HandleShooting();
     }
@@ -63,7 +80,7 @@ public class BowController : MonoBehaviour
 
     void HandleShooting()
     {
-        // 1. TIKLADIĞIMIZ ANDA OKU ELİMİZE ALIYORUZ
+    
         if (Input.GetMouseButtonDown(0))
         {
             if (ArcheryGameManager.Instance != null && !ArcheryGameManager.Instance.CanShoot()) return;
@@ -74,8 +91,18 @@ public class BowController : MonoBehaviour
             // Oku önceden yarat ve yayın ucuna tak
             if (arrowPrefab != null && arrowSpawnPoint != null)
             {
+                // YENİ: Okun yaratılıp bağlanma kısmını güncelledik
                 loadedArrow = Instantiate(arrowPrefab, arrowSpawnPoint.position, arrowSpawnPoint.rotation);
-                loadedArrow.transform.SetParent(arrowSpawnPoint);
+                
+                // İkinci parametre olarak 'false' vermek, okun uzaydaki bozuk ölçekleri miras almasını engeller
+                loadedArrow.transform.SetParent(arrowSpawnPoint, false); 
+                
+                // Garantilemek için okun yerel (local) değerlerini tamamen sıfırlıyoruz
+                loadedArrow.transform.localPosition = Vector3.zero;
+                loadedArrow.transform.localRotation = Quaternion.identity;
+                
+                // Eğer okun prefab'ında özel bir scale kullanmadıysan (genelde 1,1,1'dir) bunu da eşitle:
+                loadedArrow.transform.localScale = new Vector3(4, 2f, 4f);
                 
                 // Fiziğini kapat ki elimizden düşmesin!
                 Rigidbody rb = loadedArrow.GetComponent<Rigidbody>();
@@ -116,13 +143,27 @@ public class BowController : MonoBehaviour
                 loadedArrow.transform.localPosition = new Vector3(0, 0, -drawRatio * pullDistance);
             }
 
-            // TİTREME EFEKTİ (Yorulma)
             if (currentDrawTime > timeToMaxDraw)
             {
+                // Yorulmadan kaynaklı rastgele titreme
                 float swayX = Mathf.PerlinNoise(Time.time * 10f, 0f) - 0.5f;
                 float swayY = Mathf.PerlinNoise(0f, Time.time * 10f) - 0.5f;
-                pitch += swayY * swayAmount * Time.deltaTime;
-                yaw += swayX * swayAmount * Time.deltaTime;
+                
+                // Rüzgardan kaynaklı savrulma (WindManager'dan çekiyoruz)
+                float windSwayX = 0f;
+                float windSwayY = 0f;
+
+                if (WindManager.Instance != null)
+                {
+                    Vector3 currentWind = WindManager.Instance.GetWindForce();
+                    // Rüzgarın X (Sol/Sağ) ve Z (Ön/Arka) yönlerini kameranın Yaw/Pitch değerlerine yediriyoruz
+                    windSwayX = currentWind.x * windSwayEffect; 
+                    windSwayY = currentWind.z * windSwayEffect; 
+                }
+
+                // Hem yorulmayı hem rüzgarı ekle
+                pitch += (swayY * swayAmount + windSwayY) * Time.deltaTime;
+                yaw += (swayX * swayAmount + windSwayX) * Time.deltaTime;
             }
         }
 

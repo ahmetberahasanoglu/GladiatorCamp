@@ -4,10 +4,14 @@ using UnityEngine;
 [System.Serializable]
 public class GameSaveData
 {
-  
     public int savedGold;
     public int savedDay;
     public int savedFood;
+
+    // Yeni eklenenler
+    public int savedReputation;
+    public int savedMorale;
+    public int savedNasip;
 
     // Askerlerin Listesi
     public List<SoldierSaveData> soldiers = new List<SoldierSaveData>();
@@ -30,12 +34,23 @@ public class SoldierSaveData
     public string armorID;
     public string helmetID;
     public string shieldID;
+
+    // Yeni eklenenler
+    public bool   isGazi;
+    public int    trait;           // SoldierTrait enum → int
+    public float  currentHealth;
+    public float  maxHealth;
+    public int    dailyWage;
+    public int    currentActivity; // SoldierActivity enum → int (her zaman Idling yüklenir)
 }
 
 // Bina verisi
 [System.Serializable]
 public class BuildingSaveData
 {
-    public string buildingID; // "kogus"
-    public int level;
+    public string buildingID;                  // buildingName ile eşleşir
+    public int    level;
+    // Yeni eklenenler
+    public int    state;                       // BuildingState enum → int
+    public int    currentRemainingEncounters;
 }

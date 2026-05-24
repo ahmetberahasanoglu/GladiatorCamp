@@ -40,6 +40,7 @@ public class WarTableInteract : MonoBehaviour
 
     void OnMouseDown()
     {
+        if (UIBlocker.IsPointerOverUI()) return;
         // --- YENİ EĞİTİM (TUTORIAL) KONTROLÜ ---
         if (TutorialManager.Instance != null && TutorialManager.Instance.isTutorialActive)
         {

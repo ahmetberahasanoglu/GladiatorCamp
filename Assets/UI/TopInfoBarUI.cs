@@ -3,7 +3,6 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
-using Mono.Cecil;
 
 public class TopInfoBarUI : MonoBehaviour
 {
@@ -281,8 +280,8 @@ public class TopInfoBarUI : MonoBehaviour
 
     private IEnumerator FlashRoutine(TextMeshProUGUI uiText)
     {
-        Color originalColor = Color.black; 
-       // Color originalColor = uiText.color;
+       // Color originalColor = Color.black; 
+        Color originalColor = uiText.color;
         Vector3 originalScale = Vector3.one;
         Vector3 targetScale = new Vector3(1.3f, 1.3f, 1.3f); 
 

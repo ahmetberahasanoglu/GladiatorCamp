@@ -48,7 +48,7 @@ public class BuildingUI : MonoBehaviour
             costText.text = _myBuilding.GetCost() + " Akçe";
             
             // Eğer istersen paran yetmediğinde de butonu sönük yapabilirsin:
-            // upgradeButton.interactable = MoneyManager.Instance.gold >= _myBuilding.GetCost();
+            upgradeButton.interactable = MoneyManager.Instance.gold >= _myBuilding.GetCost();
         }
     }
 }

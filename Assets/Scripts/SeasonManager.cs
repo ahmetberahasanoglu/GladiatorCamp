@@ -8,16 +8,16 @@ public class SeasonManager : MonoBehaviour
     [Header("Işık Ayarları (Directional Light)")]
     public Light sunLight;
     
-    [Header("1-10 Gün: Yaz / Erken Sonbahar")]
+    [Header("1-50 Gün: Yaz / Erken Sonbahar")]
     public Color summerColor = new Color(1f, 0.95f, 0.8f); // Açık, sıcak sarı
     public float summerIntensity = 1.2f;
 
-    [Header("10-20 Gün: Geç Sonbahar")]
+    [Header("50-80 Gün: Geç Sonbahar")]
     public Color autumnColor = new Color(1f, 0.7f, 0.4f); // Turuncumsu, hüzünlü
     public float autumnIntensity = 0.9f;
     public ParticleSystem autumnLeavesParticle; // Dökülen yapraklar
 
-    [Header("20-30 Gün: Kışın Ayak Sesleri")]
+    [Header("80-100 Gün: Kışın Ayak Sesleri")]
     public Color winterColor = new Color(0.7f, 0.8f, 0.9f); // Soğuk, gri-mavi
     public float winterIntensity = 0.6f;
     public ParticleSystem snowParticle; // Kar yağışı
@@ -160,14 +160,14 @@ public class SeasonManager : MonoBehaviour
         // Gölgeleri kesinlikle aç (Mağara savaşında kapanmış olabilir)
         sunLight.shadows = LightShadows.Soft;
 
-        if (day < 10)
+        if (day < 50)
         {
             sunLight.color = summerColor;
             sunLight.intensity = summerIntensity;
             RenderSettings.fogDensity = 0.005f;
             RenderSettings.fogColor = summerColor;
         }
-        else if (day >= 10 && day < 20)
+        else if (day >= 50 && day < 80)
         {
             sunLight.color = autumnColor;
             sunLight.intensity = autumnIntensity;
@@ -180,6 +180,36 @@ public class SeasonManager : MonoBehaviour
             sunLight.intensity = winterIntensity;
             RenderSettings.fogDensity = 0.02f;
             RenderSettings.fogColor = winterColor;
+        }
+    }
+
+    /// <summary>Harita açıkken hava efektlerini durdur, kapanınca devam ettir.</summary>
+    public void SetWeatherPaused(bool paused)
+    {
+        if (paused)
+        {
+            if (snowParticle != null && snowParticle.isPlaying)
+                snowParticle.Pause();
+            if (autumnLeavesParticle != null && autumnLeavesParticle.isPlaying)
+                autumnLeavesParticle.Pause();
+            if (windAudioSource != null && windAudioSource.isPlaying)
+                windAudioSource.Pause();
+        }
+        else
+        {
+            // Kış mevsimindeyse karı devam ettir
+            if (currentPhase == 3)
+            {
+                if (snowParticle != null && !snowParticle.isPlaying)
+                    snowParticle.Play();
+                if (windAudioSource != null && !windAudioSource.isPlaying)
+                    windAudioSource.UnPause();
+            }
+            else if (currentPhase == 2)
+            {
+                if (autumnLeavesParticle != null && !autumnLeavesParticle.isPlaying)
+                    autumnLeavesParticle.Play();
+            }
         }
     }
 }

@@ -70,6 +70,12 @@ public class BattleManager : MonoBehaviour
     private int _currentDifficulty = 1;
 
     private int _currentEnemyCount = 1;
+
+    [Header("Düşman Tier Sistemi")]
+    public EnemyTierConfig enemyTierConfig;
+    private int           _currentTier    = 1;   // MapEventManager tarafından set edilir
+    private EnemyLoadout  _currentLoadout = null; // Spawn'da kullanılacak
+
         [Header("Sinematik Geçiş")]
     public CanvasGroup fadeGroup;
 
@@ -126,23 +132,11 @@ public class BattleManager : MonoBehaviour
             }
         }
 
-        // 2. Ceza Matematiği — Nasip faktörü dahil
-        // Temel formül: (Hayatta Kalan / 3) * Maksimum Ceza
-        // Nasip faktörü: nasip ne kadar yüksekse ceza o kadar düşük
-        //   nasip 0   → nasipMultiplier 1.0 (tam ceza)
-        //   nasip 50  → nasipMultiplier 0.5 (yarı ceza)
-        //   nasip 100 → nasipMultiplier 0.0 (ceza yok — Allah korudu)
-        float penaltyMultiplier = (float)aliveSoldiers / 3f;
-
-        float nasipMultiplier = 1f;
-        if (NasipManager.Instance != null)
-        {
-            float nasipRatio = (float)NasipManager.Instance.currentNasip
-                             / (float)NasipManager.Instance.maxNasip; // 0..1
-            nasipMultiplier = 1f - nasipRatio; // yüksek nasip → düşük ceza
-        }
-
-        int calculatedPenalty = Mathf.RoundToInt(baseRetreatPenalty * penaltyMultiplier * nasipMultiplier);
+        // 2. Senin Ceza Matematiğin
+        // Formül: (Hayatta Kalan / 3) * Maksimum Ceza. 
+        // Örn (Maks 30 ceza): 3 asker sağsa -30, 2 sağsa -20, 1 sağsa -10 itibar cezası yer!
+        float penaltyMultiplier = (float)aliveSoldiers / 3f; 
+        int calculatedPenalty = Mathf.RoundToInt(baseRetreatPenalty * penaltyMultiplier);
 
         // 3. Savaşı Durdur ve Herkesi Dondur
         state = BattleState.Lost; // Geri çekilmek teknik olarak o düğümü kaybetmektir
@@ -156,7 +150,7 @@ public class BattleManager : MonoBehaviour
             if(unit.animator != null) unit.animator.SetBool("isRunning", false);
             
             // Eğer saldırı halindelerse onu da iptal edelim
-            unit.GetComponent<GladiatorAI>().StopAllCoroutines(); 
+            unit.StopAllCoroutines(); 
         }
 
         if (skillPanel != null) skillPanel.SetActive(false);
@@ -165,31 +159,13 @@ public class BattleManager : MonoBehaviour
         // 4. Yenilgi/Geri Çekilme Ekranını Güncelle
         if (defeatText != null)
         {
-            string nasipLine = nasipMultiplier <= 0f
-                ? "\n<color=green>Nasibin yüceydi — ceza almadan kaçtın!</color>"
-                : nasipMultiplier < 0.5f
-                    ? "\n<color=yellow>Nasibin yardımıyla hafif sıyrıldın.</color>"
-                    : "";
-
-            defeatText.text = $"GERİ ÇEKİLME!\n\nAskerlerini son anda sahadan çektin."
-                            + $"\n<color=red>-{calculatedPenalty} İtibar (Korkaklık Bedeli)</color>"
-                            + nasipLine;
+            defeatText.text = $"GERİ ÇEKİLME!\n\nAskerlerini son anda sahadan çektin.\n<color=red>-{calculatedPenalty} İtibar (Korkaklık Bedeli)</color>";
         }
 
-        // 5. Cezayı uygula + çantadaki ganimetin yarısını kaybet
-        int lootLoss = 0;
+        // 5. Cezayı "Sefer Çantasına" yansıt (Kampa dönmeden uygulanmaz)
         if (ExpeditionManager.Instance != null && ExpeditionManager.Instance.isExpeditionActive)
         {
-            // İtibar cezası
             ExpeditionManager.Instance.AddLoot(0, -calculatedPenalty);
-
-            // Ganimet kaybı: çantadaki altının yarısı
-            lootLoss = Mathf.RoundToInt(ExpeditionManager.Instance.tempGold * 0.5f);
-            if (lootLoss > 0)
-            {
-                ExpeditionManager.Instance.tempGold -= lootLoss;
-                Debug.Log($"[Retreat] Kaçarken {lootLoss} altın yere düştü.");
-            }
         }
         else if (ReputationManager.Instance != null)
         {
@@ -282,12 +258,16 @@ public class BattleManager : MonoBehaviour
             squadSelectionUI.OpenPanel(false, bearCount, difficulty); // Taktik ekranını normal açar
     }
 
-   public void StartBattle(int enemyCount, int difficulty, BattleEnvironment envType)
+   public void StartBattle(int enemyCount, int difficulty, BattleEnvironment envType, int tier = 1)
     {     
         _currentEnemyCount = enemyCount;
         _currentDifficulty = difficulty;
+        _currentTier       = tier;
+        _currentLoadout    = enemyTierConfig != null
+            ? enemyTierConfig.GetRandomLoadout(tier)
+            : null;
         pendingEnv = envType;
-         _isBearBattle = false;
+        _isBearBattle = false;
         if (MapManager.Instance != null) MapManager.Instance.HideMap();
 
    
@@ -446,9 +426,57 @@ private void ChangeEnvironment(BattleEnvironment envType)
                 agent.Warp(spawnPos); 
                 agent.isStopped = true; 
             }
-            newEnemy.GetComponent<GladiatorAI>().isInBattle = true;
+
+            // ── LOADOUT UYGULA ──────────────────────────────────────────────
+            var ai = newEnemy.GetComponent<GladiatorAI>();
+            if (ai != null) ai.isInBattle = true;
+
+            var gladiator = newEnemy.GetComponent<Gladiator>();
+            if (gladiator != null && gladiator.data != null)
+            {
+                if (_currentLoadout != null)
+                {
+                    // Temel statları loadout'tan al
+                    gladiator.data.strength = _currentLoadout.baseStrength  + _currentLoadout.weaponBonus;
+                    gladiator.data.defense  = _currentLoadout.baseDefense   + _currentLoadout.armorBonus;
+                    gladiator.data.speed    = _currentLoadout.baseSpeed;
+                    gladiator.data.stamina  = _currentLoadout.baseStamina;
+                    gladiator.data.level    = _currentLoadout.baseLevel;
+                    gladiator.data.gladiatorName = _currentLoadout.displayName;
+
+                    // Element tipi — GladiatorAI'da CombatElementSystem kullanılıyor
+                    gladiator.data.elementType = _currentLoadout.elementType;
+
+                    // İsim güncelle (savaşta label için)
+                    if (!string.IsNullOrEmpty(_currentLoadout.displayName))
+                        gladiator.data.gladiatorName = _currentLoadout.displayName;
+
+                    // Mesh aktifleştirme
+                    if (_currentLoadout.activeMeshNames != null)
+                    {
+                        foreach (var meshName in _currentLoadout.activeMeshNames)
+                        {
+                            var meshObj = newEnemy.transform.Find(meshName);
+                            if (meshObj != null) meshObj.gameObject.SetActive(true);
+                        }
+                    }
+                }
+                else
+                {
+                    // Loadout yoksa tier'a göre sabit çarpan uygula (fallback)
+                    float tierMult = 1f + (_currentTier - 1) * 0.4f; // T1:1.0, T2:1.4, T3:1.8
+                    gladiator.data.strength = Mathf.RoundToInt(gladiator.data.strength * tierMult);
+                    gladiator.data.defense  = Mathf.RoundToInt(gladiator.data.defense  * tierMult);
+                    gladiator.data.stamina  = Mathf.RoundToInt(gladiator.data.stamina  * tierMult);
+                    gladiator.data.level    = _currentTier;
+                }
+
+                // Can hesabını güncelle (stamina değişti)
+                gladiator.RecalculateMaxHealth();
+            }
+
             col++;
-            if(col > 5) { col = 0; row++; }
+            if (col > 5) { col = 0; row++; }
         }
     }
 // Taktik ekranında "Sefer Başlasın" butonuna basılınca UI bu fonksiyonu çağıracak
@@ -516,7 +544,7 @@ private void ChangeEnvironment(BattleEnvironment envType)
 
         if (isVictory)
         {
-            int goldReward = _currentEnemyCount * 25 * _currentDifficulty; // Örn: 5 Düşman * Zorluk 2 = 500 Akçe
+            int goldReward = _currentEnemyCount * 50 * _currentDifficulty; // Örn: 5 Düşman * Zorluk 2 = 500 Akçe
             int foodReward = _currentEnemyCount * 10;                      // Düşman kampından yağmalanan erzak
             int moraleReward = 10 + (_currentDifficulty * 5);              // Zor savaş kazanmak daha çok moral verir
             int repReward = 5 * _currentDifficulty;                        // İtibar artışı

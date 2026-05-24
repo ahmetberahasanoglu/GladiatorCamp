@@ -78,7 +78,8 @@ public class MapEventManager : MonoBehaviour
             case NodeType.Zindan:       SetupZindan(); break;
             case NodeType.Vahsi:        SetupVahsi(); break;
             case NodeType.Dice:         SetupMysteriousDiceEvent(); break;
-            case NodeType.YagliGures:   SetupYagliGures(); break;
+            case NodeType.YagliGures:   
+            SetupYagliGures(); break;
             case NodeType.FirstBattle:   SetupFirstBattleEvent(); break;
             case NodeType.NasibEncounter:   SetupNasibEvent(); break;
             case NodeType.DervishEncounter:   SetupDervishEvent(); break;
@@ -316,7 +317,7 @@ public class MapEventManager : MonoBehaviour
                 }
                 if (BattleManager.Instance != null)
                 {
-                    BattleManager.Instance.StartBattle(3, 2, BattleEnvironment.Cave); 
+                    BattleManager.Instance.StartBattle(3, 2, BattleEnvironment.Cave, GetCurrentTier()); 
                 }
             });
         }
@@ -643,7 +644,7 @@ private void ResolveVillageBattle(int difficulty)
                 //AudioManager.Instance.PlayWarHorn();
                 //DayManager.Instance.NextDay(3); 
                 ClosePanel();
-                BattleManager.Instance.StartBattle(2, 1, BattleEnvironment.Forest); 
+                BattleManager.Instance.StartBattle(2, 1, BattleEnvironment.Forest, GetCurrentTier()); 
             });
         }
        CreateButton("Geri Dön (Kampa Bak)", () => {
@@ -745,7 +746,7 @@ private void ResolveVillageBattle(int difficulty)
                 //AudioManager.Instance.PlayWarHorn();
                 //DayManager.Instance.NextDay(3); 
                 ClosePanel();
-                BattleManager.Instance.StartBattle(2, 1, BattleEnvironment.Tower); 
+                BattleManager.Instance.StartBattle(2, 1, BattleEnvironment.Tower, GetCurrentTier()); 
             });
         }
 
@@ -791,7 +792,7 @@ private void ResolveVillageBattle(int difficulty)
                 //AudioManager.Instance.PlayWarHorn();
                 //DayManager.Instance.NextDay(3); 
                 ClosePanel();
-                BattleManager.Instance.StartBattle(3, 1, BattleEnvironment.Tower); 
+                BattleManager.Instance.StartBattle(3, 1, BattleEnvironment.Tower, GetCurrentTier()); 
             });
         }
 
@@ -833,7 +834,7 @@ private void ResolveVillageBattle(int difficulty)
                 CreateButton("Kılıçları Çekin! (Savaş)", () => { 
                     //AudioManager.Instance.PlayWarHorn();
                     ClosePanel();
-                    BattleManager.Instance.StartBattle(failEnemyCount, failDifficulty, failEnv); 
+                    BattleManager.Instance.StartBattle(failEnemyCount, failDifficulty, failEnv, GetCurrentTier()); 
                 });
             }
         });
@@ -981,18 +982,37 @@ public void SetupDervishEvent()
     void SetupArcheryEvent()
     {
         titleText.text = "Okçuluk Müsabakası";
-        descText.text = "Bir Türkmen beyi senin yiğitliğini ölçmek için okçuluk müsabakasına davet etti. Gidecek misin?";
-        if(bossSprite != null) eventImage.sprite = archerySprite; 
+        descText.text  = "Bir Türkmen beyi senin yiğitliğini ölçmek için okçuluk müsabakasına davet etti.\n\n<color=#66001D>Hangi yiğidi göndereceksin? (Hızı yüksek asker rüzgardan daha az etkilenir!)</color>";
+        if (bossSprite != null) eventImage.sprite = archerySprite;
 
-        CreateButton("Git (1 Gün)", () => {
-            
-          
-            GoToArcheryScene();
-            ClosePanel();
-        });
+        // Asker seçim butonları
+        Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
+        bool hasValidSoldier = false;
 
-        CreateButton("Teklifi Reddet (-5 İtibar)", () => {
-            
+        foreach (var soldier in allSoldiers)
+        {
+            if (!soldier.CompareTag("MySoldier") || soldier.data == null
+                || soldier.data.currentHealth <= 0 || soldier.isOnMission
+                || soldier.data.currentActivity == SoldierActivity.Working) continue;
+
+            hasValidSoldier = true;
+            string btnText  = $"{soldier.data.gladiatorName} (Hız: {soldier.data.speed})";
+
+            CreateButton(btnText, () =>
+            {
+                // Askerin hız statını PlayerPrefs'e yaz — ArcheryGameManager okuyacak
+                PlayerPrefs.SetInt("ArcherySoldierSpeed", soldier.data.speed);
+                PlayerPrefs.Save();
+                GoToArcheryScene();
+                ClosePanel();
+            });
+        }
+
+        if (!hasValidSoldier)
+            descText.text += "\n\n<color=red>Gönderecek boşta askerin yok!</color>";
+
+        CreateButton("Teklifi Reddet (-5 İtibar)", () =>
+        {
             ReputationManager.Instance.ChangeReputation(-5);
             NotificationManager.Instance.Show("Bey bu teklifi reddetmene kırıldı.", NotificationType.Warning);
             ClosePanel();
@@ -1000,13 +1020,15 @@ public void SetupDervishEvent()
     }
 
 
-    void SetupAtYarisi()
+   void SetupAtYarisi()
     {
         titleText.text = "Büyük At Yarışı";
-          if(villageSprite != null) eventImage.sprite = horseSprite;
+        if(villageSprite != null) eventImage.sprite = horseSprite;
+        
+        // ZAR metnini kaldırdık, oyuncunun refleksine ve askerin hızına vurgu yaptık
         descText.text = $"Şehrin ileri gelenlerinden Mustafa Bey seni at yarışına davet etti. (Giriş: 30 Akçe)\n\n" +
                         $"<color=#66001D>Rakip: {atYarisiRakipIsim} (Hızı: {atYarisiRakipHiz})</color>\n\n" +
-                        $"<color=yellow>Hangi yiğidi göndereceksin? (Askerinin hızı üzerine 6'lık zar atılacaktır.)</color>";
+                        $"<color=#66001D>Hangi yiğidi göndereceksin? (Askerinin hızı, engellerin geliş hızını yavaşlatacaktır!)</color>";
 
         Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
         bool hasValidSoldier = false;
@@ -1025,32 +1047,87 @@ public void SetupDervishEvent()
                     if (MoneyManager.Instance.gold >= 30)
                     {
                         MoneyManager.Instance.Spend(30);
-                       
-                
-                        ResolveContest(soldier, NodeType.Atyarisi, askerHiz, atYarisiRakipHiz, atYarisiRakipIsim);
+                        
+                        // --- DEĞİŞEN KISIM: ZAR YERİNE MİNİ OYUNU ÇAĞIR ---
+                        this.gameObject.SetActive(false); // Parşömen etkinlik ekranını geçici olarak gizle
+                        
+                        if (HorseRidingMiniGame.Instance != null)
+                        {
+                            // Mini oyunu başlat ve oyun bitince çalışacak Callback (Geri Bildirim) fonksiyonunu yolla
+                            HorseRidingMiniGame.Instance.StartHorseRiding(soldier, (isWin) => 
+                            {
+                                ShowHorseRidingResult(isWin, soldier); 
+                            });
+                        }
+                        else
+                        {
+                            Debug.LogError("HorseRidingMiniGame sahnedeki bir objede bulunamadı!");
+                        }
+                        // --------------------------------------------------
                     }
                     else
                     {
-                        NotificationManager.Instance.Show("Yarışa katılmak için 30 Akçen yok!", NotificationType.Error);
+                        if (NotificationManager.Instance != null) NotificationManager.Instance.Show("Yarışa katılmak için 30 Akçen yok!", NotificationType.Error);
                     }
                 });
             }
         }
 
         if (!hasValidSoldier) descText.text += "\n\n<color=red>Gönderecek boşta askerin yok!</color>";
+        
         CreateButton("Vaktim Yok (Ayrıl)", () =>{
+            ClosePanel();
+        });
+    }
+
+    // --- YENİ: MİNİ OYUN BİTİNCE ÇALIŞACAK GERİ BİLDİRİM FONKSİYONU ---
+    void ShowHorseRidingResult(bool isWin, Gladiator soldier)
+    {
+        // 1. Parşömen paneli tekrar görünür yap
+        this.gameObject.SetActive(true); 
+        
+        // 2. Eski butonları temizle (Eğer kendi temizleme fonksiyonun varsa onu kullan, örn: ClearButtons();)
+        // foreach (Transform child in buttonContainer) Destroy(child.gameObject); 
+
+        // 3. Sonuca göre başlık, metin ve ödülleri/cezaları ayarla
+        if (isWin)
+        {
+            titleText.text = "Rüzgarın Oğlu!";
+            descText.text = $"{soldier.data.gladiatorName}, atının üzerinde adeta rüzgarla dans etti. Tüm engelleri kusursuz aşarak yarışı birinci bitirdi ve izleyenleri büyüledi!\n\n" +
+                            $"<color=green>Kazanılan: +25 İtibar, +80 Akçe</color>";
             
-         ClosePanel();
-         });
+            // Ödülleri ver
+            MoneyManager.Instance.Add(80);
+            if (ReputationManager.Instance != null) ReputationManager.Instance.ChangeReputation(25);
+            
+            CreateButton("Ödülü Al ve Ayrıl", () => {
+                ClosePanel();
+            });
+        }
+        else
+        {
+            titleText.text = "At Tökezledi...";
+            descText.text = $"{soldier.data.gladiatorName} bir engele feci şekilde takılarak atından düştü. Yarışı Mustafa Bey'in binicisi kazandı ve itibarınız zedelendi.\n\n" +
+                            $"<color=red>Askerin yaralandı.</color>";
+            
+            // Cezaları uygula
+            soldier.data.currentHealth -= 10;
+            
+            CreateButton("Sağlık Olsun", () => {
+                ClosePanel();
+            });
+        }
     }
 
     void SetupYagliGures()
     {
         titleText.text = "Yağlı Güreş!";
-          if(villageSprite != null) eventImage.sprite = wrestlingSprite;
+        if(villageSprite != null) eventImage.sprite = wrestlingSprite;
+        
+        // ZAR metnini kaldırdık, oyuncunun yeteneğine vurgu yaptık
         descText.text = $"Meydanda davullar çalıyor. Başpehlivanlık için er meydanına bir yiğidini sal. (Giriş: 50 Akçe)\n\n" +
                         $"<color=#66001D>Rakip Pehlivan: {guresRakipIsim} (Gücü: {guresRakipGuc})</color>\n\n" +
-                        $"<color=#66001D>Kimi yollayacaksın? (Askerinin gücü üzerine 6'lık zar atılacaktır.)</color>";
+                        $"<color=#66001D>Kimi yollayacaksın? (Askerinin gücü, yeşil başarı alanını büyütecektir!)</color>";
         
         Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
         bool hasValidSoldier = false;
@@ -1064,30 +1141,76 @@ public void SetupDervishEvent()
                 int askerGuc = soldier.data.strength;
                 string btnText = $"{soldier.data.gladiatorName} (Güç: {askerGuc})";
                 
-                CreateButton(btnText, () => {
-                    
-                    if (MoneyManager.Instance.gold >= 50)
-                    {
-                        MoneyManager.Instance.Spend(50);
-                    
-                        
-                        ResolveContest(soldier, NodeType.YagliGures, askerGuc, guresRakipGuc, guresRakipIsim);
-                    }
-                    else
-                    {
-                        NotificationManager.Instance.Show("Güreşe katılmak için 50 Akçen yok!", NotificationType.Error);
-                    }
+               CreateButton(btnText, () => {
+        
+        if (MoneyManager.Instance.gold >= 50)
+        {
+            MoneyManager.Instance.Spend(50);
+            
+            // HATA BURADAYDI: ClosePanel() etkinliği tamamen siliyordu!
+            // YENİ HALİ: Sadece görseli geçici olarak gizle
+            this.gameObject.SetActive(false); 
+            
+            if (WrestlingMiniGame.Instance != null)
+            {
+                WrestlingMiniGame.Instance.StartWrestling(soldier, guresRakipGuc, (isWin) => 
+                {
+                    ShowWrestlingResult(isWin, soldier); 
                 });
+            }
+        }
+        else
+        {
+            if (NotificationManager.Instance != null) NotificationManager.Instance.Show("Güreşe katılmak için 50 Akçen yok!", NotificationType.Error);
+        }
+    });
             }
         }
 
         if (!hasValidSoldier) descText.text += "\n\n<color=red>Gönderecek boşta askerin yok!</color>";
-        CreateButton("Bize Göre Değil (Ayrıl)", () => {
         
-        ClosePanel();
+        CreateButton("Bize Göre Değil (Ayrıl)", () => {
+            ClosePanel();
         });
     }
+void ShowWrestlingResult(bool isWin, Gladiator soldier)
+    {
+        // 1. Parşömen paneli tekrar görünür yap
+        this.gameObject.SetActive(true); 
+        
+        // 2. Eski butonları temizle (Bunu kendi sistemine göre uyarla, muhtemelen ClearButtons() gibi bir fonksiyonun vardır)
+        // ClearButtons(); 
+        foreach (Transform child in buttonContainer) Destroy(child.gameObject); // Örnek temizleme kodu
 
+        // 3. Sonuca göre başlık ve metinleri değiştir
+        if (isWin)
+        {
+            titleText.text = "Başpehlivan!";
+            descText.text = $"{soldier.data.gladiatorName} er meydanında fırtına gibi esti! Rakibinin sırtını yere getirdi ve altın kemeri havaya kaldırdı.\n\n" +
+                            $"<color=green>Kazanılan: +30 İtibar, +100 Akçe</color>";
+            
+            // Ödülleri ver
+            MoneyManager.Instance.Add(100);
+            if (ReputationManager.Instance != null) ReputationManager.Instance.ChangeReputation(30);
+            
+            CreateButton("Zaferle Ayrıl", () => {
+                ClosePanel();
+            });
+        }
+        else
+        {
+            titleText.text = "Sırtı Yere Geldi...";
+            descText.text = $"{soldier.data.gladiatorName} elinden geleni yapsa da rakibinin omuzlamasına karşı koyamadı ve tuş oldu.\n\n" +
+                            $"<color=red>Askerin yara aldı ve moraliniz bozuldu.</color>";
+            
+            // Cezaları uygula (Örn: Askerin canını biraz düşür)
+            soldier.data.currentHealth -= 15;
+            
+            CreateButton("Sağlık Olsun", () => {
+                ClosePanel();
+            });
+        }
+    }
    
    private void ResolveContest(Gladiator selectedSoldier, NodeType eventType, int askerStat, int rakipStat, string rakipAd)
     {
@@ -1131,7 +1254,14 @@ public void SetupDervishEvent()
             CreateButton("Devam Et", () => { ClosePanel(); });
         });
     }
-
+  private int GetCurrentTier()
+    {
+        if (ExpeditionManager.Instance == null) return 1;
+        int count = ExpeditionManager.Instance.currentEncounterCount;
+        if (count <= 4)  return 1;
+        if (count <= 9)  return 2;
+        return 3;
+    }
     public int GetAvailableSoldierCount()
     {
         Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);

@@ -54,6 +54,7 @@ public class MapManager : MonoBehaviour
         mapPanel.SetActive(false);
         //topPanel.SetActive(true);
         isMapOpen = false;
+        PauseEnvironmentSystems(false); // Harita kapanınca sistemler devam eder
         if (LootChest.Instance != null)
         {
             LootChest.Instance.CheckForLoot();
@@ -97,7 +98,6 @@ public class MapManager : MonoBehaviour
         {
             // Eğer yeni çıkıyorsa harita progress'ini de sıfırlayalım ki eski sisli yerler olmasın
             ResetMapProgress(); 
-            MapRandomizer.Instance.RandomizeMap();
             ExpeditionManager.Instance.StartExpedition();
         }
 
@@ -327,9 +327,38 @@ public class MapManager : MonoBehaviour
 
     public void CloseAllOpenPanels()
     {
-        if (InventoryUIManager.Instance != null) InventoryUIManager.Instance.CloseInventory();
-        if (GladiatorSelector.Instance != null) GladiatorSelector.Instance.ClearSelection();
-        if (TrainingUIManager.Instance != null) TrainingUIManager.Instance.SetCurrentGladiator(null);
+        // PanelManager üzerinden açık olan her şeyi kapat
+        if (PanelManager.Instance != null) PanelManager.Instance.CloseAll();
+
+        // Belirli panel yöneticilerini kapat
+        if (InventoryUIManager.Instance  != null) InventoryUIManager.Instance.CloseInventory();
+        if (GladiatorSelector.Instance   != null) GladiatorSelector.Instance.ClearSelection();
+        if (TrainingUIManager.Instance   != null) TrainingUIManager.Instance.SetCurrentGladiator(null);
+        if (RepairPanelManager.Instance  != null) RepairPanelManager.Instance.ClosePanel();
+
+        // Wanderer ve çevre sistemlerini durdur
+        PauseEnvironmentSystems(true);
+    }
+
+    /// <summary>
+    /// Harita açıkken wanderer, kar, kuş gibi sistemler durur.
+    /// Harita kapanınca tekrar başlar.
+    /// </summary>
+    public void PauseEnvironmentSystems(bool pause)
+    {
+        // Kar/yağmur
+        if (SeasonManager.Instance != null)
+            SeasonManager.Instance.SetWeatherPaused(pause);
+
+        // Kuzgun spawner
+        var ravenSpawner = FindFirstObjectByType<RavenSpawner>();
+        if (ravenSpawner != null) ravenSpawner.enabled = !pause;
+
+        // Wandering strangers — sahnedekileri durdur
+        var strangers = FindObjectsByType<WanderingStranger>(
+            FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        foreach (var s in strangers)
+            s.SetPaused(pause);
     }
 
     public IEnumerator MoveIconRoutine(MapNode targetNode)

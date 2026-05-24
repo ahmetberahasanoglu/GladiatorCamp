@@ -16,6 +16,7 @@ public class JanissaryData : ScriptableObject
     public bool isGazi = false;
     [Header("Kişilik")]
     public SoldierTrait trait;
+    public ElementType elementType = ElementType.Normal;
 
     [Header("Anlık Durumlar (Save İçin)")]
     public float currentHealth;

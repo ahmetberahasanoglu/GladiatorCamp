@@ -51,30 +51,19 @@ public class RelicSelectionUI : MonoBehaviour
     }
     private string GetRelicName(RelicType type)
     {
-        switch (type)
-        {
-            case RelicType.ZenginAta: return "Zengin Ata";
-            case RelicType.KutluMide: return "Kutlu Mide";
-            case RelicType.DemirDovucu: return "Demir Döğücü";
-            case RelicType.GaziKani: return "Gazi Kanı";
-            case RelicType.BereketliYol: return "Bereketli Yol";
-            case RelicType.CesurYurek: return "Cesur Yürek";
-            default: return "Gizemli Yadigar";
-        }
+        // MetaProgressionManager'da zaten tanımlı — oradan al
+        if (MetaProgressionManager.Instance != null)
+            return MetaProgressionManager.Instance.GetRelicDisplayName(type);
+
+        // Fallback (Manager yoksa)
+        return type.ToString();
     }
 
-    // Açıklama Sözlüğü
     private string GetRelicDescription(RelicType type)
     {
-        switch (type)
-        {
-            case RelicType.ZenginAta: return "Sürgün edilsen bile, yeni sefere başlarken daima cebinde ekstra 150 Akçe olur.";
-            case RelicType.KutluMide: return "Askerlerin erzak tüketimi inanılmaz derecede azalır.";
-            case RelicType.DemirDovucu: return "Kamptaki eğitim ve bina tamiratları %20 daha ucuza mal olur.";
-            case RelicType.GaziKani: return "Yetiştirdiğin veya satın aldığın her asker +10 ekstra max can ile saflara katılır.";
-            case RelicType.BereketliYol: return "Haritadaki ganimet sandıkları ve tüccarlardan %15 daha fazla kazanç sağlarsın.";
-            case RelicType.CesurYurek: return "Savaşları kaybetsen bile ordunun morali eskisinin yarısı kadar düşer.";
-            default: return "Atalarından kalma gizemli bir güç.";
-        }
+        if (MetaProgressionManager.Instance != null)
+            return MetaProgressionManager.Instance.GetRelicDescription(type);
+
+        return "Atalarından kalma gizemli bir güç.";
     }
 }

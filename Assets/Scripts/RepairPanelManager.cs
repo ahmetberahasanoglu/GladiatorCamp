@@ -35,6 +35,10 @@ public class RepairPanelManager : MonoBehaviour
     // Bu fonksiyonu BuildingClickable scriptinden çağıracağız
     public void OpenPanel(BuildingClickable building)
     {
+        if (panelObj == null) return;
+
+        // Önce mevcut açık paneli kapat
+        PanelManager.Instance.OpenPanel(panelObj, "Repair");
         _currentTarget = building; // Hedefi hafızaya al
 
         // UI Yazılarını Güncelle
@@ -52,25 +56,21 @@ public class RepairPanelManager : MonoBehaviour
         // Eğer paramız yetmiyorsa butonu gri yapabiliriz (Opsiyonel)
         bool canAfford = MoneyManager.Instance.gold >= building.repairCost;
         repairButton.interactable = canAfford; 
-
-        panelObj.SetActive(true);
+        // PanelManager.OpenPanel zaten SetActive(true) yapıyor
     }
 
     void OnRepairClicked()
     {
         if (_currentTarget != null)
         {
-            // Binanın kendi içindeki tamir fonksiyonunu çalıştır
             _currentTarget.StartRepair();
-            
-            // Paneli kapat
             ClosePanel();
         }
     }
 
     public void ClosePanel()
     {
-        panelObj.SetActive(false);
+        PanelManager.Instance.ClosePanel(panelObj);
         _currentTarget = null;
     }
 }

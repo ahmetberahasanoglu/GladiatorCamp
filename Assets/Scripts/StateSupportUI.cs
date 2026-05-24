@@ -44,6 +44,26 @@ public class StateSupportUI : MonoBehaviour
         UpdateLoanPanel();
     }
 
+    /// <summary>
+    /// Inspector'daki butona bu metodu bağla (loanPanel.SetActive yerine).
+    /// Açılmadan önce PanelManager üzerinden diğer paneller kapatılır.
+    /// </summary>
+    public void OpenLoanPanel()
+    {
+        if (PanelManager.Instance != null)
+            PanelManager.Instance.OpenPanel(loanPanel, "Vakıf");
+        else
+            loanPanel.SetActive(!loanPanel.activeSelf);
+    }
+
+    public void CloseLoanPanel()
+    {
+        if (PanelManager.Instance != null)
+            PanelManager.Instance.ClosePanel(loanPanel);
+        else
+            loanPanel.SetActive(false);
+    }
+
     void OnDonateClicked()
     {
         ReputationManager.Instance.DonateToState(donationCost, donationReward);

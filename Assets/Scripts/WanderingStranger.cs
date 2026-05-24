@@ -138,6 +138,7 @@ public class WanderingStranger : MonoBehaviour
 
     void OnMouseDown()
     {
+        if (UIBlocker.IsPointerOverUI()) return;
         if (EventSystem.current.IsPointerOverGameObject() || isLeaving) return;
         if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Idle) return;
 
@@ -267,5 +268,14 @@ public class WanderingStranger : MonoBehaviour
 
         StrangerUIManager.Instance.ClosePanel();
         LeaveCamp();
+    }
+
+    /// <summary>Harita açıkken wanderer durur, kapanınca devam eder.</summary>
+    public void SetPaused(bool paused)
+    {
+        if (agent == null) return;
+        agent.isStopped = paused;
+        // Animasyonu da durdur
+        if (anim != null) anim.SetBool("isWalking", !paused && !agent.isStopped);
     }
 }

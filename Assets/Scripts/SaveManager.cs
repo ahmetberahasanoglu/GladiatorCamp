@@ -20,51 +20,69 @@ public class SaveManager : MonoBehaviour
     {
         GameSaveData data = new GameSaveData();
 
-        // Global veriler...
+        // Global veriler
         data.savedGold = MoneyManager.Instance.gold;
         data.savedFood = SupplyManager.Instance.currentFood;
-       // data.
-        if (DayManager.Instance != null) data.savedDay = DayManager.Instance.currentDay;
+        if (DayManager.Instance        != null) data.savedDay        = DayManager.Instance.currentDay;
+        if (ReputationManager.Instance != null) data.savedReputation = ReputationManager.Instance.GetReputation();
+        if (CampMoraleManager.Instance != null) data.savedMorale     = CampMoraleManager.Instance.currentMorale;
+        if (NasipManager.Instance      != null) data.savedNasip      = NasipManager.Instance.currentNasip;
 
-        // --- DÜZELTİLMESİ GEREKEN KISIM ---
-        
-        // 1. Sahnedeki TÜM askerleri bul
+        // Askerler
         Gladiator[] allSoldiers = FindObjectsOfType<Gladiator>();
-
         foreach (var soldier in allSoldiers)
         {
-            // ÖNEMLİ: Eğer asker "RecruitCandidate" yani vitrindeki askerdeyse onu kaydetme!
-            // Sadece bizim askerimiz olanları (Clone) kaydet.
-            // Bunun için basit bir kontrol: Eğer JanissaryData'sı yoksa atla.
             if (soldier.data == null) continue;
 
             SoldierSaveData sData = new SoldierSaveData();
-            var inventory = soldier.GetComponent<GladiatorInventory>();
-        
-        if (inventory != null)
-        {
-            sData.weaponID = inventory.weapon != null ? inventory.weapon.itemID : "";
-            sData.armorID  = inventory.armor != null  ? inventory.armor.itemID  : "";
-            sData.helmetID = inventory.helmet != null ? inventory.helmet.itemID : "";
-            sData.shieldID = inventory.shield != null ? inventory.shield.itemID : "";
-        }
-            sData.name = soldier.data.gladiatorName;
+
+            // Temel statlar
+            sData.name     = soldier.data.gladiatorName;
             sData.strength = soldier.data.strength;
-            sData.stamina = soldier.data.stamina;
-            sData.defense = soldier.data.defense;
-            sData.speed = soldier.data.speed;
-            //sData.morale = soldier.data.morale;
-            sData.level = soldier.data.level;
-            
+            sData.stamina  = soldier.data.stamina;
+            sData.defense  = soldier.data.defense;
+            sData.speed    = soldier.data.speed;
+            sData.level    = soldier.data.level;
+
+            // Yeni alanlar
+            sData.isGazi          = soldier.data.isGazi;
+            sData.trait           = (int)soldier.data.trait;
+            sData.currentHealth   = soldier.data.currentHealth;
+            sData.maxHealth       = soldier.data.maxHealth;
+            sData.dailyWage       = soldier.data.dailyWage;
+            sData.currentActivity = (int)soldier.data.currentActivity;
+
+            // Ekipman
+            var inventory = soldier.GetComponent<GladiatorInventory>();
+            if (inventory != null)
+            {
+                sData.weaponID  = inventory.weapon != null ? inventory.weapon.itemID : "";
+                sData.armorID   = inventory.armor  != null ? inventory.armor.itemID  : "";
+                sData.helmetID  = inventory.helmet != null ? inventory.helmet.itemID : "";
+                sData.shieldID  = inventory.shield != null ? inventory.shield.itemID : "";
+            }
+
             data.soldiers.Add(sData);
         }
-        // ----------------------------------
 
-        // Bina kaydı vs...
-        
+        // Binalar
+        BuildingClickable[] allBuildings = FindObjectsOfType<BuildingClickable>();
+        foreach (var b in allBuildings)
+        {
+            data.buildings.Add(new BuildingSaveData
+            {
+                buildingID                 = b.buildingName,
+                state                      = (int)b.currentState,
+                currentRemainingEncounters = b.currentRemainingEncounters,
+                level                      = 1, // Bina level sistemi eklenince güncellenir
+            });
+        }
+
         string json = JsonUtility.ToJson(data, true);
         System.IO.File.WriteAllText(savePath, json);
-        NotificationManager.Instance.Show("Oyun kaydedildi.", NotificationType.Info);
+        if (NotificationManager.Instance != null)
+            NotificationManager.Instance.Show("Oyun kaydedildi.", NotificationType.Info);
+        Debug.Log($"[Save] Kaydedildi → {savePath}");
     }
 
     public void LoadGame()
@@ -75,56 +93,125 @@ public class SaveManager : MonoBehaviour
             return;
         }
 
-        // 1. DOSYAYI OKU
-        string json = File.ReadAllText(savePath);
+        string json       = File.ReadAllText(savePath);
         GameSaveData data = JsonUtility.FromJson<GameSaveData>(json);
+        if (data == null) { Debug.LogError("[Save] JSON parse hatası."); return; }
 
-        // 2. GLOBAL VERİLERİ YÜKLE
-        MoneyManager.Instance.gold = 0; // Önce sıfırla, sonra ekle (Eventleri tetiklemek için)
+        // Global veriler
+        MoneyManager.Instance.gold = 0;
         MoneyManager.Instance.Add(data.savedGold);
-        
-        SupplyManager.Instance.currentFood = data.savedFood;
-        // SupplyManager UI yenilemesini tetikleyebilirsin
-        
-        if (DayManager.Instance != null) DayManager.Instance.currentDay = data.savedDay;
 
-        foreach(var g in FindObjectsOfType<Gladiator>()) 
+        SupplyManager.Instance.currentFood = data.savedFood;
+
+        if (DayManager.Instance != null)
         {
-            DestroyImmediate(g.gameObject);
+            DayManager.Instance.currentDay = data.savedDay;
+            DayManager.Instance.RefreshUI();
         }
 
-        // Kayıttaki her asker için yeni bir obje yarat
+        if (ReputationManager.Instance != null)
+        {
+            int diff = data.savedReputation - ReputationManager.Instance.GetReputation();
+            ReputationManager.Instance.ChangeReputation(diff);
+        }
+
+        if (CampMoraleManager.Instance != null)
+        {
+            int diff = data.savedMorale - CampMoraleManager.Instance.currentMorale;
+            CampMoraleManager.Instance.ChangeMorale(diff);
+        }
+
+        if (NasipManager.Instance != null)
+        {
+            NasipManager.Instance.SpendNasip(NasipManager.Instance.currentNasip);
+            if (data.savedNasip > 0) NasipManager.Instance.AddNasip(data.savedNasip);
+        }
+
+        // Mevcut askerleri sil
+        foreach (var g in FindObjectsOfType<Gladiator>())
+            DestroyImmediate(g.gameObject);
+
+        // Askerleri yükle — RecruitManager.LoadSoldierFromSave isGazi, trait ve health almıyor
+        // bu yüzden yüklendikten sonra veriyi düzeltiyoruz
         foreach (var sData in data.soldiers)
         {
-            // RecruitManager'daki prefabı ve spawn pointi kullanabiliriz
-            // Ama burası için RecruitManager'a "LoadSoldier" diye bir fonksiyon yazmak daha temiz olur.
             RecruitManager.Instance.LoadSoldierFromSave(sData);
+
+            // LoadSoldierFromSave spawn ettikten sonra son eklenen Gladiator'ı bul ve ekstra alanları yaz
+            var allG = FindObjectsOfType<Gladiator>();
+            foreach (var g in allG)
+            {
+                if (g.data == null || g.data.gladiatorName != sData.name) continue;
+                g.data.isGazi        = sData.isGazi;
+                g.data.trait         = (SoldierTrait)sData.trait;
+                g.data.maxHealth     = sData.maxHealth > 0 ? sData.maxHealth : g.data.maxHealth;
+                g.data.currentHealth = sData.currentHealth > 0 ? sData.currentHealth : g.data.maxHealth;
+                g.data.dailyWage     = sData.dailyWage > 0 ? sData.dailyWage : g.data.dailyWage;
+                // Activity: hep Idling başlasın (keşif/eğitim durumu çok karmaşık restore eder)
+                g.data.currentActivity = SoldierActivity.Idling;
+                break;
+            }
         }
 
-        // 4. BİNALARI YÜKLE
+        // Binaları yükle
+        BuildingClickable[] allBuildings = FindObjectsOfType<BuildingClickable>();
+        foreach (var bData in data.buildings)
+        {
+            foreach (var b in allBuildings)
+            {
+                if (b.buildingName != bData.buildingID) continue;
+                b.currentState                = (BuildingState)bData.state;
+                b.currentRemainingEncounters  = bData.currentRemainingEncounters;
+                b.UpdateVisuals();
+                break;
+            }
+        }
+
+        // Eski CampManager bina level sistemi (geriye dönük uyum)
         if (CampManager.Instance != null)
         {
             foreach (var bData in data.buildings)
             {
-                // İlgili binayı bul ve seviyesini eşitle
                 var building = CampManager.Instance.buildings.Find(x => x.id == bData.buildingID);
-                if (building != null)
-                {
-                    building.level = bData.level;
-                }
+                if (building != null) building.level = bData.level;
             }
         }
 
-        Debug.Log("Oyun Yüklendi!");
+        Debug.Log("[Save] Yüklendi!");
         Debug.Log(savePath);
+
         var topBar = FindObjectOfType<TopInfoBarUI>();
-        if (topBar != null)
-        {
-            topBar.ForceUpdateAll();
-        }
+        if (topBar != null) topBar.ForceUpdateAll();
     }
     public void StartGame()
     {
         SceneManager.LoadScene("CampScene");
     }
+
+    public void DeleteSave()
+    {
+        if (File.Exists(savePath))
+        {
+            File.Delete(savePath);
+            Debug.Log("[Save] Kayıt silindi.");
+        }
+    }
+
+    public bool HasSave() => File.Exists(savePath);
+
+    // Gün geçince otomatik kaydet
+    void OnEnable()
+    {
+        if (DayManager.Instance != null)
+            DayManager.Instance.OnNewDay += SaveGame;
+    }
+
+    void OnDisable()
+    {
+        if (DayManager.Instance != null)
+            DayManager.Instance.OnNewDay -= SaveGame;
+    }
+
+    void OnApplicationQuit()  => SaveGame();
+    void OnApplicationPause(bool p) { if (p) SaveGame(); } // Mobil
 }

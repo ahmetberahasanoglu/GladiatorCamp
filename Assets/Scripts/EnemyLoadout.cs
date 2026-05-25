@@ -27,6 +27,10 @@ public class EnemyLoadout : ScriptableObject
     public int weaponBonus   = 0;
     [Tooltip("Zırh benzeri bonus — savunmaya eklenir")]
     public int armorBonus    = 0;
+    [Header("Düşman Silah ve Menzil Ayarı")]
+    public WeaponClass weaponClass = WeaponClass.Sword;
+    public float weaponRange = 2.0f;
+    public bool isRanged = false;
 
     [Header("Görsel — 3D Sahnede")]
     [Tooltip("Hangi mesh'ler aktif olacak (targetMeshName listesi)")]

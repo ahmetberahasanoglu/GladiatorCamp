@@ -67,15 +67,11 @@ public class GladiatorAI : MonoBehaviour
     private float _delayTimer = 0f;
 [Header("Birim Özellikleri")]
     public bool isBeast = false; 
-    private float CurrentAttackRange
-    {
-        get { return (inventory != null && inventory.weapon != null) ? inventory.weapon.weaponRange : 2.0f; }
-    }
 
-    private bool IsRangedWeapon
-    {
-        get { return (inventory != null && inventory.weapon != null) ? inventory.weapon.isRanged : false; }
-    }
+    // ESKİ inventory sorgularını sildik, doğrudan data'dan çekiyoruz!
+    private float CurrentAttackRange => (gladiator.data != null) ? gladiator.data.attackRange : 2.0f;
+    private bool IsRangedWeapon => (gladiator.data != null) ? gladiator.data.isRanged : false;
+    private WeaponClass CurrentWeaponClass => (gladiator.data != null) ? gladiator.data.weaponClass : WeaponClass.Unarmed;
 
     [Header("Savaş Durumu")]
     public bool isInBattle = false; 
@@ -235,6 +231,7 @@ public class GladiatorAI : MonoBehaviour
         {
             animator.SetBool("IsRanged", IsRangedWeapon); 
             animator.SetFloat("AttackSpeedMultiplier", currentSpd);
+            animator.SetInteger("WeaponType", (int)CurrentWeaponClass);
             animator.SetTrigger("Attack");
         }
         yield return new WaitForSeconds(baseAttackAnimLength / currentSpd);

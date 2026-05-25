@@ -1,4 +1,7 @@
 using UnityEngine;
+
+public enum WeaponClass { Sword, Axe, Spear, Bow, Unarmed } 
+
 public enum SoldierTrait { Siradan, Obur, Dindar, Yetenekli }
 [CreateAssetMenu(menuName = "Data/Gladiator")]
 
@@ -18,11 +21,17 @@ public class JanissaryData : ScriptableObject
     public SoldierTrait trait;
     public ElementType elementType = ElementType.Normal;
 
-    [Header("Anlık Durumlar (Save İçin)")]
+   [Header("Anlık Durumlar (Save İçin)")]
     public float currentHealth;
     public float maxHealth;
     public bool isOnMission = false;
     public SoldierActivity currentActivity = SoldierActivity.Idling;
+
+    // ── YENİ: SAVAŞTA KULLANILACAK SİLAH BİLGİLERİ ──
+    [Header("Aktif Silah Bilgileri")]
+    public WeaponClass weaponClass = WeaponClass.Unarmed;
+    public float attackRange = 2.0f;
+    public bool isRanged = false;
 
     public int dailyWage = 50;
 

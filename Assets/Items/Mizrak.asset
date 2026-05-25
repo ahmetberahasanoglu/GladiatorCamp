@@ -10,19 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 872777d28f1ec70429103b9364761e4f, type: 3}
-  m_Name: BigSword
+  m_Name: Mizrak
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemID: Scimitar/Inanc
-  itemName: Pala
+  itemID: Spear
+  itemName: Mizrak
   type: 0
-  setType: 3
-  icon: {fileID: 21300000, guid: 23bb69e6efb356440ab15768f86b3d92, type: 3}
+  setType: 1
+  icon: {fileID: 21300000, guid: 1a15e3355ad845445a593e8fe55f7174, type: 3}
   price: 150
-  targetMeshName: Mizrak2
-  bonusStrength: 20
+  targetMeshName: Mizrak
+  bonusStrength: 0
   bonusDefense: 0
-  bonusSpeed: 10
+  bonusSpeed: 0
   bonusStamina: 0
   weaponClass: 0
-  weaponRange: 1.5
+  weaponRange: 2
   isRanged: 0

@@ -19,3 +19,5 @@ MonoBehaviour:
   durationDays: 5
   goldReward: 1250
   woodReward: 0
+  foodReward: 0
+  reputationReward: 10

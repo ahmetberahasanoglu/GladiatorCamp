@@ -58,14 +58,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.62352943, g: 0.62352943, b: 0.62352943, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: c9b92ac477d943f49915298417f2e0ad, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ceba3cf4714cacd4eb4f5d76a519c994, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -439,7 +439,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &165643073468782548
 RectTransform:
   m_ObjectHideFlags: 0
@@ -559,8 +559,15 @@ MonoBehaviour:
   nameText: {fileID: 6378840204206324156}
   powerText: {fileID: 1103648456565766375}
   backgroundImage: {fileID: 2517545498763309338}
+  borderImage: {fileID: 8806019582469881717}
   toggleButton: {fileID: 1550997222149273232}
-  gladiatorComponent: {fileID: 0}
+  normalBg: {r: 0.15, g: 0.15, b: 0.15, a: 1}
+  selectedBg: {r: 0.12, g: 0.25, b: 0.12, a: 1}
+  injuredBg: {r: 0.25, g: 0.08, b: 0.08, a: 1}
+  normalBorder: {r: 0.4, g: 0.4, b: 0.4, a: 1}
+  selectedBorder: {r: 1, g: 0.84, b: 0.1, a: 1}
+  selectScale: 1.08
+  animDuration: 0.12
 --- !u!222 &1113501993261893650
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -810,7 +817,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2549089555885587875
 RectTransform:
   m_ObjectHideFlags: 0

@@ -271,12 +271,13 @@ public class BattleManager : MonoBehaviour
     }
 
     // ── SAVAŞ BAŞLATMA ───────────────────────────────────────────────────
-    public void StartBattle(int enemyCount, int difficulty, BattleEnvironment envType, int tier = 1)
+   public void StartBattle(int enemyCount, int difficulty, BattleEnvironment envType, int tier = 1)
     {
         _currentEnemyCount = enemyCount;
         _currentDifficulty = difficulty;
         _currentTier       = tier;
-        _currentLoadout    = enemyTierConfig != null ? enemyTierConfig.GetRandomLoadout(tier) : null;
+        // _currentLoadout    = enemyTierConfig != null ? enemyTierConfig.GetRandomLoadout(tier) : null;
+        
         pendingEnv         = envType;
         _isBearBattle      = false;
 
@@ -522,7 +523,7 @@ public class BattleManager : MonoBehaviour
         }
     }
 
-    void SpawnGenericEnemyArray(GameObject prefabToSpawn, int count)
+   void SpawnGenericEnemyArray(GameObject prefabToSpawn, int count)
     {
         if (prefabToSpawn == null) return;
         int row = 0, col = 0;
@@ -544,32 +545,51 @@ public class BattleManager : MonoBehaviour
             var gladiator = newEnemy.GetComponent<Gladiator>();
             if (gladiator != null && gladiator.data != null)
             {
-                if (_currentLoadout != null)
+                // ── YENİ: HER DÜŞMAN İÇİN HAVUZDAN RASTGELE BİR TİP ÇEK! ──
+                EnemyLoadout randomEnemyType = null;
+                if (enemyTierConfig != null)
                 {
-                    gladiator.data.strength    = _currentLoadout.baseStrength + _currentLoadout.weaponBonus;
-                    gladiator.data.defense     = _currentLoadout.baseDefense  + _currentLoadout.armorBonus;
-                    gladiator.data.speed       = _currentLoadout.baseSpeed;
-                    gladiator.data.stamina     = _currentLoadout.baseStamina;
-                    gladiator.data.level       = _currentLoadout.baseLevel;
-                    gladiator.data.elementType = _currentLoadout.elementType;
-                    if (!string.IsNullOrEmpty(_currentLoadout.displayName))
-                        gladiator.data.gladiatorName = _currentLoadout.displayName;
+                    randomEnemyType = enemyTierConfig.GetRandomLoadout(_currentTier);
+                }
 
-                    if (_currentLoadout.activeMeshNames != null)
-                        foreach (var meshName in _currentLoadout.activeMeshNames)
+                if (randomEnemyType != null)
+                {
+                    // Çekilen rastgele tipi bu askere uygula
+                    gladiator.data.strength    = randomEnemyType.baseStrength + randomEnemyType.weaponBonus;
+                    gladiator.data.defense     = randomEnemyType.baseDefense  + randomEnemyType.armorBonus;
+                    gladiator.data.speed       = randomEnemyType.baseSpeed;
+                    gladiator.data.stamina     = randomEnemyType.baseStamina;
+                    gladiator.data.level       = randomEnemyType.baseLevel;
+                    gladiator.data.elementType = randomEnemyType.elementType;
+                    gladiator.data.weaponClass = randomEnemyType.weaponClass;
+                    gladiator.data.attackRange = randomEnemyType.weaponRange;
+                    gladiator.data.isRanged    = randomEnemyType.isRanged;
+
+                    if (!string.IsNullOrEmpty(randomEnemyType.displayName))
+                        gladiator.data.gladiatorName = randomEnemyType.displayName;
+
+                    // Mesh'leri aç (Kılıç, Yay, Kalkan vs.)
+                    if (randomEnemyType.activeMeshNames != null)
+                    {
+                        foreach (var meshName in randomEnemyType.activeMeshNames)
                         {
                             var meshObj = newEnemy.transform.Find(meshName);
                             if (meshObj != null) meshObj.gameObject.SetActive(true);
                         }
+                    }
                 }
                 else
                 {
+                    // Fallback (ScriptableObject atanmamışsa eski standart çarpana dön)
                     float tierMult = 1f + (_currentTier - 1) * 0.4f;
                     gladiator.data.strength = Mathf.RoundToInt(gladiator.data.strength * tierMult);
                     gladiator.data.defense  = Mathf.RoundToInt(gladiator.data.defense  * tierMult);
                     gladiator.data.stamina  = Mathf.RoundToInt(gladiator.data.stamina  * tierMult);
                     gladiator.data.level    = _currentTier;
+                    gladiator.data.weaponClass = WeaponClass.Sword; 
+                    gladiator.data.attackRange = 2.0f;
                 }
+                
                 gladiator.RecalculateMaxHealth();
             }
 

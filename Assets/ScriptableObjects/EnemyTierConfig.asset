@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyTierConfig
   tier1Loadouts:
   - {fileID: 11400000, guid: 30f0a66a91bbbbe4ba7775060efde87e, type: 2}
-  - {fileID: 11400000, guid: 30f0a66a91bbbbe4ba7775060efde87e, type: 2}
+  - {fileID: 11400000, guid: 9b857c425f796ff41aa0cc0b650b813d, type: 2}
   - {fileID: 11400000, guid: 997fd18ad0b01c14482e15b29b54b43c, type: 2}
   tier2Loadouts:
   - {fileID: 11400000, guid: e0283ca44a349d14bb5f425f497bef79, type: 2}

@@ -16,14 +16,16 @@ MonoBehaviour:
   portrait: {fileID: 21300000, guid: 1a15e3355ad845445a593e8fe55f7174, type: 3}
   elementType: 2
   baseStrength: 8
-  baseDefense: 5
-  baseSpeed: 5
-  baseStamina: 8
+  baseDefense: 1
+  baseSpeed: 1
+  baseStamina: 3
   baseLevel: 1
-  weaponBonus: 10
-  armorBonus: 0
+  weaponBonus: 5
+  armorBonus: 1
   weaponClass: 1
   weaponRange: 2
   isRanged: 0
-  activeMeshNames: []
+  activeMeshNames:
+  - Balta
+  - Cape1
   bonusGoldOnKill: 100

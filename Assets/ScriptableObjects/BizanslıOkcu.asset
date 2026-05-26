@@ -21,9 +21,11 @@ MonoBehaviour:
   baseStamina: 1
   baseLevel: 1
   weaponBonus: 5
-  armorBonus: 0
+  armorBonus: -2
   weaponClass: 3
   weaponRange: 2
   isRanged: 1
-  activeMeshNames: []
+  activeMeshNames:
+  - Bow
+  - Cape2
   bonusGoldOnKill: 100

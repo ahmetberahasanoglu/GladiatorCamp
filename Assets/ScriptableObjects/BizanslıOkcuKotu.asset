@@ -10,22 +10,22 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 13303b86a69538347bda09b53833671e, type: 3}
-  m_Name: "Bizans_M\u0131zrakl\u0131"
+  m_Name: "Bizansl\u0131OkcuKotu"
   m_EditorClassIdentifier: Assembly-CSharp::EnemyLoadout
-  displayName: "K\u0131demli"
-  portrait: {fileID: 21300000, guid: ae91a5e4931072a4a9172e32d474c0f2, type: 3}
-  elementType: 0
+  displayName: "Bizansl\u0131 Okcu"
+  portrait: {fileID: 21300000, guid: c09e303a0e4336e4a8d955e6af825c6b, type: 3}
+  elementType: 3
   baseStrength: 8
-  baseDefense: 5
+  baseDefense: 1
   baseSpeed: 5
-  baseStamina: 8
+  baseStamina: 1
   baseLevel: 1
-  weaponBonus: 0
-  armorBonus: 0
-  weaponClass: 2
-  weaponRange: 4
-  isRanged: 0
+  weaponBonus: 5
+  armorBonus: -2
+  weaponClass: 3
+  weaponRange: 2
+  isRanged: 1
   activeMeshNames:
-  - Mizrak
-  - Helmet
-  bonusGoldOnKill: 75
+  - Bow
+  - Cape2
+  bonusGoldOnKill: 100

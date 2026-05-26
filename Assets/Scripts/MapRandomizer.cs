@@ -1,17 +1,10 @@
-// v2 — ApplyVisuals ile label + sprite güncelleme
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// Haritadaki node'ları StartPoint'ten BFS derinliğine göre tier'lara ayırır
-/// ve her seferde rastgele bir event atar.
-/// 
-/// Tier Sistemi:
-///   Tier 1 (derinlik 1-4)  : Güvenli başlangıç bölgesi
-///   Tier 2 (derinlik 5-9)  : Orta risk, kervan çıkabilir
-///   Tier 3 (derinlik 10+)  : Tehlikeli, yüksek ödüllü
-///   Boss   (en derin node) : Her zaman Boss kalır, değişmez
+/// Haritayı BFS ile tarar ve "Nefes Ritmi" (Pacing) + "Tekrar Yok" (No Repeat)
+/// algoritmalarını kullanarak rastgele etkinlikler atar.
 /// </summary>
 public class MapRandomizer : MonoBehaviour
 {
@@ -22,11 +15,13 @@ public class MapRandomizer : MonoBehaviour
     public List<NodeType> tier1Pool = new List<NodeType>
     {
         NodeType.Village,
-        NodeType.RestArea,
         NodeType.NasibEncounter,
         NodeType.DervishEncounter,
         NodeType.Tuccar,
         NodeType.Dice,
+        NodeType.FirstBattle,
+        NodeType.Vahsi
+        // RestArea tamamen kaldırıldı. Köy aynı işlevi görüyor.
     };
 
     [Header("Tier 2 — Orta Risk (Derinlik 5-9)")]
@@ -39,6 +34,7 @@ public class MapRandomizer : MonoBehaviour
         NodeType.KervanEncounter,
         NodeType.Zindan,
         NodeType.Kacak,
+        NodeType.CenkOyunu
     };
 
     [Header("Tier 3 — Tehlikeli Bölge (Derinlik 10+)")]
@@ -49,19 +45,13 @@ public class MapRandomizer : MonoBehaviour
         NodeType.Kalkan,
         NodeType.Vahsi,
         NodeType.Archery,
-        NodeType.KervanEncounter,  // Çantası dolu oyuncu için çok değerli
+        NodeType.KervanEncounter,  
         NodeType.Zindan,
     };
 
-    // Sabit derinlik sınırları (Inspector'dan ayarlanabilir)
     [Header("Derinlik Sınırları")]
-    [Tooltip("Bu derinliğe kadar Tier 1 havuzundan seçilir")]
     public int tier1MaxDepth = 4;
-    [Tooltip("Bu derinliğe kadar Tier 2 havuzundan seçilir")]
     public int tier2MaxDepth = 9;
-    // tier2MaxDepth üzeri otomatik Tier 3 olur
-
-    // ────────────────────────────────────────────────────────────────────────
 
     void Awake()
     {
@@ -69,85 +59,136 @@ public class MapRandomizer : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    /// <summary>
-    /// Haritayı baştan sona BFS ile dolaşır, her node'a derinliğine
-    /// uygun rastgele bir event atar. Boss ve StartPoint değişmez.
-    /// </summary>
     public void RandomizeMap()
     {
-        // 1. StartPoint'i bul
         MapNode startNode = FindStartNode();
         if (startNode == null)
         {
-            Debug.LogError("[MapRandomizer] StartPoint bulunamadı! " +
-                           "Sahnede NodeType.StartPoint türünde bir node olduğundan emin ol.");
+            Debug.LogError("[MapRandomizer] StartPoint bulunamadı!");
             return;
         }
 
-        // 2. BFS ile her node'un derinliğini hesapla
-        Dictionary<MapNode, int> depthMap = BuildDepthMap(startNode);
-
-        if (depthMap.Count == 0)
-        {
-            Debug.LogError("[MapRandomizer] BFS sonuç döndürmedi. " +
-                           "outgoingPaths bağlantılarını kontrol et.");
-            return;
-        }
+        // 1. BFS ile derinlikleri ve ebeveyn (önceki) node'ları bul
+        Dictionary<MapNode, int> depthMap = BuildDepthMap(startNode, out Dictionary<MapNode, List<MapNode>> incomingPaths);
+        
+        if (depthMap.Count == 0) return;
 
         int maxDepth = depthMap.Values.Max();
-        Debug.Log($"[MapRandomizer] Toplam {depthMap.Count} node bulundu. " +
-                  $"Maks derinlik: {maxDepth}");
 
-        // 3. BFS'e giremeyen (hiçbir node'a bağlı olmayan) orphan node'ları da topla
-        MapNode[] allNodes = FindObjectsByType<MapNode>(
-            FindObjectsInactive.Include, FindObjectsSortMode.None);
+        // 2. Orphan (bağlantısız) node'ları topla
+        MapNode[] allNodes = FindObjectsByType<MapNode>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var n in allNodes)
         {
             if (!depthMap.ContainsKey(n))
             {
-                // Bağlantısız node: Tier 1'den rastgele ver, derinlik 1 say
                 depthMap[n] = 1;
-                Debug.LogWarning($"[MapRandomizer] '{n.gameObject.name}' " +
-                                 "hiçbir node'a bağlı değil (orphan). Tier 1 atandı.");
+                incomingPaths[n] = new List<MapNode>();
             }
         }
 
-        // 4. Her node'a tier'ına uygun event + görsel ata
-        foreach (var kvp in depthMap)
-        {
-            MapNode node = kvp.Key;
-            int depth    = kvp.Value;
+        // 3. Atamaları Derinliğe (Tier) Göre Sırayla Yap
+        var sortedNodes = depthMap.OrderBy(kvp => kvp.Value).Select(kvp => kvp.Key).ToList();
+        
+        // Savaş Pacing'ini takip etmek için (Üst üste kaç savaş oldu?)
+        Dictionary<MapNode, int> consecutiveBattles = new Dictionary<MapNode, int>();
+        consecutiveBattles[startNode] = 0;
 
-            // Sabit node'lara sprite/label güncelle ama type'a dokunma
-            if (node.nodeType == NodeType.StartPoint ||
-                node.nodeType == NodeType.Boss)
+        foreach (var node in sortedNodes)
+        {
+            int maxParentBattles = 0;
+            List<NodeType> parentTypes = new List<NodeType>();
+
+            // Bu node'a gelen önceki node'ların (ebeveynlerin) tiplerini ve savaş sayılarını al
+            if (incomingPaths.ContainsKey(node))
             {
+                foreach (var parent in incomingPaths[node])
+                {
+                    if (consecutiveBattles.ContainsKey(parent))
+                    {
+                        maxParentBattles = Mathf.Max(maxParentBattles, consecutiveBattles[parent]);
+                    }
+                    parentTypes.Add(parent.nodeType);
+                }
+            }
+
+            // Sabit Node'lar (Başlangıç ve Boss değişmez)
+            if (node.nodeType == NodeType.StartPoint || node.nodeType == NodeType.Boss)
+            {
+                consecutiveBattles[node] = IsCombatEvent(node.nodeType) ? maxParentBattles + 1 : 0;
                 node.ApplyVisuals(GetSpriteForType(node.nodeType), GetLabel(node.nodeType));
                 continue;
             }
 
-            // Manuel Boss yoksa en derin node'ları Boss yap
+            int depth = depthMap[node];
+            
+            // Son derinlikteki manuel Boss yoksa Boss ata
             if (depth == maxDepth && !HasManualBossNode(depthMap))
             {
                 node.nodeType = NodeType.Boss;
+                consecutiveBattles[node] = maxParentBattles + 1;
                 node.ApplyVisuals(GetSpriteForType(NodeType.Boss), GetLabel(NodeType.Boss));
                 continue;
             }
 
-            // Tier seç → görsel uygula
-            NodeType chosen = PickFromTier(depth);
-            node.nodeType   = chosen;
+            // --- AKILLI SEÇİM ALGORİTMASI ---
+            bool forcePassive = maxParentBattles >= 2; // Arka arkaya 2 savaş olduysa mola ver!
+            NodeType chosen = PickSmartFromTier(depth, parentTypes, forcePassive);
+            
+            node.nodeType = chosen;
+            consecutiveBattles[node] = IsCombatEvent(chosen) ? maxParentBattles + 1 : 0;
+            
             node.ApplyVisuals(GetSpriteForType(chosen), GetLabel(chosen));
         }
 
-        Debug.Log("[MapRandomizer] Harita başarıyla rastgeleleştirildi!");
+        Debug.Log("[MapRandomizer] Harita başarıyla akıllı ritimle rastgeleleştirildi!");
     }
 
-    // ── Yardımcı: BFS Derinlik Haritası ────────────────────────────────────
-    private Dictionary<MapNode, int> BuildDepthMap(MapNode root)
+    // ── AKILLI SEÇİCİ ──────────────────────────────────────────────────────
+    private NodeType PickSmartFromTier(int depth, List<NodeType> forbiddenTypes, bool forcePassive)
+    {
+        List<NodeType> pool;
+
+        if (depth <= tier1MaxDepth) pool = new List<NodeType>(tier1Pool);
+        else if (depth <= tier2MaxDepth) pool = new List<NodeType>(tier2Pool);
+        else pool = new List<NodeType>(tier3Pool);
+
+        // 1. KURAL: NEFES RİTMİ (Eğer zorunlu mola lazımsa savaş eventlerini havuzdan çıkar)
+        if (forcePassive)
+        {
+            var passivePool = pool.Where(t => !IsCombatEvent(t)).ToList();
+            if (passivePool.Count > 0) pool = passivePool;
+        }
+
+        // 2. KURAL: TEKRAR YOK (Önceki node ile aynı event çıkmasın)
+        var noRepeatPool = pool.Where(t => !forbiddenTypes.Contains(t)).ToList();
+        if (noRepeatPool.Count > 0)
+        {
+            pool = noRepeatPool;
+        }
+
+        // Eğer havuz bir şekilde boşalırsa (çok düşük ihtimal), her zaman güvenli liman Köy ver.
+        if (pool.Count == 0) return NodeType.Village;
+
+        return pool[Random.Range(0, pool.Count)];
+    }
+
+    // ── KATEGORİ BELİRLEYİCİLER ────────────────────────────────────────────
+    private bool IsCombatEvent(NodeType type)
+    {
+        return type == NodeType.Battle || 
+               type == NodeType.FirstBattle || 
+               type == NodeType.KuleSavas || 
+               type == NodeType.Vahsi || 
+               type == NodeType.Zindan || 
+               type == NodeType.Boss;
+    }
+
+    // ── BFS Derinlik Haritası ve Geliş Yönleri ──────────────────────────────
+    private Dictionary<MapNode, int> BuildDepthMap(MapNode root, out Dictionary<MapNode, List<MapNode>> incomingPaths)
     {
         var depthMap = new Dictionary<MapNode, int>();
-        var queue    = new Queue<MapNode>();
+        incomingPaths = new Dictionary<MapNode, List<MapNode>>();
+        var queue = new Queue<MapNode>();
 
         depthMap[root] = 0;
         queue.Enqueue(root);
@@ -160,68 +201,40 @@ public class MapRandomizer : MonoBehaviour
             foreach (MapNode neighbor in current.outgoingPaths)
             {
                 if (neighbor == null) continue;
-                if (depthMap.ContainsKey(neighbor)) continue; // Zaten ziyaret edildi
+
+                // Bu neighbor'a nereden gelindiğini kaydet (Ebeveyn kontrolü için)
+                if (!incomingPaths.ContainsKey(neighbor))
+                    incomingPaths[neighbor] = new List<MapNode>();
+                
+                if (!incomingPaths[neighbor].Contains(current))
+                    incomingPaths[neighbor].Add(current);
+
+                if (depthMap.ContainsKey(neighbor)) continue;
 
                 depthMap[neighbor] = currentDepth + 1;
                 queue.Enqueue(neighbor);
             }
         }
-
         return depthMap;
     }
 
-    // ── Yardımcı: Derinliğe göre havuzdan seç ──────────────────────────────
-    private NodeType PickFromTier(int depth)
-    {
-        List<NodeType> pool;
-
-        if (depth <= tier1MaxDepth)
-            pool = tier1Pool;
-        else if (depth <= tier2MaxDepth)
-            pool = tier2Pool;
-        else
-            pool = tier3Pool;
-
-        if (pool == null || pool.Count == 0)
-        {
-            Debug.LogWarning($"[MapRandomizer] Derinlik {depth} için havuz boş! Village atandı.");
-            return NodeType.Village;
-        }
-
-        return pool[Random.Range(0, pool.Count)];
-    }
-
-    // ── Yardımcı: StartPoint bul ────────────────────────────────────────────
+    // ── YARDIMCI METOTLAR ───────────────────────────────────────────────────
     private MapNode FindStartNode()
     {
-        // Önce Inspector'daki MapManager.startingNodes'a bak (en güvenilir)
-        if (MapManager.Instance != null &&
-            MapManager.Instance.startingNodes != null &&
-            MapManager.Instance.startingNodes.Count > 0)
+        if (MapManager.Instance != null && MapManager.Instance.startingNodes != null && MapManager.Instance.startingNodes.Count > 0)
         {
-            // startingNodes listesinde StartPoint türünde olan varsa onu al
             foreach (var n in MapManager.Instance.startingNodes)
-            {
-                if (n != null && n.nodeType == NodeType.StartPoint)
-                    return n;
-            }
-            // Yoksa listenin ilk elemanını kullan
-            if (MapManager.Instance.startingNodes[0] != null)
-                return MapManager.Instance.startingNodes[0];
+                if (n != null && n.nodeType == NodeType.StartPoint) return n;
+            if (MapManager.Instance.startingNodes[0] != null) return MapManager.Instance.startingNodes[0];
         }
 
-        // Fallback: sahnede ara
-        MapNode[] allNodes = FindObjectsByType<MapNode>(
-            FindObjectsInactive.Include, FindObjectsSortMode.None);
-
+        MapNode[] allNodes = FindObjectsByType<MapNode>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var node in allNodes)
-            if (node.nodeType == NodeType.StartPoint)
-                return node;
+            if (node.nodeType == NodeType.StartPoint) return node;
 
         return null;
     }
 
-    // ── Yardımcı: Sahneye elle konulmuş Boss var mı? ───────────────────────
     private bool HasManualBossNode(Dictionary<MapNode, int> depthMap)
     {
         foreach (var node in depthMap.Keys)
@@ -229,7 +242,6 @@ public class MapRandomizer : MonoBehaviour
         return false;
     }
 
-    // ── Label metinleri ─────────────────────────────────────────────────────
     private string GetLabel(NodeType type) => type switch
     {
         NodeType.Battle            => "Savaş",
@@ -240,7 +252,6 @@ public class MapRandomizer : MonoBehaviour
         NodeType.Zindan            => "Zindan",
         NodeType.Boss              => "Kızıl Kale",
         NodeType.Tuccar            => "Tüccar",
-        NodeType.RestArea          => "Dinlenme",
         NodeType.Treasure          => "Hazine",
         NodeType.Vahsi             => "Vahşi Hayvan",
         NodeType.KuleSavas         => "Kule Savaşı",
@@ -253,10 +264,10 @@ public class MapRandomizer : MonoBehaviour
         NodeType.Kalkan            => "Savunma",
         NodeType.StartPoint        => "Kamp",
         NodeType.Kacak             => "Kaçak",
+        NodeType.CenkOyunu         => "Cenk",
         _                          => "?"
     };
 
-    // ── Sprite seçici ───────────────────────────────────────────────────────
     private Sprite GetSpriteForType(NodeType type)
     {
         MapEventManager em = MapEventManager.Instance;
@@ -278,12 +289,12 @@ public class MapRandomizer : MonoBehaviour
             NodeType.Vahsi             => em.wildSprite,
             NodeType.Dice              => em.diceSprite,
             NodeType.YagliGures        => em.wrestlingSprite,
-            NodeType.RestArea          => em.villageSprite,
             NodeType.NasibEncounter    => em.villageSprite,
             NodeType.DervishEncounter  => em.villageSprite,
             NodeType.CaravanEncounter  => em.merchant,
             NodeType.KervanEncounter   => em.merchant,
             NodeType.Kacak             => em.villageSprite,
+            NodeType.CenkOyunu         => em.villageSprite, 
             _                          => em.villageSprite,
         };
     }

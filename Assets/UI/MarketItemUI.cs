@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Text; // StringBuilder için gerekli (Metin birleştirme)
+using System.Text;
 
 public class MarketItemUI : MonoBehaviour
 {
@@ -10,9 +10,13 @@ public class MarketItemUI : MonoBehaviour
     public TextMeshProUGUI priceText;
     public Image iconImage;
     public Button buyButton;
+    public TextMeshProUGUI statsText;
 
-    // YENİ: Statları yazacağımız text alanı
-    public TextMeshProUGUI statsText; 
+    [Header("Set Badge")]
+    [Tooltip("'Ateş', 'Zehir', 'İnanç' gibi etiketin arkasındaki Image (RectTransform)")]
+    public Image setBadgeBg;
+    [Tooltip("Set ismini gösteren TMP text")]
+    public TextMeshProUGUI setBadgeText;
 
     private ItemData _myItemData;
 
@@ -20,36 +24,60 @@ public class MarketItemUI : MonoBehaviour
     {
         _myItemData = item;
 
-        // 1. Temel Bilgiler
-        nameText.text = item.itemID;
+        // --- 1. Görünen İsim (itemName) ---
+        nameText.text = item.DisplayName;
+
+        // --- 2. Fiyat ---
         priceText.text = item.price.ToString() + " Akçe";
-        
+
+        // --- 3. İkon ---
         if (item.icon != null) iconImage.sprite = item.icon;
 
-        // 2. STATLARI HESAPLA (Sadece 0'dan büyük olanları göster)
-        StringBuilder statsBuilder = new StringBuilder();
+        // --- 4. Statlar ---
+        StringBuilder sb = new StringBuilder();
+        if (item.bonusStrength != 0) sb.Append($"STR: {Colorize(item.bonusStrength)}  ");
+        if (item.bonusDefense != 0)  sb.Append($"DEF: {Colorize(item.bonusDefense)}  ");
+        if (item.bonusSpeed != 0)    sb.Append($"SPD: {Colorize(item.bonusSpeed)}  ");
+        if (item.bonusStamina != 0)  sb.Append($"STA: {Colorize(item.bonusStamina)}  ");
+        if (sb.Length == 0) sb.Append("Özellik Yok");
+        statsText.text = sb.ToString();
 
-        if (item.bonusStrength != 0) statsBuilder.Append($"STR: {Colorize(item.bonusStrength)}  ");
-        if (item.bonusDefense != 0)  statsBuilder.Append($"DEF: {Colorize(item.bonusDefense)}  ");
-        if (item.bonusSpeed != 0)    statsBuilder.Append($"SPD: {Colorize(item.bonusSpeed)}  ");
-        if (item.bonusStamina != 0)  statsBuilder.Append($"STA: {Colorize(item.bonusStamina)}  ");
-        // if (item.bonusMorale != 0)   statsBuilder.AppendLine($"Moral: <color=green>+{item.bonusMorale}</color>");
+        // --- 5. Set Badge ---
+        RefreshSetBadge(item);
 
-        // Eğer hiçbir stat yoksa (mesela sadece süs eşyasıysa)
-        if (statsBuilder.Length == 0) statsBuilder.Append("Özellik Yok");
-
-        statsText.text = statsBuilder.ToString();
-
-        // 3. Buton
+        // --- 6. Buton ---
         buyButton.onClick.RemoveAllListeners();
         buyButton.onClick.AddListener(OnBuyClicked);
     }
- string Colorize(int val)
+
+    void RefreshSetBadge(ItemData item)
     {
-        if (val > 0) return $"<color=green>+{val}</color>"; // Yeşil +5
-        if (val < 0) return $"<color=red>{val}</color>";    // Kırmızı -2
+        bool hasSet = item.setType != ItemSetType.None;
+
+        if (setBadgeBg != null)  setBadgeBg.gameObject.SetActive(hasSet);
+        if (setBadgeText != null) setBadgeText.gameObject.SetActive(hasSet);
+
+        if (!hasSet) return;
+
+        Color setColor = item.GetSetColor();
+
+        if (setBadgeBg != null)
+            setBadgeBg.color = setColor;
+
+        if (setBadgeText != null)
+        {
+            setBadgeText.text = item.GetSetDisplayName() + " Seti";
+            setBadgeText.color = Color.white;
+        }
+    }
+
+    string Colorize(int val)
+    {
+        if (val > 0) return $"<color=green>+{val}</color>";
+        if (val < 0) return $"<color=red>{val}</color>";
         return val.ToString();
     }
+
     void OnBuyClicked()
     {
         MarketManager.Instance.Buy(_myItemData);

@@ -78,13 +78,13 @@ public class MapEventManager : MonoBehaviour
             case NodeType.Zindan:       SetupZindan(); break;
             case NodeType.Vahsi:        SetupVahsi(); break;
             case NodeType.Dice:         SetupMysteriousDiceEvent(); break;
-            case NodeType.YagliGures:   
-            SetupYagliGures(); break;
+            case NodeType.YagliGures:   SetupYagliGures(); break;
             case NodeType.FirstBattle:   SetupFirstBattleEvent(); break;
             case NodeType.NasibEncounter:   SetupNasibEvent(); break;
             case NodeType.DervishEncounter:   SetupDervishEvent(); break;
             case NodeType.CaravanEncounter:   SetupCaravanEvent(); break;
             case NodeType.KervanEncounter:   SetupKervansarayEvent(); break;
+            case NodeType.CenkOyunu:          SetupCenkEvent(); break;
         }
     }
 
@@ -139,14 +139,13 @@ public class MapEventManager : MonoBehaviour
             });
         }
 
-        // KAÇIŞ BUTONU (Zar atma mekaniği hazır vardı)
-        int mevcutNasip = NasipManager.Instance != null ? NasipManager.Instance.currentNasip : 0;
-        CreateButton($"Kaçmayı Dene (Nasip: {mevcutNasip})", () => {
-            // Kaçamazlarsa savaş başlar ama onu da ayı savaşı yapmamız lazım.
-            // O yüzden Kaçış metoduna Bear flag'ini eklemen gerekebilir veya 
-            // şimdilik basitçe kaçış zarını kullandırabilirsin:
-            ResolveEscapeContest(BattleEnvironment.Forest, 1, 2); 
-        });
+        // KAÇIŞ — Ayıdan kaçmak zor, yüksek nasip gerekir
+        AddEscapeButton(
+            escapeText:    "Dağılın, Kaçın!",
+            escapeType:    EscapeType.Optional,
+            nasipRequired: 5,
+            onEscape:      () => { ResolveEscapeContest(BattleEnvironment.Forest, 1, 2); }
+        );
     }
     void SetupNasibEvent()
     {
@@ -416,7 +415,6 @@ public class MapEventManager : MonoBehaviour
             ClosePanel();
         });
     }
-
 
     private void ClearAllButtons()
     {
@@ -752,9 +750,12 @@ private void ResolveVillageBattle(int difficulty)
 
         int mevcutNasip = NasipManager.Instance != null ? NasipManager.Instance.currentNasip : 0;
         
-        CreateButton($"Kaçmayı Dene (Nasip: {mevcutNasip})", () => {
-            ResolveEscapeContest(BattleEnvironment.Tower, 2, 1); 
-        });
+        AddEscapeButton(
+            escapeText:    "Kaçmayı Dene",
+            escapeType:    EscapeType.Optional,
+            nasipRequired: 3,
+            onEscape:      () => { ResolveEscapeContest(BattleEnvironment.Tower, 2, 1); }
+        );
     }
 
      void SetupKuleSavas()
@@ -1020,15 +1021,13 @@ public void SetupDervishEvent()
     }
 
 
-   void SetupAtYarisi()
+    void SetupAtYarisi()
     {
         titleText.text = "Büyük At Yarışı";
-        if(villageSprite != null) eventImage.sprite = horseSprite;
-        
-        // ZAR metnini kaldırdık, oyuncunun refleksine ve askerin hızına vurgu yaptık
+          if(villageSprite != null) eventImage.sprite = horseSprite;
         descText.text = $"Şehrin ileri gelenlerinden Mustafa Bey seni at yarışına davet etti. (Giriş: 30 Akçe)\n\n" +
                         $"<color=#66001D>Rakip: {atYarisiRakipIsim} (Hızı: {atYarisiRakipHiz})</color>\n\n" +
-                        $"<color=#66001D>Hangi yiğidi göndereceksin? (Askerinin hızı, engellerin geliş hızını yavaşlatacaktır!)</color>";
+                        $"<color=yellow>Hangi yiğidi göndereceksin? (Askerinin hızı üzerine 6'lık zar atılacaktır.)</color>";
 
         Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
         bool hasValidSoldier = false;
@@ -1047,87 +1046,35 @@ public void SetupDervishEvent()
                     if (MoneyManager.Instance.gold >= 30)
                     {
                         MoneyManager.Instance.Spend(30);
-                        
-                        // --- DEĞİŞEN KISIM: ZAR YERİNE MİNİ OYUNU ÇAĞIR ---
-                        this.gameObject.SetActive(false); // Parşömen etkinlik ekranını geçici olarak gizle
-                        
-                        if (HorseRidingMiniGame.Instance != null)
-                        {
-                            // Mini oyunu başlat ve oyun bitince çalışacak Callback (Geri Bildirim) fonksiyonunu yolla
-                            HorseRidingMiniGame.Instance.StartHorseRiding(soldier, (isWin) => 
-                            {
-                                ShowHorseRidingResult(isWin, soldier); 
-                            });
-                        }
-                        else
-                        {
-                            Debug.LogError("HorseRidingMiniGame sahnedeki bir objede bulunamadı!");
-                        }
-                        // --------------------------------------------------
+                       
+                
+                        ResolveContest(soldier, NodeType.Atyarisi, askerHiz, atYarisiRakipHiz, atYarisiRakipIsim);
                     }
                     else
                     {
-                        if (NotificationManager.Instance != null) NotificationManager.Instance.Show("Yarışa katılmak için 30 Akçen yok!", NotificationType.Error);
+                        NotificationManager.Instance.Show("Yarışa katılmak için 30 Akçen yok!", NotificationType.Error);
                     }
                 });
             }
         }
 
         if (!hasValidSoldier) descText.text += "\n\n<color=red>Gönderecek boşta askerin yok!</color>";
-        
-        CreateButton("Vaktim Yok (Ayrıl)", () =>{
-            ClosePanel();
-        });
-    }
 
-    // --- YENİ: MİNİ OYUN BİTİNCE ÇALIŞACAK GERİ BİLDİRİM FONKSİYONU ---
-    void ShowHorseRidingResult(bool isWin, Gladiator soldier)
-    {
-        // 1. Parşömen paneli tekrar görünür yap
-        this.gameObject.SetActive(true); 
-        
-        // 2. Eski butonları temizle (Eğer kendi temizleme fonksiyonun varsa onu kullan, örn: ClearButtons();)
-        // foreach (Transform child in buttonContainer) Destroy(child.gameObject); 
-
-        // 3. Sonuca göre başlık, metin ve ödülleri/cezaları ayarla
-        if (isWin)
-        {
-            titleText.text = "Rüzgarın Oğlu!";
-            descText.text = $"{soldier.data.gladiatorName}, atının üzerinde adeta rüzgarla dans etti. Tüm engelleri kusursuz aşarak yarışı birinci bitirdi ve izleyenleri büyüledi!\n\n" +
-                            $"<color=green>Kazanılan: +25 İtibar, +80 Akçe</color>";
-            
-            // Ödülleri ver
-            MoneyManager.Instance.Add(80);
-            if (ReputationManager.Instance != null) ReputationManager.Instance.ChangeReputation(25);
-            
-            CreateButton("Ödülü Al ve Ayrıl", () => {
-                ClosePanel();
-            });
-        }
-        else
-        {
-            titleText.text = "At Tökezledi...";
-            descText.text = $"{soldier.data.gladiatorName} bir engele feci şekilde takılarak atından düştü. Yarışı Mustafa Bey'in binicisi kazandı ve itibarınız zedelendi.\n\n" +
-                            $"<color=red>Askerin yaralandı.</color>";
-            
-            // Cezaları uygula
-            soldier.data.currentHealth -= 10;
-            
-            CreateButton("Sağlık Olsun", () => {
-                ClosePanel();
-            });
-        }
+        AddEscapeButton(
+            escapeText:    "Teklifi Reddet",
+            escapeType:    EscapeType.Costly,
+            reputationPenalty: 5,
+            onEscape:      () => { ClosePanel(); }
+        );
     }
 
     void SetupYagliGures()
     {
         titleText.text = "Yağlı Güreş!";
-        if(villageSprite != null) eventImage.sprite = wrestlingSprite;
-        
-        // ZAR metnini kaldırdık, oyuncunun yeteneğine vurgu yaptık
+          if(villageSprite != null) eventImage.sprite = wrestlingSprite;
         descText.text = $"Meydanda davullar çalıyor. Başpehlivanlık için er meydanına bir yiğidini sal. (Giriş: 50 Akçe)\n\n" +
                         $"<color=#66001D>Rakip Pehlivan: {guresRakipIsim} (Gücü: {guresRakipGuc})</color>\n\n" +
-                        $"<color=#66001D>Kimi yollayacaksın? (Askerinin gücü, yeşil başarı alanını büyütecektir!)</color>";
+                        $"<color=#66001D>Kimi yollayacaksın? (Askerinin gücü üzerine 6'lık zar atılacaktır.)</color>";
         
         Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
         bool hasValidSoldier = false;
@@ -1141,76 +1088,33 @@ public void SetupDervishEvent()
                 int askerGuc = soldier.data.strength;
                 string btnText = $"{soldier.data.gladiatorName} (Güç: {askerGuc})";
                 
-               CreateButton(btnText, () => {
-        
-        if (MoneyManager.Instance.gold >= 50)
-        {
-            MoneyManager.Instance.Spend(50);
-            
-            // HATA BURADAYDI: ClosePanel() etkinliği tamamen siliyordu!
-            // YENİ HALİ: Sadece görseli geçici olarak gizle
-            this.gameObject.SetActive(false); 
-            
-            if (WrestlingMiniGame.Instance != null)
-            {
-                WrestlingMiniGame.Instance.StartWrestling(soldier, guresRakipGuc, (isWin) => 
-                {
-                    ShowWrestlingResult(isWin, soldier); 
+                CreateButton(btnText, () => {
+                    
+                    if (MoneyManager.Instance.gold >= 50)
+                    {
+                        MoneyManager.Instance.Spend(50);
+                    
+                        
+                        ResolveContest(soldier, NodeType.YagliGures, askerGuc, guresRakipGuc, guresRakipIsim);
+                    }
+                    else
+                    {
+                        NotificationManager.Instance.Show("Güreşe katılmak için 50 Akçen yok!", NotificationType.Error);
+                    }
                 });
-            }
-        }
-        else
-        {
-            if (NotificationManager.Instance != null) NotificationManager.Instance.Show("Güreşe katılmak için 50 Akçen yok!", NotificationType.Error);
-        }
-    });
             }
         }
 
         if (!hasValidSoldier) descText.text += "\n\n<color=red>Gönderecek boşta askerin yok!</color>";
         
-        CreateButton("Bize Göre Değil (Ayrıl)", () => {
-            ClosePanel();
-        });
+        AddEscapeButton(
+            escapeText:    "Bize Göre Değil",
+            escapeType:    EscapeType.Costly,
+            reputationPenalty: 5,
+            onEscape:      () => { ClosePanel(); }
+        );
     }
-void ShowWrestlingResult(bool isWin, Gladiator soldier)
-    {
-        // 1. Parşömen paneli tekrar görünür yap
-        this.gameObject.SetActive(true); 
-        
-        // 2. Eski butonları temizle (Bunu kendi sistemine göre uyarla, muhtemelen ClearButtons() gibi bir fonksiyonun vardır)
-        // ClearButtons(); 
-        foreach (Transform child in buttonContainer) Destroy(child.gameObject); // Örnek temizleme kodu
 
-        // 3. Sonuca göre başlık ve metinleri değiştir
-        if (isWin)
-        {
-            titleText.text = "Başpehlivan!";
-            descText.text = $"{soldier.data.gladiatorName} er meydanında fırtına gibi esti! Rakibinin sırtını yere getirdi ve altın kemeri havaya kaldırdı.\n\n" +
-                            $"<color=green>Kazanılan: +30 İtibar, +100 Akçe</color>";
-            
-            // Ödülleri ver
-            MoneyManager.Instance.Add(100);
-            if (ReputationManager.Instance != null) ReputationManager.Instance.ChangeReputation(30);
-            
-            CreateButton("Zaferle Ayrıl", () => {
-                ClosePanel();
-            });
-        }
-        else
-        {
-            titleText.text = "Sırtı Yere Geldi...";
-            descText.text = $"{soldier.data.gladiatorName} elinden geleni yapsa da rakibinin omuzlamasına karşı koyamadı ve tuş oldu.\n\n" +
-                            $"<color=red>Askerin yara aldı ve moraliniz bozuldu.</color>";
-            
-            // Cezaları uygula (Örn: Askerin canını biraz düşür)
-            soldier.data.currentHealth -= 15;
-            
-            CreateButton("Sağlık Olsun", () => {
-                ClosePanel();
-            });
-        }
-    }
    
    private void ResolveContest(Gladiator selectedSoldier, NodeType eventType, int askerStat, int rakipStat, string rakipAd)
     {
@@ -1254,7 +1158,12 @@ void ShowWrestlingResult(bool isWin, Gladiator soldier)
             CreateButton("Devam Et", () => { ClosePanel(); });
         });
     }
-  private int GetCurrentTier()
+
+    /// <summary>
+    /// Mevcut encounter sayısına göre tier döner.
+    /// Tier 1: 0-4, Tier 2: 5-9, Tier 3: 10+
+    /// </summary>
+    private int GetCurrentTier()
     {
         if (ExpeditionManager.Instance == null) return 1;
         int count = ExpeditionManager.Instance.currentEncounterCount;
@@ -1262,6 +1171,7 @@ void ShowWrestlingResult(bool isWin, Gladiator soldier)
         if (count <= 9)  return 2;
         return 3;
     }
+
     public int GetAvailableSoldierCount()
     {
         Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
@@ -1314,5 +1224,133 @@ void ShowWrestlingResult(bool isWin, Gladiator soldier)
     private void GoToArcheryScene()
     {
         SceneManager.LoadScene("ArcheryMiniGame");
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // CENK ETKİNLİĞİ
+    // ══════════════════════════════════════════════════════════════════════
+    void SetupCenkEvent()
+    {
+        titleText.text = "Cenk Daveti";
+        if (merchant != null) eventImage.sprite = merchant;
+
+        // Rakip gücü tier'a göre değişir
+        int tier        = GetCurrentTier();
+        int opponentPts = tier == 1 ? 20 : tier == 2 ? 35 : 50;
+
+        descText.text =
+            $"Yolun üzerinde bir han var. İçeride birkaç er seni Cenk masasına çağırıyor.\n\n" +
+            $"<color=#66001D>Rakip Gücü: ~{opponentPts} puan</color>\n\n" +
+            $"Kazanırsan itibar kazanırsın. Kaybedersen moral düşer.";
+
+        CreateButton("Masaya Otur", () =>
+        {
+            if (CenkGameManager.Instance == null) { ClosePanel(); return; }
+
+            ClosePanel(); // Parşömen ekranını kapat
+            CenkGameManager.Instance.OnCenkFinished = (won) =>
+            {
+                if (won)
+                {
+                    int rep = 10 + (tier - 1) * 5;
+                    ReputationManager.Instance?.ChangeReputation(rep);
+                    NotificationManager.Instance?.Show(
+                        $"Cenk'i kazandın! +{rep} İtibar", NotificationType.Success);
+                }
+                else
+                {
+                    CampMoraleManager.Instance?.ChangeMorale(-10);
+                    NotificationManager.Instance?.Show(
+                        "Cenk'i kaybettin. -10 Moral", NotificationType.Warning);
+                }
+            };
+            CenkGameManager.Instance.OpenMinigame();
+        });
+
+        // Kaçış — nasibe bağlı
+        AddEscapeButton(
+            escapeText:    "Aldırma, devam et",
+            escapeType:    EscapeType.Optional,
+            nasipRequired: 2,
+            onEscape:      () => { ClosePanel(); }
+        );
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MERKEZİ KAÇIŞ SİSTEMİ
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Kaçış türü — her event ne kadar "zorunlu" olduğunu belirtir.
+    /// </summary>
+    public enum EscapeType
+    {
+        /// <summary>Her zaman kaçılabilir, ceza yok.</summary>
+        Free,
+        /// <summary>Nasip yeterince yüksekse kaçılabilir.</summary>
+        Optional,
+        /// <summary>Kaçmak itibar cezası verir.</summary>
+        Costly,
+        /// <summary>Kaçmak mümkün değil — event zorunlu.</summary>
+        Mandatory
+    }
+
+    /// <summary>
+    /// Event paneline kaçış butonu ekler.
+    /// Nasip sistemiyle entegre — yeterli nasip yoksa buton grileşir.
+    /// </summary>
+    private void AddEscapeButton(
+        string     escapeText,
+        EscapeType escapeType,
+        int        nasipRequired = 0,
+        int        reputationPenalty = 0,
+        System.Action onEscape = null)
+    {
+        if (escapeType == EscapeType.Mandatory) return; // Kaçış yok
+
+        int currentNasip = NasipManager.Instance != null
+            ? NasipManager.Instance.currentNasip : 0;
+
+        switch (escapeType)
+        {
+            case EscapeType.Free:
+                CreateButton(escapeText, () =>
+                {
+                    onEscape?.Invoke();
+                });
+                break;
+
+            case EscapeType.Optional:
+                bool canEscape = currentNasip >= nasipRequired;
+                string optText = canEscape
+                    ? $"{escapeText} (Nasip: {currentNasip}✓)"
+                    : $"{escapeText} (Nasip Yeterli Değil: {currentNasip}/{nasipRequired})";
+
+                CreateButton(optText, () =>
+                {
+                    if (!canEscape)
+                    {
+                        NotificationManager.Instance?.Show(
+                            $"Nasibin bu zorluktan kaçmak için yeterli değil! ({currentNasip}/{nasipRequired})",
+                            NotificationType.Warning);
+                        return; // Paneli kapatma, event devam eder
+                    }
+                    NasipManager.Instance?.SpendNasip(1); // Kaçmak 1 nasip harcar
+                    onEscape?.Invoke();
+                });
+                break;
+
+            case EscapeType.Costly:
+                int penalty = reputationPenalty > 0 ? reputationPenalty : 10;
+                CreateButton($"{escapeText} (-{penalty} İtibar)", () =>
+                {
+                    ReputationManager.Instance?.ChangeReputation(-penalty);
+                    NotificationManager.Instance?.Show(
+                        $"Kaçtın ama itibar zedelendi. (-{penalty} İtibar)",
+                        NotificationType.Warning);
+                    onEscape?.Invoke();
+                });
+                break;
+        }
     }
 }

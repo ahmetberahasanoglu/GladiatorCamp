@@ -143,7 +143,7 @@ public class GladiatorInventory : MonoBehaviour
         Debug.LogWarning($"<color=yellow>DİKKAT:</color> Karakterin içinde '{meshName}' adında bir model bulunamadı!");
     }
 
-    void RecalculateStats()
+   void RecalculateStats()
     {
         data.strength = baseStr;
         data.defense = baseDef;
@@ -155,7 +155,22 @@ public class GladiatorInventory : MonoBehaviour
         AddBonus(helmet);
         AddBonus(shield);
         
-        // --- YENİ: SET DURUMUNU KONTROL ET ---
+        // ── YENİ: SİLAH TÜRÜ VE MENZİLİNİ DATA'YA AKTAR ──
+        if (weapon != null)
+        {
+            data.weaponClass = weapon.weaponClass;
+            data.attackRange = weapon.weaponRange;
+            data.isRanged    = weapon.isRanged;
+        }
+        else
+        {
+            // Silahsızsa (Yumruk) varsayılan değerler
+            data.weaponClass = WeaponClass.Unarmed; 
+            data.attackRange = 1.5f; 
+            data.isRanged    = false;
+        }
+        // ─────────────────────────────────────────────────
+
         CalculateSetBonus();
 
         GetComponent<Gladiator>().RefreshStats();

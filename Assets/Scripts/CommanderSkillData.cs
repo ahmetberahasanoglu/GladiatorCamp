@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public enum CommanderSkillType { HealAll, DamageAllEnemies, StunEnemies }
+public enum CommanderSkillType { HealAll, DamageAllEnemies, StunEnemies , HealSingle,   DamageSingle,     BuffAll}
 
 [CreateAssetMenu(fileName = "NewCommanderSkill", menuName = "Game/Commander Skill")]
 public class CommanderSkillData : ScriptableObject

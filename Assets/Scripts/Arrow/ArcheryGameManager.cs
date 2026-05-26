@@ -13,6 +13,7 @@ public class ArcheryGameManager : MonoBehaviour
     private int totalScore = 0;
 
     public bool isGameOver = false; 
+    private bool isWon=false;
 
     [Header("UI Elemanları")]
     public TextMeshProUGUI scoreText; // Sol üstteki Puan yazısı
@@ -42,7 +43,8 @@ public class ArcheryGameManager : MonoBehaviour
         UpdateUI();
         if (resultPanel != null) resultPanel.SetActive(false);
 
-        int soldierSpeed = PlayerPrefs.GetInt("ArcherySoldierSpeed", 20);
+       int soldierSpeed = ArcheryBridge.SoldierSpeed;
+string soldierName = ArcheryBridge.SoldierName;
         if (WindManager.Instance != null)
             WindManager.Instance.SetSoldierStat(soldierSpeed);
     }
@@ -78,11 +80,7 @@ public class ArcheryGameManager : MonoBehaviour
         if (scoreText != null) scoreText.text = $"{totalScore} / {targetScore}";//Puan: 
         if (shotText != null) shotText.text = $"{currentShots} / {maxShots}";//Atış: 
     }
-public void ReturnToMap()
-    {
-        // Harita sahnesinin adını buraya tam doğru yazdığından emin ol!
-        SceneManager.LoadScene("CampScene"); 
-    }
+
     void EndGame()
     {
       isGameOver = true; 
@@ -96,6 +94,7 @@ public void ReturnToMap()
         // KAZANDIK MI KAYBETTİK Mİ?
         if (totalScore >= targetScore)
         {
+            isWon=true;
            if(titleText) { titleText.text = "TEBRİKLER!";  } // titleText.color = new Color(0.2f, 0.4f, 0.1f);
             if(descText) descText.text = $"Türkmen Beyi yeteneğinden etkilendi. İddialaştığın puanı geçtin.\nToplam Puan: {totalScore}";
             if(rewardText) rewardText.text = $"+{rewardGold} Altın\n+{rewardReputation} İtibar";
@@ -106,12 +105,17 @@ public void ReturnToMap()
         }
         else
         {
+            isWon=false;
             if(titleText) { titleText.text = "BAŞARISIZ"; titleText.color = new Color(0.6f, 0.1f, 0.1f); } // Koyu Kırmızı
             if(descText) descText.text = $"Bey sana güldü, Yeterli puanı toplayamadın.\n(Gereken: {targetScore}, Sen: {totalScore})";
             if(rewardText) rewardText.text = "Ödül Yok";
         }
     }
-
+public void ReturnToMap()
+    {
+        ArcheryBridge.SetResult(isWon, totalScore);
+        SceneManager.LoadScene("CampScene"); 
+    }
     // Sonuç panelindeki "Geri Dön" butonuna bunu bağlayacağız
     public void ReturnToMainGame()
     {

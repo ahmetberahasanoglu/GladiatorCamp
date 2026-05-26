@@ -2,8 +2,9 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using TMPro;
+using System.Collections;
+using System.Collections.Generic;
 
-// YENİ: UnderConstruction (İnşa Halinde) durumu eklendi!
 public enum BuildingState { Locked, Ruined, UnderConstruction, Built }
 
 public class BuildingClickable : MonoBehaviour
@@ -17,157 +18,184 @@ public class BuildingClickable : MonoBehaviour
     [Header("UI Bilgilendirme (3D Yazı)")]
     public TextMeshProUGUI statusText;
 
-    [Header("İnşaat Süresi (Roguelite)")]
-    public int requiredEncounters = 3; 
-    public int currentRemainingEncounters = 0; 
+    [Header("İnşaat Süresi")]
+    [Tooltip("Kaç harita adımı VEYA kaç gün geçince tamamlansın")]
+    public int requiredEncounters = 3;
+    public int currentRemainingEncounters = 0;
 
-    [Header("Görseller (Modeller)")]
-    public GameObject ruinedModel; 
-    public GameObject builtModel;  
-    public GameObject constructionModel; // Opsiyonel: İnşaat halinde görünmesi için iskele modeli (Yoksa ruined kalır)
+    [Tooltip("Gün geçince de ilerlesin mi? (Her daysPerProgress günde 1 ilerleme)")]
+    public bool progressOnDayPass = true;
+    [Tooltip("Kaç günde bir inşaat ilerlesin")]
+    public int daysPerProgress = 1;
+    private int _daysSinceLastProgress = 0;
 
-    [Header("Renk Değişimi")]
-    public Color highlightColor = Color.yellow;
-    private Renderer _renderer; 
-    private Color _originalColor;
+    [Header("Görseller")]
+    public GameObject ruinedModel;
+    public GameObject builtModel;
+    public GameObject constructionModel;
 
-    [Header("Efektler (Juiciness)")]
-    public GameObject buildEffectPrefab; 
-    public Vector3 effectOffset = new Vector3(0, 2f, 0); 
+    [Header("Efektler")]
+    public GameObject buildEffectPrefab;
+    public Vector3    effectOffset = new Vector3(0, 2f, 0);
 
     [Header("Olaylar")]
-    public UnityEvent OnBuiltClick;   
-    public UnityEvent<BuildingClickable> OnRepairClick; 
+    public UnityEvent OnBuiltClick;
+    public UnityEvent<BuildingClickable> OnRepairClick;
 
-    void Start()
+    // ── Hover / Click ────────────────────────────────────────────────────
+    [Header("Hover Ayarları")]
+    public float hoverScaleAdd = 0.06f;
+    public float scaleAnimTime = 0.12f;
+
+    [Header("Outline Renkleri")]
+    public Color outlineColorBuilt        = new Color(1f,   0.85f, 0.2f,  1f);
+    public Color outlineColorConstruction = new Color(0.3f, 0.8f,  1f,   1f);
+    public Color outlineColorRuined       = new Color(0.9f, 0.2f,  0.1f, 1f);
+
+    [Header("Ses")]
+    public AudioClip hoverSound;
+    public AudioClip clickSound;
+    private AudioSource _audio;
+
+    // ── İç durum ─────────────────────────────────────────────────────────
+    private Vector3       _baseScale;
+    private Coroutine     _scaleCoroutine;
+    private bool          _isHovered = false;
+
+    // Outline component'leri — ruined ve built modelin her ikisinden toplanır
+    private List<Outline> _outlines = new List<Outline>();
+
+    // ─────────────────────────────────────────────────────────────────────
+
+    void Awake()
     {
-        UpdateVisuals();
+        _audio = GetComponent<AudioSource>();
+        if (_audio == null) _audio = gameObject.AddComponent<AudioSource>();
+        _audio.spatialBlend = 1f;
+        _audio.playOnAwake  = false;
     }
 
-    void OnMouseEnter()
-    {
-        if (EventSystem.current.IsPointerOverGameObject()) return;
-        if (_renderer != null) _renderer.material.color = highlightColor;
-    }
+   void Start()
+{
+    _baseScale = transform.localScale;
 
-    void OnMouseExit()
-    {
-        if (_renderer != null) _renderer.material.color = _originalColor;
-    }
-// BuildingClickable.cs içine ekle
+    // Önce tüm modelleri aktif et, outline'ları topla, sonra geri kapat
+    if (ruinedModel       != null) ruinedModel.SetActive(true);
+    if (builtModel        != null) builtModel.SetActive(true);
+    if (constructionModel != null) constructionModel.SetActive(true);
+
+    CollectOutlines();   // Hepsi aktifken topla
+
+    UpdateVisuals();     // Sonra doğru modeli aç, gerisini kapat
+}
+
     void OnEnable()
     {
-        ExpeditionManager.OnEncounterAdvanced += AdvanceConstructionTimer;
+        ExpeditionManager.OnEncounterAdvanced += OnEncounterAdvanced;
+
+        if (DayManager.Instance != null)
+            DayManager.Instance.OnNewDay += OnNewDay;
     }
 
     void OnDisable()
     {
-        ExpeditionManager.OnEncounterAdvanced -= AdvanceConstructionTimer;
+        ExpeditionManager.OnEncounterAdvanced -= OnEncounterAdvanced;
+
+        if (DayManager.Instance != null)
+            DayManager.Instance.OnNewDay -= OnNewDay;
     }
 
-    // Fonksiyonu şu şekilde değiştir:
-   
+    // ── Outline Toplama — ruined + built her ikisinden ───────────────────
+    void CollectOutlines()
+    {
+        _outlines.Clear();
+
+        // Ruined modelin outline'ları
+        if (ruinedModel != null)
+            _outlines.AddRange(ruinedModel.GetComponentsInChildren<Outline>(true));
+
+        // Built modelin outline'ları
+        if (builtModel != null)
+            _outlines.AddRange(builtModel.GetComponentsInChildren<Outline>(true));
+
+        // Construction modelinin outline'ları (varsa)
+        if (constructionModel != null)
+            _outlines.AddRange(constructionModel.GetComponentsInChildren<Outline>(true));
+
+        // Başta hepsini kapat
+        foreach (var o in _outlines) o.enabled = false;
+    }
+
+    // ── HOVER ─────────────────────────────────────────────────────────────
+    void OnMouseEnter()
+    {
+        if (EventSystem.current.IsPointerOverGameObject()) return;
+        if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
+
+        _isHovered = true;
+        AnimateScale(_baseScale + Vector3.one * hoverScaleAdd);
+        SetOutlines(true);
+        if (hoverSound != null) _audio.PlayOneShot(hoverSound);
+    }
+
+    void OnMouseExit()
+    {
+        _isHovered = false;
+        AnimateScale(_baseScale);
+        SetOutlines(false);
+    }
+
+    // ── CLICK ─────────────────────────────────────────────────────────────
     public void OnMouseDown()
     {
         if (UIBlocker.IsPointerOverUI()) return;
         if (EventSystem.current.IsPointerOverGameObject()) return;
         if (MapManager.Instance != null && MapManager.Instance.isMapOpen) return;
-        
+
+        StartCoroutine(ClickPunch());
+        if (clickSound != null) _audio.PlayOneShot(clickSound);
+
         switch (currentState)
         {
             case BuildingState.Ruined:
-                if (RepairPanelManager.Instance != null)
-                {
-                    RepairPanelManager.Instance.OpenPanel(this);
-                }
+                RepairPanelManager.Instance?.OpenPanel(this);
                 break;
 
             case BuildingState.UnderConstruction:
-                // YENİ: İnşaat halindeyken tıklanırsa kalan süreyi gösterir!
-                NotificationManager.Instance.Show($"{buildingName} inşa ediliyor... Tamamlanmasına {currentRemainingEncounters} sefer (adım) kaldı.", NotificationType.Warning);
+                NotificationManager.Instance.Show(
+                    $"{buildingName} inşa ediliyor... {currentRemainingEncounters} adım kaldı.",
+                    NotificationType.Warning);
                 break;
 
             case BuildingState.Built:
                 NotificationManager.Instance.Show($"{buildingName} binasına girdin.", NotificationType.Info);
                 OnBuiltClick?.Invoke();
                 break;
-            
+
             case BuildingState.Locked:
                 NotificationManager.Instance.Show("Bu bina henüz kilitli!", NotificationType.Info);
                 break;
         }
     }
 
-    public void UpdateVisuals()
+    // ── İNŞAAT İLERLEMESİ — Harita Adımı ────────────────────────────────
+    void OnEncounterAdvanced() => AdvanceConstruction(source: "sefer adımı");
+
+    // ── İNŞAAT İLERLEMESİ — Gün Geçişi ──────────────────────────────────
+    void OnNewDay()
     {
-        if (ruinedModel != null) ruinedModel.SetActive(currentState == BuildingState.Ruined);
-        if (builtModel != null) builtModel.SetActive(currentState == BuildingState.Built);
-        if (constructionModel != null) constructionModel.SetActive(currentState == BuildingState.UnderConstruction);
-        
-        GameObject activeModel = null;
-        if (currentState == BuildingState.Built) activeModel = builtModel;
-        else if (currentState == BuildingState.Ruined) activeModel = ruinedModel;
-        else if (currentState == BuildingState.UnderConstruction) 
-        {
-            activeModel = constructionModel != null ? constructionModel : ruinedModel; // İskele modeli yoksa harabeyi göster
-        }
+        if (!progressOnDayPass) return;
+        if (currentState != BuildingState.UnderConstruction) return;
 
-        if (activeModel != null)
+        _daysSinceLastProgress++;
+        if (_daysSinceLastProgress >= daysPerProgress)
         {
-            _renderer = activeModel.GetComponentInChildren<Renderer>();
-            if (_renderer != null) _originalColor = _renderer.material.color;
-        }
-        UpdateStatusText();
-    }
-
-
-public int GetEffectiveCost() {
-    if (MetaProgressionManager.Instance != null && MetaProgressionManager.Instance.HasRelic(RelicType.DemirDovucu)) {
-        return Mathf.RoundToInt(repairCost * 0.8f);     
-    }
-    return repairCost;
-}
-    public void StartRepair()
-    {
-        if (MoneyManager.Instance != null && MoneyManager.Instance.gold >= repairCost)
-        {
-            MoneyManager.Instance.Spend(repairCost); 
-            
-            // İnşaatı Başlat
-            currentState = BuildingState.UnderConstruction;
-            currentRemainingEncounters = requiredEncounters;
-            UpdateVisuals(); 
-
-            NotificationManager.Instance.Show($"{buildingName} inşaatı başladı! {requiredEncounters} sefer adımından sonra hazır olacak.", NotificationType.Info);
-        }
-        else
-        {
-            NotificationManager.Instance.Show("Hazine tam takır! Yeterli akçe yok.", NotificationType.Error);
-        }
-    }
-    private void UpdateStatusText()
-    {
-        if (statusText == null) return;
-
-        switch (currentState)
-        {
-            case BuildingState.Locked:
-                statusText.text = $"<color=#888888>{buildingName}\n<size=70%>(Kilitli)</size></color>";
-                break;
-            case BuildingState.Ruined:
-                statusText.text = $"{buildingName}\n<size=70%>(Harabe)</size>";
-                break;
-            case BuildingState.UnderConstruction:
-                statusText.text = $"<color=yellow>{buildingName}\n<size=70%>({currentRemainingEncounters} Sefer Kaldı)</size></color>";
-                break;
-            case BuildingState.Built:
-                statusText.text = $"<color=white>{buildingName}</color>"; 
-                break;
+            _daysSinceLastProgress = 0;
+            AdvanceConstruction(source: "gün");
         }
     }
 
-   
-    public void AdvanceConstructionTimer()
+    void AdvanceConstruction(string source)
     {
         if (currentState != BuildingState.UnderConstruction) return;
 
@@ -176,14 +204,140 @@ public int GetEffectiveCost() {
         if (currentRemainingEncounters <= 0)
         {
             currentState = BuildingState.Built;
+            _daysSinceLastProgress = 0;
+
             if (buildEffectPrefab != null)
-            {
-                Vector3 spawnPos = transform.position + effectOffset;
-                Destroy(Instantiate(buildEffectPrefab, spawnPos, Quaternion.identity), 3f);
-            }
-            NotificationManager.Instance.Show($"Müjde! {buildingName} inşası tamamlandı!", NotificationType.Success);
+                Destroy(Instantiate(buildEffectPrefab, transform.position + effectOffset, Quaternion.identity), 3f);
+
+            NotificationManager.Instance.Show(
+                $"Müjde! {buildingName} inşası tamamlandı!",
+                NotificationType.Success);
+
+            // Outline'ları yeni duruma göre güncelle
+            CollectOutlines();
         }
-        
-        UpdateVisuals(); 
+        else
+        {
+            NotificationManager.Instance.Show(
+                $"{buildingName}: {currentRemainingEncounters} adım kaldı. ({source})",
+                NotificationType.Info);
+        }
+
+        UpdateVisuals();
+    }
+
+    // ── VİZUELLER ─────────────────────────────────────────────────────────
+    public void UpdateVisuals()
+    {
+        if (ruinedModel       != null) ruinedModel.SetActive(currentState == BuildingState.Ruined);
+        if (builtModel        != null) builtModel.SetActive(currentState == BuildingState.Built);
+        if (constructionModel != null) constructionModel.SetActive(currentState == BuildingState.UnderConstruction);
+
+        // Hover aktifse outline'ları yenile (model değişmiş olabilir)
+        if (_isHovered) SetOutlines(true);
+        else            SetOutlines(false);
+
+        UpdateStatusText();
+    }
+
+    void SetOutlines(bool visible)
+    {
+        Color c = currentState switch
+        {
+            BuildingState.Built             => outlineColorBuilt,
+            BuildingState.UnderConstruction => outlineColorConstruction,
+            BuildingState.Ruined            => outlineColorRuined,
+            _                               => Color.gray
+        };
+
+        foreach (var o in _outlines)
+        {
+            if (o == null) continue;
+            // Sadece aktif modeldeki outline'ı aç
+            bool modelActive = o.gameObject.activeInHierarchy;
+            o.enabled        = visible && modelActive;
+            if (o.enabled) o.OutlineColor = c;
+        }
+    }
+
+    // ── ANİMASYONLAR ──────────────────────────────────────────────────────
+    void AnimateScale(Vector3 target)
+    {
+        if (_scaleCoroutine != null) StopCoroutine(_scaleCoroutine);
+        _scaleCoroutine = StartCoroutine(ScaleRoutine(target));
+    }
+
+    IEnumerator ScaleRoutine(Vector3 target)
+    {
+        Vector3 start = transform.localScale;
+        float t = 0f;
+        while (t < scaleAnimTime)
+        {
+            t += Time.unscaledDeltaTime;
+            transform.localScale = Vector3.Lerp(start, target, t / scaleAnimTime);
+            yield return null;
+        }
+        transform.localScale = target;
+    }
+
+    IEnumerator ClickPunch()
+    {
+        Vector3 hovered  = _baseScale + Vector3.one * hoverScaleAdd;
+        Vector3 punched  = _baseScale - Vector3.one * (hoverScaleAdd * 0.5f);
+        float   half     = scaleAnimTime * 0.5f;
+        Vector3 start    = transform.localScale;
+        float t = 0f;
+        while (t < half) { t += Time.unscaledDeltaTime; transform.localScale = Vector3.Lerp(start, punched, t / half); yield return null; }
+        t = 0f;
+        Vector3 returnTo = _isHovered ? hovered : _baseScale;
+        while (t < half) { t += Time.unscaledDeltaTime; transform.localScale = Vector3.Lerp(punched, returnTo, t / half); yield return null; }
+        transform.localScale = returnTo;
+    }
+
+    // ── ONARIM ────────────────────────────────────────────────────────────
+    public int GetEffectiveCost()
+    {
+        if (MetaProgressionManager.Instance != null &&
+            MetaProgressionManager.Instance.HasRelic(RelicType.DemirDovucu))
+            return Mathf.RoundToInt(repairCost * 0.8f);
+        return repairCost;
+    }
+
+    public void StartRepair()
+    {
+        if (MoneyManager.Instance != null && MoneyManager.Instance.gold >= repairCost)
+        {
+            MoneyManager.Instance.Spend(repairCost);
+            currentState = BuildingState.UnderConstruction;
+            currentRemainingEncounters = requiredEncounters;
+            _daysSinceLastProgress = 0;
+            UpdateVisuals();
+            CollectOutlines();
+
+            string progressNote = progressOnDayPass
+                ? $"Her {daysPerProgress} günde veya her sefer adımında ilerler."
+                : "Sefer adımlarında ilerler.";
+
+            NotificationManager.Instance.Show(
+                $"{buildingName} inşaatı başladı! {requiredEncounters} adım kaldı. {progressNote}",
+                NotificationType.Info);
+        }
+        else
+        {
+            NotificationManager.Instance.Show("Yeterli akçe yok!", NotificationType.Error);
+        }
+    }
+
+    private void UpdateStatusText()
+    {
+        if (statusText == null) return;
+        statusText.text = currentState switch
+        {
+            BuildingState.Locked            => $"<color=#888888>{buildingName}\n<size=70%>(Kilitli)</size></color>",
+            BuildingState.Ruined            => $"{buildingName}\n<size=70%>(Harabe)</size>",
+            BuildingState.UnderConstruction => $"<color=yellow>{buildingName}\n<size=70%>({currentRemainingEncounters} Adım Kaldı)</size></color>",
+            BuildingState.Built             => $"<color=white>{buildingName}</color>",
+            _                               => buildingName
+        };
     }
 }

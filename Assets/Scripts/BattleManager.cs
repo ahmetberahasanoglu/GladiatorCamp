@@ -139,9 +139,9 @@ public class BattleManager : MonoBehaviour
         if (retreatConfirmText != null)
         {
             retreatConfirmText.text =
-                $"Geri çekilmek istiyor musun?\n\n" +
+                $"Geri çekilmek istiyor musun?\n" +
                 $"Sağ asker sayısı: <color=yellow>{aliveSoldiers}</color>\n" +
-                $"İtibar cezası: <color=red>-{penalty}</color>\n\n" +
+                $"İtibar cezası: <color=red>-{penalty}</color>\n" +
                 $"<size=80%>Geri çekilmek bu savaşı kaybettirir.</size>";
         }
 
@@ -322,6 +322,11 @@ public class BattleManager : MonoBehaviour
         if (skillPanel != null) skillPanel.SetActive(true);
         topPanel.SetActive(false);
         bgPanel.SetActive(false);
+        if (BattleElementUI.Instance != null)
+        {
+            BattleElementUI.Instance.Show();
+            BattleElementUI.Instance.Refresh(); // Askerler doğdu, hemen say!
+        }
     }
 
     // ── SAVAŞ KONTROLÜ ───────────────────────────────────────────────────
@@ -356,6 +361,7 @@ public class BattleManager : MonoBehaviour
         if (skillPanel != null) skillPanel.SetActive(false);
         topPanel.SetActive(true);
 
+
         if (isVictory)
         {
             // --- Relic çarpanını ödüle uygula ---
@@ -367,13 +373,29 @@ public class BattleManager : MonoBehaviour
             int foodReward   = _currentEnemyCount * 10;
             int moraleReward = 10 + (_currentDifficulty * 5);
             int repReward    = 5 * _currentDifficulty;
+            string nushaMetni = "";
+            if ((pendingEnv == BattleEnvironment.Cave || _currentDifficulty >= 5) && MapEventManager.Instance != null && MapEventManager.Instance.nadirFermanlar.Count > 0)
+            {
+                ItemData dusenFerman = MapEventManager.Instance.nadirFermanlar[Random.Range(0, MapEventManager.Instance.nadirFermanlar.Count)];
+                ExpeditionManager.Instance.tempItems.Add(dusenFerman);
+                
+                nushaMetni = $"\n<color=#00FFFF>Düşman Komutanından düştü: {dusenFerman.itemName}</color>";
+            }
+            // Normal savaşlarda çok düşük ihtimalle (%10) yaygın nüsha düşsün
+            else if (Random.Range(0, 100) < 10 && MapEventManager.Instance != null && MapEventManager.Instance.yayginNushalar.Count > 0)
+            {
+                ItemData dusenNusha = MapEventManager.Instance.yayginNushalar[Random.Range(0, MapEventManager.Instance.yayginNushalar.Count)];
+                ExpeditionManager.Instance.tempItems.Add(dusenNusha);
+                
+                nushaMetni = $"\n<color=#00FFFF>Cesetlerin arasında bulundu: {dusenNusha.itemName}</color>";
+            }
 
             if (lootText != null)
                 lootText.text =
                     $"ZAFER!\n\n" +
                     $"<color=yellow>+{goldReward} Akçe (Çantaya)</color>\n" +
                     $"<color=green>+{repReward} İtibar (Çantaya)</color>\n" +
-                    $"+{foodReward} Erzak\n+{moraleReward} Moral" +
+                    $"+{foodReward} Erzak\n+{moraleReward} Moral" + nushaMetni+
                     (lootMult > 1f ? $"\n<color=yellow><size=75%>★ Bereketli Yol bonusu aktif</size></color>" : "");
 
             if (ExpeditionManager.Instance != null && ExpeditionManager.Instance.isExpeditionActive)
@@ -422,7 +444,7 @@ public class BattleManager : MonoBehaviour
         lootPanel.SetActive(false);
         defeatPanel.SetActive(false);
         bgPanel.SetActive(false);
-
+        if (BattleElementUI.Instance != null) BattleElementUI.Instance.Hide();
         bool isWinter = DayManager.Instance.currentDay >= DayManager.Instance.maxDays;
         AudioManager.Instance?.PlayCampMusic(isWinter);
 
@@ -573,8 +595,20 @@ public class BattleManager : MonoBehaviour
                     {
                         foreach (var meshName in randomEnemyType.activeMeshNames)
                         {
-                            var meshObj = newEnemy.transform.Find(meshName);
-                            if (meshObj != null) meshObj.gameObject.SetActive(true);
+                            // ESKİ KOD: var meshObj = newEnemy.transform.Find(meshName);
+                            
+                            // YENİ KOD: Derinlemesine arama yap
+                            Transform meshObj = FindDeepChild(newEnemy.transform, meshName);
+                            
+                            if (meshObj != null) 
+                            {
+                                meshObj.gameObject.SetActive(true);
+                            }
+                            else
+                            {
+                                // Eğer ismini yanlış yazarsan konsolda seni uyarsın
+                                Debug.LogWarning($"{randomEnemyType.displayName} prefabı içinde '{meshName}' bulunamadı! Harf hatası olabilir mi?");
+                            }
                         }
                     }
                 }
@@ -596,6 +630,20 @@ public class BattleManager : MonoBehaviour
             col++;
             if (col > 5) { col = 0; row++; }
         }
+    }
+ 
+    Transform FindDeepChild(Transform parent, string childName)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == childName)
+                return child;
+            
+            Transform result = FindDeepChild(child, childName);
+            if (result != null)
+                return result;
+        }
+        return null;
     }
 
     // ── ORTAM ────────────────────────────────────────────────────────────

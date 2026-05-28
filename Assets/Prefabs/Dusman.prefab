@@ -3388,6 +3388,37 @@ Transform:
   - {fileID: 3611785769483936812}
   m_Father: {fileID: 7343938663511013618}
   m_LocalEulerAnglesHint: {x: -11.998766, y: 6.9115314, z: -166.5702}
+--- !u!1 &6112968969689096144
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5640186561119130249}
+  m_Layer: 0
+  m_Name: arrowspawnpoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5640186561119130249
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6112968969689096144}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.702, y: 0, z: 0.372}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6099193593116981986}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6184715599187109481
 GameObject:
   m_ObjectHideFlags: 0
@@ -3973,7 +4004,8 @@ Transform:
   m_LocalPosition: {x: -0.02, y: -0, z: 0.171}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 5640186561119130249}
   m_Father: {fileID: 1532242229316814534}
   m_LocalEulerAnglesHint: {x: 0.009, y: 0, z: 0.019}
 --- !u!33 &7136916606870648135
@@ -5511,6 +5543,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3689324531303967068, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3917729198740615885, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
       propertyPath: enemyTag
       value: MySoldier
@@ -5518,7 +5554,7 @@ PrefabInstance:
     - target: {fileID: 3917729198740615885, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
       propertyPath: arrowSpawnPoint
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 5640186561119130249}
     - target: {fileID: 3917729198740615885, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
       propertyPath: baseAttackAnimLength
       value: 1.5

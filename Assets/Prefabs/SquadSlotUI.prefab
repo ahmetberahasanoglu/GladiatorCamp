@@ -561,9 +561,9 @@ MonoBehaviour:
   backgroundImage: {fileID: 2517545498763309338}
   borderImage: {fileID: 8806019582469881717}
   toggleButton: {fileID: 1550997222149273232}
-  normalBg: {r: 0.15, g: 0.15, b: 0.15, a: 1}
-  selectedBg: {r: 0.12, g: 0.25, b: 0.12, a: 1}
-  injuredBg: {r: 0.25, g: 0.08, b: 0.08, a: 1}
+  normalBg: {r: 1, g: 1, b: 1, a: 1}
+  selectedBg: {r: 0.60583127, g: 0.94716984, b: 0.60583127, a: 1}
+  injuredBg: {r: 0.3132075, g: 0, b: 0, a: 1}
   normalBorder: {r: 0.4, g: 0.4, b: 0.4, a: 1}
   selectedBorder: {r: 1, g: 0.84, b: 0.1, a: 1}
   selectScale: 1.08

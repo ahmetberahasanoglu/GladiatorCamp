@@ -23,7 +23,7 @@ MonoBehaviour:
   weaponBonus: 1
   armorBonus: 0
   weaponClass: 0
-  weaponRange: 1.5
+  weaponRange: 2
   isRanged: 0
   activeMeshNames:
   - Sword2

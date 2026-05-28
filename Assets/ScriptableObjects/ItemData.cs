@@ -5,7 +5,8 @@ public enum ItemType
     Weapon,
     Armor,
     Shield,
-    Helmet
+    Helmet,
+    Nusha
 }
 
 public enum ItemSetType
@@ -38,6 +39,10 @@ public class ItemData : ScriptableObject
     [Header("Skinned Mesh")]
     [Tooltip("Karakterin içindeki açılacak mesh objesinin tam adı. Örn: Sword_Iron")]
     public string targetMeshName;
+    
+    [Header("Eğer Eşya Nüsha (Büyü) ise Doldurulacak:")]
+    [Tooltip("Bu kağıt/ferman savaşta hangi yeteneği tetikleyecek?")]
+    public CommanderSkillData spellData;
 
     [Header("Stats")]
     public int bonusStrength;

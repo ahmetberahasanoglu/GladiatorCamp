@@ -76,6 +76,17 @@ public class GladiatorAI : MonoBehaviour
     [Header("Savaş Durumu")]
     public bool isInBattle = false; 
 
+    [Header("Enerji (Ulti) Sistemi")]
+public float currentEnergy = 0f;
+public float maxEnergy = 100f;
+public UnityEngine.UI.Image energyFillImage; // Inspector'dan yeni yaptığın ince barı bağla
+public ParticleSystem ultimateVFX; // Ulti atarken çıkacak partikül (örn: alev, parlama)
+
+
+    // YENİ: Ulti Kontrolcüleri
+    private bool isCastingUltimate = false; 
+    private bool isUltimateStrike = false;
+
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -146,11 +157,20 @@ public class GladiatorAI : MonoBehaviour
             direction.y = 0;
             if(direction != Vector3.zero) transform.rotation = Quaternion.LookRotation(direction);
 
-            if (!isAttacking && Time.time > lastAttackTime + (0.1f / CurrentAttackSpeed))
-            {
-                if (_attackCoroutine != null) StopCoroutine(_attackCoroutine);
-                _attackCoroutine = StartCoroutine(AttackRoutine());
-            }
+          if (!isAttacking && !isCastingUltimate && Time.time > lastAttackTime + (0.1f / CurrentAttackSpeed))
+{
+    if (currentEnergy >= maxEnergy)
+    {
+        // Enerji tamamsa Ulti Rutinini başlat!
+        StartCoroutine(CastUltimateRoutine());
+    }
+    else
+    {
+        // Değilse normal saldırı
+        if (_attackCoroutine != null) StopCoroutine(_attackCoroutine);
+        _attackCoroutine = StartCoroutine(AttackRoutine());
+    }
+}
         }
         else
         {
@@ -165,6 +185,25 @@ public class GladiatorAI : MonoBehaviour
             }
         }
     }
+    public void GainEnergy(float amount)
+{
+    if (currentEnergy >= maxEnergy || isDead) return;
+
+    currentEnergy += amount;
+    
+    // UI Barını güncelle
+    if (energyFillImage != null)
+    {
+        energyFillImage.fillAmount = currentEnergy / maxEnergy;
+    }
+
+    // Eğer enerji tam dolduysa, barın rengini parlatarak oyuncuya "Ulti Hazır" hissi ver
+    if (currentEnergy >= maxEnergy)
+    {
+        currentEnergy = maxEnergy;
+        energyFillImage.color = Color.yellow; // Veya parlak beyaz
+    }
+}
 
     // --- YENİ: ZEHİR VE ATEŞ YANMA İŞLEMLERİ ---
   private void HandleStatusEffects()
@@ -238,14 +277,78 @@ public class GladiatorAI : MonoBehaviour
         lastAttackTime = Time.time;
         isAttacking = false;
     }
+IEnumerator CastUltimateRoutine()
+    {
+        isCastingUltimate = true;
+        isAttacking = true;
+        isUltimateStrike = true; // Vuruş anında (ExecuteAttackEvent) bunun bir ulti olduğunu bileceğiz
 
-    public void ExecuteAttackEvent()
+        // 1. Enerjiyi ve UI'ı Sıfırla
+        currentEnergy = 0f;
+        if (energyFillImage != null)
+        {
+            energyFillImage.fillAmount = 0f;
+            energyFillImage.color = new Color(0f, 0.5f, 1f); // Orijinal maviye dön
+        }
+
+        // 2. Ulti Şarj Efektini Patlat
+        if (ultimateVFX != null) ultimateVFX.Play();
+        // Varsa bir bağırış sesi: AudioManager.Instance.PlaySFX(AudioManager.Instance.warcrySound, 1f);
+
+        // 3. Mevcut saldırı animasyonunu oynat
+        float currentSpd = CurrentAttackSpeed;
+        if (animator) 
+        {
+            animator.SetBool("IsRanged", IsRangedWeapon); 
+            animator.SetFloat("AttackSpeedMultiplier", currentSpd);
+            animator.SetInteger("WeaponType", (int)CurrentWeaponClass);
+            animator.SetTrigger("Attack");
+        }
+
+        yield return new WaitForSeconds(baseAttackAnimLength / currentSpd);
+        
+        lastAttackTime = Time.time;
+        isCastingUltimate = false;
+        isAttacking = false;
+        isUltimateStrike = false; // Güvenlik için kapat
+    }
+
+   // YENİ: Sadece Vuran ve Hasar Alan Donar (Lokal Hit-Stop)
+    IEnumerator LocalHitStopEffect(GladiatorAI targetAI)
+    {
+        // 1. Animasyon hızlarını 0'a çekerek karakterleri havada dondur
+        if (animator != null) animator.speed = 0f;
+        if (targetAI != null && targetAI.animator != null) targetAI.animator.speed = 0f;
+
+        // 2. Çok kısa bir an bekle (Vuruşun tokluk süresi)
+        yield return new WaitForSeconds(0.12f); 
+
+        // 3. Animasyonları normale (1) döndür
+        if (animator != null) animator.speed = 1f;
+        if (targetAI != null && targetAI.animator != null) targetAI.animator.speed = 1f;
+    }
+   public void ExecuteAttackEvent()
     {
         if (target == null || isDead) return;
 
         float attackDamage = gladiator.data.strength * 2f + (gladiator.data.level * 2);
         bool isCrit = Random.Range(0, 100) < gladiator.data.speed;
-        if (isCrit) attackDamage *= 1.5f; 
+
+        // ── YENİ: EĞER BU BİR ULTİ VURUŞUYSA ──
+        if (isUltimateStrike)
+        {
+            attackDamage *= 3.0f; // Hasarı 3'e katla!
+            isCrit = true;        // Kesinlikle kritik vurur!
+            
+            // Eğer tok bir darbe sesin varsa burada çal:
+            // AudioManager.Instance.PlaySFX(AudioManager.Instance.heavyImpactSound, 1f);
+        }
+        else
+        {
+            // Normal saldırı kritiği
+            if (isCrit) attackDamage *= 1.5f; 
+        }
+        // ──────────────────────────────────────
 
         if (IsRangedWeapon)
         {
@@ -256,12 +359,11 @@ public class GladiatorAI : MonoBehaviour
                 Projectile projectile = arrow.GetComponent<Projectile>();
                 if (projectile != null)
                 {
-                    // Ok hedefe çarptığında bizim yerimize ProcessOnHitEffects'i çağıracak
                     projectile.Setup(target, attackDamage, isCrit, this); 
                 }
             }
         }
-        else
+       else
         {
             float currentDist = Vector3.Distance(transform.position, target.position);
             if (currentDist <= CurrentAttackRange * 1.5f) 
@@ -270,7 +372,32 @@ public class GladiatorAI : MonoBehaviour
                 if (enemyAI != null && !enemyAI.isDead && gladiator.data != null)
                 {   
                     enemyAI.TakeDamage(attackDamage, isCrit);
-                    ProcessOnHitEffects(enemyAI, attackDamage); // YENİ: Vuruş gerçekleştiğinde Sinerjiyi çalıştır
+                    ProcessOnHitEffects(enemyAI, attackDamage); 
+
+                    // ── YENİ: ULTİ VURUŞU İSE LOKAL DONDURMA VE TİTREME ──
+                    if (isUltimateStrike)
+                    {
+                        // 1. Sadece ikisini dondur
+                        StartCoroutine(LocalHitStopEffect(enemyAI));
+                        
+                        // 2. Kamerayı Şiddetle Salla (Eğer scripti kurduysan)
+                        if (CameraShake.Instance != null) CameraShake.Instance.Shake(0.15f, 0.4f);
+
+                        // 3. Etrafa Sıçrama Hasarı (Şok Dalgası)
+                        Collider[] splashHits = Physics.OverlapSphere(target.position, 2.5f);
+                        foreach (var hit in splashHits)
+                        {
+                            if (hit.CompareTag(enemyTag) && hit.gameObject != target.gameObject)
+                            {
+                                GladiatorAI nearbyEnemy = hit.GetComponent<GladiatorAI>();
+                                if (nearbyEnemy != null && !nearbyEnemy.isDead)
+                                {
+                                    nearbyEnemy.TakeDamage(attackDamage * 0.3f, false, false); 
+                                }
+                            }
+                        }
+                    }
+                    // ─────────────────────────────────────────────────────
                 }
             }
         }
@@ -365,6 +492,7 @@ public class GladiatorAI : MonoBehaviour
         float finalDamage = incomingDamage * reduction;
 
         gladiator.currentHealth -= finalDamage;
+        GainEnergy(10f);
         if (!IsRangedWeapon && !isDoT) // Zehir yerken radarı bozma
         {
             retargetTimer = 0f; 
@@ -638,6 +766,7 @@ GladiatorAI[] allUnits = FindObjectsByType<GladiatorAI>(FindObjectsSortMode.None
             yield return null; 
         }
     }
+    
 
     void FindNewActivity()
     {

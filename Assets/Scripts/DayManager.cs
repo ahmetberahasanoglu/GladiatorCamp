@@ -25,6 +25,12 @@ public class DayManager : MonoBehaviour
     public event Action<int> OnDayChanged;
     public event Action<GameEvent> OnEventTriggered;
     public event System.Action OnWinterArrived;
+    [Header("Gün Sonu Raporu Arayüzü")]
+public GameObject endDayPanel;
+public TMPro.TextMeshProUGUI endDayTitleText;
+public TMPro.TextMeshProUGUI endDayDescText;
+public Transform endDayButtonContainer;
+public GameObject endDayButtonPrefab;
 
     void Awake()
     {
@@ -95,20 +101,17 @@ public class DayManager : MonoBehaviour
     // =========================================================
     // 2. AŞAMA: SENİN KODUN (Hiçbir harita/savaş sistemini bozmasın diye orijinal bırakıldı)
     // =========================================================
-    public void NextDay(int amount)
+  public void NextDay(int amount)
     {
         currentDay += amount;
         
         OnNewDay?.Invoke();
-        OnDayChanged?.Invoke(currentDay);
+        OnDayChanged?.Invoke(currentDay); 
         HealAllSoldiers(20 * amount);
-        
         CheckForRandomEvent();
-        
         if (WorkplaceManager.Instance != null) WorkplaceManager.Instance.EndOfDayPayment(amount);
         if (MoneyManager.Instance != null) MoneyManager.Instance.EndOfDay(amount); 
         if (SupplyManager.Instance != null) SupplyManager.Instance.ConsumeDailyFood(amount);
-
         if (currentDay >= maxDays)
         {
             Debug.Log("KIŞ GELDİ! OYUN BİTTİ.");
@@ -116,43 +119,46 @@ public class DayManager : MonoBehaviour
         }
     }
 
-    // =========================================================
-    // 3. AŞAMA: SABAH RAPORU GÖSTERİMİ
-    // =========================================================
-    private void ShowMorningReport()
+   private void ShowMorningReport()
+{
+    // 1. SEFER KONTROLÜ (Sadece Kamptayken Çalışsın)
+    // Eğer oyunun savaşta/haritada olduğunu belirten bir GameManager boolean'ın varsa onu kullanabilirsin.
+    // Örnek: if (GameManager.Instance.isOnExpedition) return;
+    // Veya direkt sahne isminden kontrol edebilirsin:
+    if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "CampScene") return;
+
+    // Panel referansı yoksa patlamaması için güvenlik kontrolü
+    if (endDayPanel == null) return;
+
+    // 2. PANELİ AÇ VE SESİ OYNAT
+    endDayPanel.SetActive(true);
+    if (AudioManager.Instance != null) AudioManager.Instance.PlayPaper(); 
+
+    // 3. METİNLERİ KENDİ REFERANSLARINA YAZDIR
+    endDayTitleText.text = $"GÜN {currentDay} RAPORU";
+    
+    string report = "Ordunun giderleri:\n\n";
+    report += $"<color=red> {SupplyManager.Instance.GetExpectedDailyFoodCost()} erzak tüketildi.</color>\n";
+    report += $"<color=red> {MoneyManager.Instance.GetExpectedDailyWageCost()} akçe maaş ödendi.</color>\n";
+    report += $"<color=green> Birlikler dinlendi ve yaralarını sardı.</color>\n";
+
+    endDayDescText.text = report;
+
+    // 4. ESKİ BUTONLARI TEMİZLE (Sadece kendi container'ındaki)
+    foreach (Transform child in endDayButtonContainer)
     {
-        // Eğer sahnede MapEventManager yoksa (Örn: Savaş ekranındaysak) hata vermesin
-        if (MapEventManager.Instance == null || MapEventManager.Instance.eventPanel == null) return;
-
-        MapEventManager.Instance.eventPanel.SetActive(true);
-        AudioManager.Instance.PlayPaper(); // Parşömen sesi
-
-        MapEventManager.Instance.titleText.text = $"GÜN {currentDay} RAPORU";
-        
-        // Not: Şimdilik temsili yazıyor, ileride bu stringlerin içine MoneyManager'dan çektiğin net sayıları da yazdırabilirsin.
-        string report = "Ordunun giderleri:\n\n";
-        
-        report += $"<color=red> {SupplyManager.Instance.GetExpectedDailyFoodCost()} erzak tüketildi.</color>\n";
-        report += $"<color=red> {MoneyManager.Instance.GetExpectedDailyWageCost()} akçe maaş ödendi.</color>\n";
-        report += $"<color=green> Birlikler dinlendi ve yaralarını sardı.</color>\n";
-
-        MapEventManager.Instance.descText.text = report;
-
-        // Önceki butonları temizle (Ters döngü ile)
-        for (int i = MapEventManager.Instance.buttonContainer.childCount - 1; i >= 0; i--)
-        {
-            Transform child = MapEventManager.Instance.buttonContainer.GetChild(i);
-            child.SetParent(null);
-            Destroy(child.gameObject);
-        }
-
-        // "Emredersin" butonu ekle
-        GameObject btnObj = Instantiate(MapEventManager.Instance.buttonPrefab, MapEventManager.Instance.buttonContainer);
-        btnObj.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Anlaşıldı";
-        btnObj.GetComponent<UnityEngine.UI.Button>().onClick.AddListener(() => {
-            MapEventManager.Instance.ClosePanel();
-        });
+        Destroy(child.gameObject);
     }
+
+    // 5. YENİ BUTONU OLUŞTUR
+    GameObject btnObj = Instantiate(endDayButtonPrefab, endDayButtonContainer);
+    btnObj.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = "Anlaşıldı";
+    
+    // Butona tıklandığında sadece endDayPanel'i kapatsın
+    btnObj.GetComponent<UnityEngine.UI.Button>().onClick.AddListener(() => {
+        endDayPanel.SetActive(false);
+    });
+}
 
     // ... (Senin HealAllSoldiers, CheckForRandomEvent ve TriggerEvent fonksiyonların eskisi gibi duruyor, onlara dokunmadım) ...
     

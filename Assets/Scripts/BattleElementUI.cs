@@ -246,15 +246,4 @@ public class BattleElementUI : MonoBehaviour
     }
 }
 
-// ── Her satır için küçük component ──────────────────────────────────────────
-/// <summary>
-/// ElementRowUI prefabının içindeki bileşenlere referans tutar.
-/// Prefabın kök objesine ekle.
-/// </summary>
-public class ElementRowUI : MonoBehaviour
-{
-    public Image             elementIcon;
-    public TextMeshProUGUI   elementName;
-    public TextMeshProUGUI   countText;
-    public Image             matchArrow;    // İsteğe bağlı — null olabilir
-}
+

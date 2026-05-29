@@ -444,7 +444,7 @@ public class BattleManager : MonoBehaviour
         lootPanel.SetActive(false);
         defeatPanel.SetActive(false);
         bgPanel.SetActive(false);
-        if (BattleElementUI.Instance != null) BattleElementUI.Instance.Hide();
+    if (BattleElementUI.Instance != null) BattleElementUI.Instance.Hide();
         bool isWinter = DayManager.Instance.currentDay >= DayManager.Instance.maxDays;
         AudioManager.Instance?.PlayCampMusic(isWinter);
 

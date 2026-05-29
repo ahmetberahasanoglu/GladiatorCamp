@@ -20,6 +20,7 @@ public class GladiatorInventory : MonoBehaviour
 
     void Start()
     {
+       if (gameObject.CompareTag("EnemySoldier")) return;
        InitializeBaseStats();
 
        if (weapon != null) ToggleMesh(weapon.targetMeshName, true);
@@ -145,6 +146,7 @@ public class GladiatorInventory : MonoBehaviour
 
    void RecalculateStats()
     {
+        if (gameObject.CompareTag("EnemySoldier")) return;
         data.strength = baseStr;
         data.defense = baseDef;
         data.speed = baseSpd;

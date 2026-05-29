@@ -15,10 +15,11 @@ public class StateLoanManager : MonoBehaviour
     public int latePenaltyRep = 15;    
     public int cooldownDays = 3; // YENİ: Borç ödendikten sonra kaç gün beklenmeli?
 
-    private int dayLoanTaken = 0;
+    public int dayLoanTaken = 0;
     public int nextAvailableLoanDay = 0; // YENİ: Bir sonraki borç alınabilecek gün
 
     public event Action OnLoanStateChanged;
+
 
     void Awake()
     {
@@ -127,18 +128,53 @@ public class StateLoanManager : MonoBehaviour
         }
     }
 
-    void CheckLoanStatus(int currentDay)
+
+   void CheckLoanStatus(int currentDay)
     {
         if (!hasActiveLoan) return;
 
+        // Vade Günü GEÇTİYSE (Örn: 8 günlük sürenin 9. gününe girildiyse)
         if (currentDay > loanDueDay)
         {
-            NotificationManager.Instance.Show("VAKFIN EMANETİ GECİKTİ! İtibarın zedeleniyor.", NotificationType.Warning);
-            ReputationManager.Instance.ChangeReputation(-latePenaltyRep);
-            
-            if (NasipManager.Instance != null) NasipManager.Instance.SpendNasip(2);
+            // 1. Durum: Kasada yeterli para varsa sessizce tahsil et
+            if (MoneyManager.Instance.gold >= loanAmount)
+            {
+                MoneyManager.Instance.Spend(loanAmount);
+                
+                if (NotificationManager.Instance != null)
+                    NotificationManager.Instance.Show($"Vade doldu! Vakıf {loanAmount} Akçeyi kasandan otomatik tahsil etti.", NotificationType.Warning);
 
-            loanDueDay += 3; 
+                // Normal bekleme süresi (3 gün)
+                nextAvailableLoanDay = currentDay + cooldownDays;
+            }
+            // 2. Durum: Para yetmiyorsa tüm parasını haczet + Ağır İtibar/Nasip Cezası kes!
+            else
+            {
+                int missingAmount = loanAmount - MoneyManager.Instance.gold;
+                MoneyManager.Instance.Spend(MoneyManager.Instance.gold); // Kasayı sıfırla
+                
+                // Her 100 akçe eksik için 1 itibar düş (Minimum 5 ceza)
+                int repPenalty = missingAmount / 100; 
+                if (repPenalty < 5) repPenalty = 5; 
+
+                ReputationManager.Instance.ChangeReputation(-repPenalty);
+
+                if (NasipManager.Instance != null) 
+                    NasipManager.Instance.SpendNasip(2);
+
+                if (NotificationManager.Instance != null)
+                    NotificationManager.Instance.Show($"Vakfa borcunu ödeyemedin! Tüm paran haczedildi ve {repPenalty} İtibar kaybettin.", NotificationType.Error);
+
+                // Haciz cezası olarak Cooldown süresini normalden uzun yap (5 gün ceza)
+                nextAvailableLoanDay = currentDay + 5; 
+            }
+
+            // Borcu sıfırla (Tahsil edildi veya haczedildi)
+            hasActiveLoan = false;
+            loanAmount = 0;
+            dayLoanTaken = 0;
+            loanDueDay = 0;
+            
             OnLoanStateChanged?.Invoke();
         }
     }

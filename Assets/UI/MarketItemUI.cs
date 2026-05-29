@@ -12,11 +12,19 @@ public class MarketItemUI : MonoBehaviour
     public Button buyButton;
     public TextMeshProUGUI statsText;
 
-    [Header("Set Badge")]
-    [Tooltip("'Ateş', 'Zehir', 'İnanç' gibi etiketin arkasındaki Image (RectTransform)")]
-    public Image setBadgeBg;
-    [Tooltip("Set ismini gösteren TMP text")]
+    [Header("Set Badge / Element Görselleri")]
+    [Tooltip("Eski arkaplan rengi (Artık gizleyebilir veya hafif saydam yapabilirsin)")]
+    public Image setBadgeBg; 
     public TextMeshProUGUI setBadgeText;
+    
+    [Tooltip("YENİ: Element ikonunu gösterecek Image bileşeni")]
+    public Image elementIconImage; 
+
+    [Header("Element İkon Havuzu (Inspector'dan Ata)")]
+    public Sprite fireIcon;
+    public Sprite poisonIcon;
+    public Sprite faithIcon;
+    public Sprite normalIcon; // Eğer 'None' durumunda fiziksel kılıç/kalkan ikonunu göstermek istersen
 
     private ItemData _myItemData;
 
@@ -42,7 +50,7 @@ public class MarketItemUI : MonoBehaviour
         if (sb.Length == 0) sb.Append("Özellik Yok");
         statsText.text = sb.ToString();
 
-        // --- 5. Set Badge ---
+        // --- 5. Set Badge ve İkon ---
         RefreshSetBadge(item);
 
         // --- 6. Buton ---
@@ -56,19 +64,46 @@ public class MarketItemUI : MonoBehaviour
 
         if (setBadgeBg != null)  setBadgeBg.gameObject.SetActive(hasSet);
         if (setBadgeText != null) setBadgeText.gameObject.SetActive(hasSet);
-
-        if (!hasSet) return;
+        
+        // Element ikonu her zaman aktif olabilir (Normal fiziksel itemleri göstermek için) 
+        // veya sadece set varsa aktif edebilirsin. Şimdilik hep aktif bırakalım.
+        if (elementIconImage != null) elementIconImage.gameObject.SetActive(true);
 
         Color setColor = item.GetSetColor();
 
-        if (setBadgeBg != null)
-            setBadgeBg.color = setColor;
+        // Arka planı tamamen kaldırabilir veya estetik için çok saydam (alpha 0.2) bir renk yapabilirsin
+        if (setBadgeBg != null && hasSet)
+        {
+            setBadgeBg.color = new Color(setColor.r, setColor.g, setColor.b, 0.2f); 
+        }
 
-        if (setBadgeText != null)
+        if (setBadgeText != null && hasSet)
         {
             setBadgeText.text = item.GetSetDisplayName() + " Seti";
-            setBadgeText.color = Color.white;
+            setBadgeText.color = setColor; // Yazıyı da set rengine boyayalım
         }
+
+        // --- YENİ: İkon Ataması ve Renklendirme ---
+        if (elementIconImage != null)
+        {
+            elementIconImage.sprite = GetIconForSet(item.setType);
+            
+            // Eğer seti varsa ikon o elementin renginde (Kırmızı, Yeşil vb.) parlasın.
+            // Seti yoksa (None), standart siyah/koyu kahve kalsın.
+            elementIconImage.color = hasSet ? setColor : new Color(0.2f, 0.2f, 0.2f, 1f); 
+        }
+    }
+
+    // Set tipine göre ilgili ikonu döndürür
+    Sprite GetIconForSet(ItemSetType type)
+    {
+        return type switch
+        {
+            ItemSetType.Fire => fireIcon,
+            ItemSetType.Poison => poisonIcon,
+            ItemSetType.Faith => faithIcon,
+            _ => normalIcon // Hiçbir set yoksa çapraz kılıç/kalkan ikonunu döndür
+        };
     }
 
     string Colorize(int val)

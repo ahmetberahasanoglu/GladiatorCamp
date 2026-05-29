@@ -616,6 +616,7 @@ GameObject:
   - component: {fileID: 4050755522903660733}
   - component: {fileID: 6679536999975872551}
   - component: {fileID: 3689324531303967068}
+  - component: {fileID: 7814815398716526704}
   m_Layer: 0
   m_Name: Gladiator
   m_TagString: MySoldier
@@ -840,6 +841,19 @@ MonoBehaviour:
   iconImage: {fileID: 3829843598911722274}
   iconCanvas: {fileID: 1744635259561951345}
   pollInterval: 0.2
+--- !u!114 &7814815398716526704
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1174153895519014436}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43a78d9d0b4ee354bacfe3ed4ba73768, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CursorInteractable
+  isEnemy: 0
 --- !u!1 &1186823783692632653
 GameObject:
   m_ObjectHideFlags: 0

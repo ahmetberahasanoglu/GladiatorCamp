@@ -12,8 +12,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05b4e429ec7bbb144bb209a32365d43c, type: 3}
   m_Name: MapIconsConfig
   m_EditorClassIdentifier: Assembly-CSharp::MapConfig
-  villageIcon: {fileID: 21300000, guid: b3c9beecd6581f34a99f0f010d09b429, type: 3}
-  battleIcon: {fileID: 21300000, guid: 6a76fdd7ede0dde47bc7c7fa4ad29ccc, type: 3}
-  bossIcon: {fileID: 21300000, guid: 7605bc226ef65974ea158757d2af9d03, type: 3}
-  restIcon: {fileID: 21300000, guid: b3c9beecd6581f34a99f0f010d09b429, type: 3}
-  startIcon: {fileID: 21300000, guid: 18e6d77bf104405408cbede2f3312bfc, type: 3}
+  villageIcon: {fileID: 21300000, guid: ac2dd8407de605a4292d1d9518ab8c99, type: 3}
+  battleIcon: {fileID: 21300000, guid: 2dc81f391a83c804d8ae7d6e1e2eae74, type: 3}
+  bossIcon: {fileID: 21300000, guid: a21716c97e59b484693acdcf813da79e, type: 3}
+  restIcon: {fileID: 21300000, guid: 4ddc3555fdfb70c4882d4438c40d085a, type: 3}
+  startIcon: {fileID: 21300000, guid: 1f01df31d5c00074e9282c82df94224a, type: 3}
+  treasureIcon: {fileID: 21300000, guid: 2356afd79c3d94c448d46fc04fb8542a, type: 3}
+  guresIcon: {fileID: 21300000, guid: cf6410453591ae04e97f8804b8fceae7, type: 3}
+  horseIcon: {fileID: 21300000, guid: 5b6129135e8a5ba43ab820e64c1e5562, type: 3}
+  arrowIcon: {fileID: 21300000, guid: bf39e7e793ff683449b139efdb1fb3d4, type: 3}
+  cenkIcon: {fileID: 21300000, guid: 0d4a4b512501b8e4fa8583e4ddc44880, type: 3}
+  kervanIcon: {fileID: 21300000, guid: 94a631890ac6b7c44bf38b463c56f1d0, type: 3}
+  dervishIcon: {fileID: 21300000, guid: 52d0ca51158350348a4090b04094395a, type: 3}
+  nasibIcon: {fileID: 21300000, guid: bc7980b28a4f3ba46b3059d0df1e2f39, type: 3}
+  diceIcon: {fileID: 21300000, guid: 8b7ee663f220ee14c86843b702fc310f, type: 3}
+  shieldIcon: {fileID: 21300000, guid: 4b4f5c7b8c361064e850c2eac89ecada, type: 3}
+  caravanIcon: {fileID: 21300000, guid: bc8bd115512a92144bd05caff07fdb07, type: 3}
+  wildIcon: {fileID: 21300000, guid: e26fb4a8f6e6e6a4bb176b98feb8ea66, type: 3}
+  tuccarIcon: {fileID: 21300000, guid: bd6cfe67aedb4a14cbaac449b00117f5, type: 3}
+  dungeonIcon: {fileID: 21300000, guid: c501817a169fa2f44bf105a22606763e, type: 3}
+  towerIcon: {fileID: 21300000, guid: 7879bb9f49778b743ac629062ff5194d, type: 3}

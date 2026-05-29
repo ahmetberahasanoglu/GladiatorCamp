@@ -5611,6 +5611,10 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7814815398716526704, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
+      propertyPath: isEnemy
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8161922304838044321, guid: 351ef2dd26b1fde4a8fdfabb92582e93, type: 3}
       propertyPath: weapon
       value: 

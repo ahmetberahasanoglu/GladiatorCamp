@@ -17,14 +17,14 @@ public class SquadSelectionUIManager : MonoBehaviour
     private List<Gladiator> selectedSquad = new List<Gladiator>();
     private bool _isBossBattle;
     [Header("Komutan Yetenekleri Seçimi")]
-    public List<CommanderSkillData> unlockedSkills; 
+  // public List<CommanderSkillData> unlockedSkills; 
     public Transform skillInventoryArea; 
     public GameObject skillCardPrefab; 
     
     [Header("Seçilen Yetenek Slotları (Max 3)")]
     public List<Image> selectedSkillSlots; 
     private List<CommanderSkillData> selectedSkills = new List<CommanderSkillData>();
-
+    private Dictionary<CommanderSkillData, int> availableSpells = new Dictionary<CommanderSkillData, int>();
     void Start()
     {
         if (panel != null) panel.SetActive(false);
@@ -79,20 +79,43 @@ public class SquadSelectionUIManager : MonoBehaviour
     }
     void PopulateSkills()
     {
-        // Önce temizle
+        // 1. Önce UI'ı temizle
         foreach (Transform child in skillInventoryArea) Destroy(child.gameObject);
         selectedSkills.Clear();
+        availableSpells.Clear();
         UpdateSkillSlotVisuals();
 
-        // Envanterdeki yetenekleri listele
-        foreach (var skill in unlockedSkills)
+        // 2. ÇANTADAKİ (InventoryStorage) NÜSHALARI BUL VE SAY
+        if (InventoryStorage.Instance != null)
         {
+            foreach (var item in InventoryStorage.Instance.storedItems)
+            {
+                // Eğer eşya bir Nüsha ise ve içinde büyü verisi varsa
+                if (item.type == ItemType.Nusha && item.spellData != null)
+                {
+                    if (availableSpells.ContainsKey(item.spellData))
+                        availableSpells[item.spellData]++;
+                    else
+                        availableSpells[item.spellData] = 1;
+                }
+            }
+        }
+
+        // 3. BULUNAN NÜSHALARI EKRANA ÇİZ
+        foreach (var kvp in availableSpells)
+        {
+            CommanderSkillData skill = kvp.Key;
+            int count = kvp.Value;
+
             GameObject card = Instantiate(skillCardPrefab, skillInventoryArea);
             
-            // Kartın ikonunu ve adını ayarla
             Image icon = card.transform.Find("Icon").GetComponent<Image>();
             TextMeshProUGUI nameText = card.transform.Find("Name").GetComponent<TextMeshProUGUI>();
             
+            // Eğer prefabında Miktar (Count) gösteren bir text varsa (Örn: CountText):
+            Transform countObj = card.transform.Find("CountText");
+            if (countObj != null) countObj.GetComponent<TextMeshProUGUI>().text = $"x{count}";
+
             if (icon != null) icon.sprite = skill.skillIcon;
             if (nameText != null) nameText.text = skill.skillName;
 

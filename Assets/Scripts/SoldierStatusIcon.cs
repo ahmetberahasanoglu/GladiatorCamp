@@ -3,9 +3,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Askerin üzerinde durum ikonu gösteren World-Space Canvas bileşeni.
-/// Her 0.2 saniyede bir durumu polling ile kontrol eder —
-/// aktivite değişimleri OnStatsChanged tetiklemediği için event yerine
-/// bu yöntem kullanılır.
+/// Her 0.2 saniyede bir durumu polling ile kontrol eder.
 /// </summary>
 public class SoldierStatusIcon : MonoBehaviour
 {
@@ -18,8 +16,9 @@ public class SoldierStatusIcon : MonoBehaviour
     public Sprite injuredSprite;    // Yara     — Can %50 altı
 
     [Header("UI Bileşenleri")]
-    public Image  iconImage;        // İkonu gösteren Image
-    public Canvas iconCanvas;       // World Space Canvas
+    public GameObject backgroundObject; // YENİ: Açıp kapatacağımız yarı saydam arka plan (İkonun Parent'ı olmalı)
+    public Image  iconImage;            // İkonu gösteren Image (Background'ın Child'ı)
+    public Canvas iconCanvas;           // Sadece kameraya bakması (Billboard) için referans tutuyoruz
 
     [Header("Polling")]
     [Tooltip("Kaç saniyede bir durum kontrol edilsin")]
@@ -34,7 +33,7 @@ public class SoldierStatusIcon : MonoBehaviour
 
     // ── Polling ──────────────────────────────────────────────────────────
     private float  _pollTimer;
-    private Sprite _lastSprite;        // Son gösterilen sprite — gereksiz SetActive/sprite set'i önler
+    private Sprite _lastSprite;        
     private bool   _lastVisible;
 
     // ─────────────────────────────────────────────────────────────────────
@@ -45,12 +44,19 @@ public class SoldierStatusIcon : MonoBehaviour
         _training  = GetComponentInParent<GladiatorTraining>();
         _healing   = GetComponentInParent<GladiatorHealing>();
         _praying   = GetComponentInParent<GladiatorPraying>();
+
+        // ── YENİ: Oyun başlarken Canvas'ı değil, sadece arka plan objesini kapatıyoruz ──
+        if (backgroundObject != null) 
+        {
+            backgroundObject.SetActive(false);
+            _lastVisible = false;
+        }
     }
 
     void Start()
     {
         _mainCam   = Camera.main;
-        _pollTimer = 0f;           // İlk frame'de hemen kontrol etsin
+        _pollTimer = 0f; 
 
         // Başlangıç durumunu anında yansıt
         ForceRefresh();
@@ -58,7 +64,8 @@ public class SoldierStatusIcon : MonoBehaviour
 
     void Update()
     {
-        // ── Billboard: ikon her zaman kameraya baksın ────────────────────
+        // ── Billboard: Canvas her zaman kameraya baksın ────────────────────
+        // (Görünmezken bile diğer objeler için dönmeye devam etmeli)
         if (_mainCam != null && iconCanvas != null)
         {
             iconCanvas.transform.LookAt(
@@ -78,7 +85,7 @@ public class SoldierStatusIcon : MonoBehaviour
     // ── Durum Kontrolü ───────────────────────────────────────────────────
     void CheckAndApply()
     {
-        if (_gladiator == null || iconImage == null) return;
+        if (_gladiator == null || iconImage == null || backgroundObject == null) return;
 
         Sprite chosen  = DetermineSprite();
         bool   visible = chosen != null;
@@ -89,14 +96,19 @@ public class SoldierStatusIcon : MonoBehaviour
         _lastSprite  = chosen;
         _lastVisible = visible;
 
-        iconImage.gameObject.SetActive(visible);
-        if (visible) iconImage.sprite = chosen;
+        // Tüm Canvas'ı değil, sadece Arka Plan objesini aç/kapat
+        backgroundObject.SetActive(visible);
+        
+        // Eğer görünecekse doğru ikonu (Child) yerleştir
+        if (visible) 
+        {
+            iconImage.sprite = chosen;
+        }
     }
 
-    // ── Dışarıdan anında güncelleme istenirse (isteğe bağlı) ─────────────
     public void ForceRefresh()
     {
-        _lastSprite  = null;   // önbelleği sıfırla → garantili güncelleme
+        _lastSprite  = null;  
         _lastVisible = false;
         CheckAndApply();
     }
@@ -107,21 +119,21 @@ public class SoldierStatusIcon : MonoBehaviour
         if (_gladiator == null || _gladiator.data == null) return null;
 
         // Öncelik sırası: Şifa > Eğitim > Dua > Çalışma > Keşif > Yaralı
-        // Her biri kendi script'inin gerçek field'ından okunuyor
-
-        if (_healing  != null && _healing.IsHealing)   return healingSprite;
+        if (_healing  != null && _healing.IsHealing)    return healingSprite;
         if (_training != null && _training.IsTraining)  return trainingSprite;
         if (_praying  != null && _praying.isPraying)    return prayingSprite;
 
         SoldierActivity act = _gladiator.data.currentActivity;
         if (act == SoldierActivity.Working)   return workingSprite;
         if (act == SoldierActivity.OnMission) return missionSprite;
+        if (act == SoldierActivity.Praying)   return prayingSprite; 
 
         // Yaralı: can %50'nin altındaysa ve boştaysa göster
         bool isInjured = _gladiator.currentHealth < _gladiator.maxHealth * 0.5f
                          && _gladiator.currentHealth > 0f;
         if (isInjured) return injuredSprite;
 
-        return null;   // Boşta & sağlıklı → ikon gizle
+        // Hiçbiri değilse null dön (Arka plan kapanacak)
+        return null;   
     }
 }

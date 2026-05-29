@@ -126,7 +126,7 @@ public class BuildingClickable : MonoBehaviour
         foreach (var o in _outlines) o.enabled = false;
     }
 
-    // ── HOVER ─────────────────────────────────────────────────────────────
+   // ── HOVER ─────────────────────────────────────────────────────────────
     void OnMouseEnter()
     {
         if (EventSystem.current.IsPointerOverGameObject()) return;
@@ -136,6 +136,8 @@ public class BuildingClickable : MonoBehaviour
         AnimateScale(_baseScale + Vector3.one * hoverScaleAdd);
         SetOutlines(true);
         if (hoverSound != null) _audio.PlayOneShot(hoverSound);
+
+        if (CursorManager.Instance != null) CursorManager.Instance.SetInteractCursor();
     }
 
     void OnMouseExit()
@@ -143,6 +145,8 @@ public class BuildingClickable : MonoBehaviour
         _isHovered = false;
         AnimateScale(_baseScale);
         SetOutlines(false);
+
+        if (CursorManager.Instance != null) CursorManager.Instance.SetNormalCursor();
     }
 
     // ── CLICK ─────────────────────────────────────────────────────────────

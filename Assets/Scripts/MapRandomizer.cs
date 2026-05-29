@@ -24,7 +24,7 @@ public class MapRandomizer : MonoBehaviour
         // RestArea tamamen kaldırıldı. Köy aynı işlevi görüyor.
     };
 
-    [Header("Tier 2 — Orta Risk (Derinlik 5-9)")]
+   [Header("Tier 2 — Orta Risk (Derinlik 5-9)")]
     public List<NodeType> tier2Pool = new List<NodeType>
     {
         NodeType.Battle,
@@ -33,8 +33,7 @@ public class MapRandomizer : MonoBehaviour
         NodeType.CaravanEncounter,
         NodeType.KervanEncounter,
         NodeType.Zindan,
-        NodeType.Kacak,
-        NodeType.CenkOyunu
+        NodeType.CenkOyunu // Kacak Çıkarıldı
     };
 
     [Header("Tier 3 — Tehlikeli Bölge (Derinlik 10+)")]
@@ -48,6 +47,8 @@ public class MapRandomizer : MonoBehaviour
         NodeType.KervanEncounter,  
         NodeType.Zindan,
     };
+    [Header("Map Config Referansı")]
+    public MapConfig mapConfig;
 
     [Header("Derinlik Sınırları")]
     public int tier1MaxDepth = 4;
@@ -112,10 +113,11 @@ public class MapRandomizer : MonoBehaviour
             }
 
             // Sabit Node'lar (Başlangıç ve Boss değişmez)
-            if (node.nodeType == NodeType.StartPoint || node.nodeType == NodeType.Boss)
+           if (node.nodeType == NodeType.StartPoint || node.nodeType == NodeType.Boss)
             {
                 consecutiveBattles[node] = IsCombatEvent(node.nodeType) ? maxParentBattles + 1 : 0;
-                node.ApplyVisuals(GetSpriteForType(node.nodeType), GetLabel(node.nodeType));
+                // YENİ: GetSpriteForType yerine mapConfig.GetIcon kullanıyoruz
+                node.ApplyVisuals(mapConfig != null ? mapConfig.GetIcon(node.nodeType) : null, GetLabel(node.nodeType));
                 continue;
             }
 
@@ -136,8 +138,8 @@ public class MapRandomizer : MonoBehaviour
             
             node.nodeType = chosen;
             consecutiveBattles[node] = IsCombatEvent(chosen) ? maxParentBattles + 1 : 0;
-            
-            node.ApplyVisuals(GetSpriteForType(chosen), GetLabel(chosen));
+            // YENİ: GetSpriteForType yerine mapConfig.GetIcon kullanıyoruz
+            node.ApplyVisuals(mapConfig != null ? mapConfig.GetIcon(chosen) : null, GetLabel(chosen));
         }
 
         Debug.Log("[MapRandomizer] Harita başarıyla akıllı ritimle rastgeleleştirildi!");
@@ -263,7 +265,6 @@ public class MapRandomizer : MonoBehaviour
         NodeType.DervishEncounter  => "Derviş",
         NodeType.Kalkan            => "Savunma",
         NodeType.StartPoint        => "Kamp",
-        NodeType.Kacak             => "Kaçak",
         NodeType.CenkOyunu         => "Cenk",
         _                          => "?"
     };
@@ -293,7 +294,6 @@ public class MapRandomizer : MonoBehaviour
             NodeType.DervishEncounter  => em.villageSprite,
             NodeType.CaravanEncounter  => em.merchant,
             NodeType.KervanEncounter   => em.merchant,
-            NodeType.Kacak             => em.villageSprite,
             NodeType.CenkOyunu         => em.villageSprite, 
             _                          => em.villageSprite,
         };

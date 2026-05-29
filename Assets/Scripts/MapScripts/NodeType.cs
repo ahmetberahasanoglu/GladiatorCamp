@@ -8,7 +8,6 @@ public enum NodeType
     KuleSavas,         
     RestArea,          
     Boss,              
-    Kacak,             
     Tuccar,            
     Vahsi,             
     Zindan,            

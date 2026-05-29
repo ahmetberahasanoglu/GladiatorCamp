@@ -304,8 +304,23 @@ public class MapManager : MonoBehaviour
         HideMap();
     }
 
-    public void RetreatToPreviousNode()
+   public void RetreatToPreviousNode()
     {
+        // ── YENİ: YAŞAYAN ASKER KONTROLÜ ──
+        if (!HasAliveSoldiers())
+        {
+            Debug.Log("Tüm askerler öldü! Sefer başarısız.");
+            if (NotificationManager.Instance != null)
+            {
+                NotificationManager.Instance.Show("Tüm askerlerin şehit düştü! Sefer başarısız oldu...", NotificationType.Error);
+            }
+            
+            // Asker kalmadığı için geri çekilemez, doğrudan sefer biter!
+            ExpeditionFailedFromMap();
+            return;
+        }
+        // ──────────────────────────────────
+
         if (previousNode != null)
         {
             Debug.Log($"Savaş Kaybedildi! Geri çekiliniyor: {previousNode.nodeType}");
@@ -360,6 +375,11 @@ public class MapManager : MonoBehaviour
             FindObjectsInactive.Exclude, FindObjectsSortMode.None);
         foreach (var s in strangers)
             s.SetPaused(pause);
+
+        if (CampBrawlManager.Instance != null)
+        {
+            CampBrawlManager.Instance.isMapOpen = pause;
+        }
     }
 
     public IEnumerator MoveIconRoutine(MapNode targetNode)
@@ -414,5 +434,18 @@ public class MapManager : MonoBehaviour
         {
             MapEventManager.Instance.TriggerEvent(node.nodeType);
         }
+    }
+    private bool HasAliveSoldiers()
+    {
+        Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
+        foreach (var soldier in allSoldiers)
+        {
+            // Sadece bizim askerimizse ve canı sıfırdan büyükse
+            if (soldier.CompareTag("MySoldier") && soldier.data != null && soldier.data.currentHealth > 0)
+            {
+                return true; // Yaşayan en az bir asker var
+            }
+        }
+        return false; // Kimse hayatta değil
     }
 }

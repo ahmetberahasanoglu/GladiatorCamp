@@ -7,9 +7,12 @@ using UnityEngine.SceneManagement;
 public class MapEventManager : MonoBehaviour
 {
     public static MapEventManager Instance;
-
+[Header("Nüsha / Ferman Havuzları")]
+    public List<ItemData> yayginNushalar; // Şifa, Ufak Güç vs.
+    public List<ItemData> nadirFermanlar;
     [Header("UI Elemanları")]
     public GameObject eventPanel;       
+    public GameObject endDayPanel;       
     public GameObject topPanel; 
     public Image eventImage;            
     public TextMeshProUGUI titleText;   
@@ -114,11 +117,11 @@ public class MapEventManager : MonoBehaviour
     
         if (readySoldiers == 0)
         {
-            descText.text += "\n\n<color=red>SAVAŞA HAZIR ASKER YOK!</color>\nHerkes görevde, çalışıyor veya yaralı.";
+            descText.text += "\n\nSAVAŞA HAZIR ASKER YOK!\nHerkes görevde, çalışıyor veya yaralı.";
         }
         else
         {
-            descText.text += $"\n\nSavaşa Hazır Asker: <color=green>{readySoldiers}</color>";
+            descText.text += $"\n\nSavaşa Hazır Asker: {readySoldiers}";
         }
 
         // SAVAŞ BUTONU
@@ -150,7 +153,7 @@ public class MapEventManager : MonoBehaviour
     void SetupNasibEvent()
     {
         titleText.text = "Yoldaki Derviş";
-        descText.text = "Üstü başı yırtık, yaşlı bir derviş yol kenarında bir ağacın dibinde oturuyor. Sana doğru bakıp titreyen bir sesle mırıldandı:\n\n<color=#4E2A03>\"Yolcu... Allah rızası için bir lokma ekmek, üç beş akçe sadaka verir misin?\"</color>";
+        descText.text = "Üstü başı yırtık, yaşlı bir derviş yol kenarında bir ağacın dibinde oturuyor. Sana doğru bakıp titreyen bir sesle mırıldandı:\n\n\"Yolcu... Allah rızası için bir lokma ekmek, üç beş akçe sadaka verir misin?\"";
 
         if(villageSprite != null) eventImage.sprite = villageSprite; 
 
@@ -185,7 +188,7 @@ public class MapEventManager : MonoBehaviour
  public void SetupMysteriousDiceEvent()
     {
         titleText.text = "Gizemli Yabancı";
-        descText.text = "Karanlık bir pelerin giymiş bir adam yolunu kesti. Avucundan kemikten yapılma bir zar çıkardı.\n\n<color=#66001D>\"Şu zarı at bakalım Uç Beyi... Eğer 3'ten büyük atarsan sana tam 1000 Akçe vereceğim. Ama kaybedersen, en değerli şeylerinden birini... ordundan bir canı alırım.\"</color>";
+        descText.text = "Karanlık bir pelerin giymiş bir adam yolunu kesti. Avucundan kemikten yapılma bir zar çıkardı.\n\n\"Şu zarı at bakalım Uç Beyi... Eğer 3'ten büyük atarsan sana tam 1000 Akçe vereceğim. Ama kaybedersen, en değerli şeylerinden birini... ordundan bir canı alırım.\"";
         
         if(diceSprite != null) eventImage.sprite = diceSprite;
 
@@ -200,11 +203,11 @@ public class MapEventManager : MonoBehaviour
                 int mevcutNasip = NasipManager.Instance != null ? NasipManager.Instance.currentNasip : 0;
                 int totalScore = zarSonucu + mevcutNasip;
                 int hedef = 4; 
-                string mathText = $"\n\n<size=85%><b><color=#FFD700>Zar ({zarSonucu}) + Nasip ({mevcutNasip}) = {totalScore}</color></b> / Hedef ({hedef})</size>\n";
+                string mathText = $"\n\n<size=85%><b>Zar ({zarSonucu}) + Nasip ({mevcutNasip}) = {totalScore}</b> / Hedef ({hedef})</size>\n";
 
                 if (totalScore >= hedef) 
                 {
-                    descText.text = $"<color=green>KAZANDIN!</color>\n\nAdam şaşkınlıkla sana baktı. Elindeki devasa keseyi ayaklarının dibine fırlattı ve tek kelime etmeden karanlıkta kayboldu." + mathText;
+                    descText.text = $"KAZANDIN!\n\nAdam şaşkınlıkla sana baktı. Elindeki devasa keseyi ayaklarının dibine fırlattı ve tek kelime etmeden karanlıkta kayboldu." + mathText;
                     
                     MoneyManager.Instance.Add(1000); 
                     if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(15);
@@ -214,7 +217,7 @@ public class MapEventManager : MonoBehaviour
                 }
                 else
                 {
-                    descText.text = $"<color=red>KAYBETTİN!</color>\n\nAdam korkunç bir kahkaha attı. <color=#66001D>\"Kaybettin Uç Beyi... Söz verdiğin gibi, şimdi bana bir can ver!\"</color>\n\n<color=yellow>(Kimi feda edeceksin?)</color>" + mathText;
+                    descText.text = $"KAYBETTİN!\n\nAdam korkunç bir kahkaha attı. \"Kaybettin Uç Beyi... Söz verdiğin gibi, şimdi bana bir can ver!\"\n\n(Kimi feda edeceksin?)" + mathText;
                     ShowSacrificeSelection();
                 }
             });
@@ -253,7 +256,7 @@ public class MapEventManager : MonoBehaviour
 
         if (!hasEligibleSoldier)
         {
-            descText.text += "\n\n<color=#66001D>\"Alacak bir can bulamıyorum... Ordun zaten tükenmiş!\"</color> diyerek alay etti ve hazinenden 500 Akçe çalıp kayboldu.";
+            descText.text += "\n\n\"Alacak bir can bulamıyorum... Ordun zaten tükenmiş!\" diyerek alay etti ve hazinenden 500 Akçe çalıp kayboldu.";
             
             if (MoneyManager.Instance.gold >= 500) MoneyManager.Instance.Spend(500);
             else if (MoneyManager.Instance.gold > 0) MoneyManager.Instance.Spend(MoneyManager.Instance.gold);
@@ -275,7 +278,7 @@ public class MapEventManager : MonoBehaviour
         if (ai != null) ai.Die();
         else Destroy(doomedSoldier.gameObject);
 
-        descText.text = $"Adam kara pelerininin içinden elini uzattı. <color=yellow>{doomedName}</color> acı dolu bir çığlık atarak oracıkta cansız yere yığıldı. Gözleri kararırken kampa ağır bir sessizlik çöktü...";
+        descText.text = $"Adam kara pelerininin içinden elini uzattı. {doomedName} acı dolu bir çığlık atarak oracıkta cansız yere yığıldı. Gözleri kararırken kampa ağır bir sessizlik çöktü...";
         
         if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-25);
 
@@ -290,11 +293,11 @@ public class MapEventManager : MonoBehaviour
     
         if (readySoldiers == 0)
         {
-            descText.text += "\n\n<color=red>SAVAŞA HAZIR ASKER YOK!</color>\nHerkes görevde, çalışıyor veya yaralı.";
+            descText.text += "\n\nSAVAŞA HAZIR ASKER YOK!\nHerkes görevde, çalışıyor veya yaralı.";
         }
         else
         {
-            descText.text += $"\n\nSavaşa Hazır Asker: <color=green>{readySoldiers}</color>";
+            descText.text += $"\n\nSavaşa Hazır Asker: {readySoldiers}";
         }
         GameObject enterBtnObj = Instantiate(buttonPrefab, buttonContainer);
         enterBtnObj.GetComponentInChildren<TextMeshProUGUI>().text = "İçeri Gir (Savaş)";
@@ -349,33 +352,93 @@ public class MapEventManager : MonoBehaviour
         });
     }
 
-    void SetupTuccar() 
+   void SetupTuccar()
     {
-        titleText.text = "Ormanda Bir Tüccar";
-        descText.text = "Tekerleği kırılmış bir tüccar arabası buldun. Sana bir teklifi var: 'Bana 50 Akçe ver, devlet ricaliyle aranı yapayım (İtibar).'";
-        if(merchant != null) eventImage.sprite = merchant;
+        titleText.text = "Gezgin Tüccar";
+        if (merchant != null) eventImage.sprite = merchant;
+        descText.text = "Uzak diyarlardan gelmiş kurnaz bir tüccar sana mallarını sunuyor. Bugün arabasında şunlar var:\n\n";
 
-        CreateButton("Kabul Et (-50 Altın, +15 İtibar)", () => {
-            
-         
+        // Tüccarın satacağı 2 farklı eşyayı rastgele seçelim
+        List<int> shopPool = new List<int> { 0, 1, 2, 3 }; // 0: Nüsha, 1: Odun, 2: Erzak, 3: İtibar
+        int firstItem = shopPool[UnityEngine.Random.Range(0, shopPool.Count)];
+        shopPool.Remove(firstItem);
+        int secondItem = shopPool[UnityEngine.Random.Range(0, shopPool.Count)];
 
-            if (MoneyManager.Instance.gold >= 50)
+        // İç içe fonksiyon ile tüccar butonlarını dinamik oluşturuyoruz
+        void AddStoreItem(int itemType)
+        {
+            switch (itemType)
             {
-                MoneyManager.Instance.Spend(50);
-                ReputationManager.Instance.ChangeReputation(15);
-                NotificationManager.Instance.Show("Takas yapıldı, itibarın arttı!", NotificationType.Success);
-            }
-            else
-            {
-                NotificationManager.Instance.Show("Yeterli altının yok!", NotificationType.Error);
-            }
-            ClosePanel();
-        });
+                case 0:
+                    int spellCost = 100;
+                    CreateButton($"Gizemli Nüsha Satın Al ({spellCost} Akçe)", () =>
+                    {
+                        if (MoneyManager.Instance.gold >= spellCost) {
+                            MoneyManager.Instance.Spend(spellCost);
+                            
+                            // TODO: Mevcut Nüsha/Büyü verme kodunu buraya ekle
+                            
+                            NotificationManager.Instance.Show("Nüsha Çantaya Eklendi!", NotificationType.Success);
+                            ClosePanel(); // Alışveriş sonrası paneli kapat
+                        } else NotificationManager.Instance.Show("Yeterli Akçen yok!", NotificationType.Error);
+                    });
+                    break;
 
-        CreateButton("Yola Devam Et", () => {
-            
-            ClosePanel(); 
-        });
+                case 1:
+                    int woodAmount = UnityEngine.Random.Range(20, 51);
+                    int woodCost = woodAmount * 2; // Odun başı 2 akçe
+                    CreateButton($"{woodAmount} Odun Satın Al ({woodCost} Akçe)", () =>
+                    {
+                        if (MoneyManager.Instance.gold >= woodCost) {
+                            MoneyManager.Instance.Spend(woodCost);
+                            
+                            // TODO: Kendi odun ekleme kodunu yaz (örn: ResourceManager.Instance.AddWood(woodAmount))
+                            
+                            NotificationManager.Instance.Show($"{woodAmount} Odun Kampa Gönderildi!", NotificationType.Success);
+                            ClosePanel();
+                        } else NotificationManager.Instance.Show("Yeterli Akçen yok!", NotificationType.Error);
+                    });
+                    break;
+
+                case 2:
+                    int foodAmount = UnityEngine.Random.Range(15, 40);
+                    int foodCost = foodAmount * 3; // Erzak başı 3 akçe
+                    CreateButton($"{foodAmount} Erzak Satın Al ({foodCost} Akçe)", () =>
+                    {
+                        if (MoneyManager.Instance.gold >= foodCost) {
+                            MoneyManager.Instance.Spend(foodCost);
+                            
+                            // TODO: Kendi erzak ekleme kodunu yaz (örn: ResourceManager.Instance.AddFood(foodAmount))
+                            
+                            NotificationManager.Instance.Show($"{foodAmount} Erzak Depoya Eklendi!", NotificationType.Success);
+                            ClosePanel();
+                        } else NotificationManager.Instance.Show("Yeterli Akçen yok!", NotificationType.Error);
+                    });
+                    break;
+
+                case 3:
+                    int repCost = 150;
+                    CreateButton($"Saray İtibarını Artır (+10) ({repCost} Akçe)", () =>
+                    {
+                        if (MoneyManager.Instance.gold >= repCost) {
+                            MoneyManager.Instance.Spend(repCost);
+                            
+                            // TODO: İtibar artırma kodunu yaz (örn: ReputationManager.Instance.AddReputation(10))
+                            
+                            NotificationManager.Instance.Show("Saraydaki İtibarın Arttı!", NotificationType.Success);
+                            ClosePanel();
+                        } else NotificationManager.Instance.Show("Yeterli Akçen yok!", NotificationType.Error);
+                    });
+                    break;
+            }
+        }
+
+        // İki rastgele butonu oluştur
+        AddStoreItem(firstItem);
+        AddStoreItem(secondItem);
+
+        // Alışveriş yapmak istemezse her zaman ayrılma seçeneği olmalı
+        CreateButton("Teşekkür Et ve Ayrıl", () => { ClosePanel(); });
     }
 
    void SetupTreasure()
@@ -383,33 +446,37 @@ public class MapEventManager : MonoBehaviour
         titleText.text = "Gizli Hazine";
         descText.text = "Ormanın derinliklerinde eski, ahşap bir sandık duruyor. Üzerindeki işlemeler çok değerli olduğunu gösteriyor... ama bir şeyler garip.";
         if(treasureSprite != null) eventImage.sprite = treasureSprite;
-        CreateButton("Sandığı Aç", () => {
-          
-            ClearAllButtons(); 
-
-            int roll = Random.Range(0, 100);
+       CreateButton("Sandığı Aç", () => {
+        ClearAllButtons(); 
+        int roll = Random.Range(0, 100);
+        
+        if (roll < 75) // %75 İhtimalle Normal Hazine
+        {
+            int goldAmount = Random.Range(80, 150); 
+            if (MoneyManager.Instance != null) MoneyManager.Instance.Add(goldAmount);
             
-            if (roll < 0) //75 falan yapıcam %75 ihtiml para
-            {
-                // NORMAL HAZİNE SONUCU
-                int goldAmount = Random.Range(80, 150); 
-                if (MoneyManager.Instance != null) MoneyManager.Instance.Add(goldAmount);
-                
-            
-                titleText.text = "<color=yellow>Göz Kamaştıran Altınlar!</color>";
-                descText.text = $"Sandığı açtın ve içinin ağzına kadar altınla dolu olduğunu gördün! Kasaya <color=yellow>{goldAmount} Akçe</color> eklendi.";
-                
+            titleText.text = "Göz Kamaştıran Altınlar!";
+            descText.text = $"Sandığı açtın ve {goldAmount} Akçe buldun!";
 
-                CreateButton("Harika! (Devam Et)", () => {
-                    ClosePanel();
-                });
-            }
-            else 
+            // ── YENİ: %40 İHTİMALLE İÇİNDEN NÜSHA ÇIKSIN ──
+            if (Random.Range(0, 100) < 40 && yayginNushalar.Count > 0)
             {
-              
-                ResolveMimicEncounter();
+                ItemData kazanilanNusha = yayginNushalar[Random.Range(0, yayginNushalar.Count)];
+                
+                // Nüshayı geçici sefer çantasına ekliyoruz
+                ExpeditionManager.Instance.tempItems.Add(kazanilanNusha);
+                
+                descText.text += $"\n\nAltınların altında parlayan, üzeri dualarla kaplı bir kağıt buldun:\n+ {kazanilanNusha.itemName} çantaya eklendi!";
             }
-        });
+            // ──────────────────────────────────────────────
+
+            CreateButton("Harika! (Devam Et)", () => { ClosePanel(); });
+        }
+        else 
+        {
+            ResolveMimicEncounter();
+        }
+    });
 
         CreateButton("Vaktim Yok, İlerle", () => {
             ClosePanel();
@@ -462,7 +529,7 @@ public class MapEventManager : MonoBehaviour
         {
             // KURTULDU (Zar Başarılı)
             titleText.text = "MİMİC TUZAĞI!";
-            descText.text = $"Sandık aniden devasa, salyalı bir ağza dönüştü ve <color=yellow>{victimName}</color>'e saldırdı!\n\nNasibiniz yaver gitti... Asker son anda kolunu kurtarmayı başardı ama herkesin yüreği ağzına geldi.";
+            descText.text = $"Sandık aniden devasa, salyalı bir ağza dönüştü ve {victimName}'e saldırdı!\n\nNasibiniz yaver gitti... Asker son anda kolunu kurtarmayı başardı ama herkesin yüreği ağzına geldi.";
             
             if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-5);
             
@@ -471,8 +538,8 @@ public class MapEventManager : MonoBehaviour
         else
         {
             // ÖLDÜ (Zar Başarısız)
-            titleText.text = "<color=red>DEHŞET VERİCİ ÖLÜM!</color>";
-            descText.text = $"Sandık aslında devasa bir Mimic canavarıydı! <color=red>{victimName}</color> ne olduğunu bile anlayamadan çığlıklar içinde tek lokmada yutuldu!\n\nOrdu bu vahşet karşısında dehşete düştü ve moral darmadağın oldu.";
+            titleText.text = "DEHŞET VERİCİ ÖLÜM!";
+            descText.text = $"Sandık aslında devasa bir Mimic canavarıydı! {victimName} ne olduğunu bile anlayamadan çığlıklar içinde tek lokmada yutuldu!\n\nOrdu bu vahşet karşısında dehşete düştü ve moral darmadağın oldu.";
             
             if (GladiatorSelector.Instance != null) GladiatorSelector.Instance.DeselectIfDead(victim.gameObject);
             Destroy(victim.gameObject);
@@ -487,7 +554,7 @@ public class MapEventManager : MonoBehaviour
     public void SetupVillageEvent()
     {
         titleText.text = "İşgal Edilmiş Köy";
-        descText.text = "Ufukta dumanlar tüten bir köy belirdi. Yaklaştıkça durumu anlıyorsun; acımasız bir eşkıya grubu köyü işgal etmiş. Ahalinin çığlıkları ta buraya kadar geliyor.\n\n<color=#FFD700>Askerlerin kılıçlarının kabzalarını sıkarak senin ağzından çıkacak emri bekliyor.</color>";
+        descText.text = "Ufukta dumanlar tüten bir köy belirdi. Yaklaştıkça durumu anlıyorsun; acımasız bir eşkıya grubu köyü işgal etmiş. Ahalinin çığlıkları ta buraya kadar geliyor.\n\nAskerlerin kılıçlarının kabzalarını sıkarak senin ağzından çıkacak emri bekliyor.";
         
         CreateButton("Köyü Kurtar (Saldır)", () => 
         {
@@ -498,7 +565,7 @@ public class MapEventManager : MonoBehaviour
         {
             foreach(Transform child in buttonContainer) Destroy(child.gameObject);
             
-            descText.text = "Köydeki feryatlara kulak tıkayıp askerlerini ormanın derinliklerine doğru yönlendirdin. Kimse tek kelime etmedi ama herkesin başı öne eğikti...\n\n<size=85%><color=red>(Nasip Azaldı! Ordunun morali bozuldu.)</color></size>";
+            descText.text = "Köydeki feryatlara kulak tıkayıp askerlerini ormanın derinliklerine doğru yönlendirdin. Kimse tek kelime etmedi ama herkesin başı öne eğikti...\n\n<size=85%>(Nasip Azaldı! Ordunun morali bozuldu.)</size>";
             
             if (NasipManager.Instance != null) NasipManager.Instance.SpendNasip(1); 
             if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-10); 
@@ -545,11 +612,11 @@ private void ResolveVillageBattle(int difficulty)
             bool isWin = totalScore >= difficulty;
 
 
-            string mathText = $"\n\n<size=85%><b><color=#FFD700>Ordu Gücü ({orduGucu}) + Zar ({zarSonucu}) + Nasip ({nasip}) = {totalScore}</color></b> / Düşman Zorluğu ({difficulty})</size>\n";
+            string mathText = $"\n\n<size=85%><b>Ordu Gücü ({orduGucu}) + Zar ({zarSonucu}) + Nasip ({nasip}) = {totalScore}</b> / Düşman Zorluğu ({difficulty})</size>\n";
 
             if (isWin)
             {
-                descText.text = $"<color=green>KESİN ZAFER!</color>\n\nAskerlerinle köy meydanına daldın ve işgalcileri darmadağın ettin! Sağ kalanlar kılıçlarını atıp diz çöktü.\n" + mathText;
+                descText.text = $"KESİN ZAFER!\n\nAskerlerinle köy meydanına daldın ve işgalcileri darmadağın ettin! Sağ kalanlar kılıçlarını atıp diz çöktü.\n" + mathText;
 
  
                 CreateButton("Köyün Kaderini Belirle", () => {
@@ -558,7 +625,7 @@ private void ResolveVillageBattle(int difficulty)
             }
             else
             {
-                descText.text = $"<color=red>AĞIR YENİLGİ!</color>\n\nİşgalciler beklediğinden çok daha kalabalıktı! Ağır yaralar alarak ormana geri çekilmek zorunda kaldınız. Kaçarken bir askerimiz geride kaldı...\n" + mathText;
+                descText.text = $"AĞIR YENİLGİ!\n\nİşgalciler beklediğinden çok daha kalabalıktı! Ağır yaralar alarak ormana geri çekilmek zorunda kaldınız. Kaçarken bir askerimiz geride kaldı...\n" + mathText;
 
                 if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-20);
 
@@ -573,14 +640,14 @@ private void ResolveVillageBattle(int difficulty)
         foreach(Transform child in buttonContainer) Destroy(child.gameObject);
 
         titleText.text = "Köyün Kaderi";
-        descText.text = "Savaş bitti! Köyün yaşlısı titreyerek ayaklarına kapandı: <color=#FFD700>\"Bizi kurtardın Uç Beyi! Allah senden razı olsun... Ama neyimiz var neyimiz yoksa bu sandıktadır, yalvarırım köyümüze dokunma!\"</color>\n\nAskerlerin ise ganimet hırsıyla ambarlara bakıyor...";
+        descText.text = "Savaş bitti! Köyün yaşlısı titreyerek ayaklarına kapandı: \"Bizi kurtardın Uç Beyi! Allah senden razı olsun... Ama neyimiz var neyimiz yoksa bu sandıktadır, yalvarırım köyümüze dokunma!\"\n\nAskerlerin ise ganimet hırsıyla ambarlara bakıyor...";
 
 
         CreateButton("Köyü Yağmalayın! (Zulüm)", () => 
         {
             foreach(Transform child in buttonContainer) Destroy(child.gameObject);
             
-            descText.text = "<color=red>ZULÜM!</color>\n\nKurtarıcı olarak girdiğin köyden zalim olarak çıkıyorsun. Askerlerin evleri yağmaladı, ambarları boşalttı. Hazinen doldu taştı ama şerefin iki paralık oldu!\n\n<size=85%><color=red>(Nasip Sıfırlandı! Ağır Moral Kaybı... +300 Akçe, +150 Erzak)</color></size>";
+            descText.text = "ZULÜM!\n\nKurtarıcı olarak girdiğin köyden zalim olarak çıkıyorsun. Askerlerin evleri yağmaladı, ambarları boşalttı. Hazinen doldu taştı ama şerefin iki paralık oldu!\n\n<size=85%>(Nasip Sıfırlandı! Ağır Moral Kaybı... +300 Akçe, +150 Erzak)</size>";
             
             MoneyManager.Instance.Add(300);
             SupplyManager.Instance.AddFood(150);
@@ -596,7 +663,7 @@ private void ResolveVillageBattle(int difficulty)
         {
             foreach(Transform child in buttonContainer) Destroy(child.gameObject);
             
-            descText.text = "<color=green>ADALET!</color>\n\n<color=#FFD700>\"Biz harami değiliz! Sadece ölen işgalcilerin silahlarını alın!\"</color> diye gürledin. \n\nKöy halkı sevinç gözyaşlarıyla sana dualar etti. Askerlerin onurlu bir komutanın emrinde olmaktan gurur duydu.\n\n<size=85%><color=yellow>(Nasip Arttı! +50 Akçe, +20 Erzak)</color></size>";
+            descText.text = "ADALET!\n\n\"Biz harami değiliz! Sadece ölen işgalcilerin silahlarını alın!\" diye gürledin. \n\nKöy halkı sevinç gözyaşlarıyla sana dualar etti. Askerlerin onurlu bir komutanın emrinde olmaktan gurur duydu.\n\n<size=85%>(Nasip Arttı! +50 Akçe, +20 Erzak)</size>";
             
             MoneyManager.Instance.Add(50);
             SupplyManager.Instance.AddFood(20);
@@ -617,11 +684,11 @@ private void ResolveVillageBattle(int difficulty)
     
         if (readySoldiers == 0)
         {
-            descText.text += "\n\n<color=red>SAVAŞA HAZIR ASKER YOK!</color>\nHerkes görevde, çalışıyor veya yaralı.";
+            descText.text += "\n\nSAVAŞA HAZIR ASKER YOK!\nHerkes görevde, çalışıyor veya yaralı.";
         }
         else
         {
-            descText.text += $"\n\nSavaşa Hazır Asker: <color=green>{readySoldiers}</color>";
+            descText.text += $"\n\nSavaşa Hazır Asker: {readySoldiers}";
         }
 
         GameObject atkBtnObj = Instantiate(buttonPrefab, buttonContainer);
@@ -679,11 +746,11 @@ private void ResolveVillageBattle(int difficulty)
             currentLootItems = ExpeditionManager.Instance.tempItems.Count;
         }
 
-        descText.text = "Ağır silahlı muhafızlar tarafından korunan büyük bir ticaret kervanına denk geldin. Kervanbaşı sana seslendi:\n\n<color=#FFD700>\"Uç Beyi! Kampa doğru gidiyoruz. Dilersen ganimetlerini %10 komisyon karşılığında senin adına güvenle otağına ulaştırabiliriz.\"</color>\n\n";
+        descText.text = "Ağır silahlı muhafızlar tarafından korunan büyük bir ticaret kervanına denk geldin. Kervanbaşı sana seslendi:\n\n\"Uç Beyi! Kampa doğru gidiyoruz. Dilersen ganimetlerini %10 komisyon karşılığında senin adına güvenle otağına ulaştırabiliriz.\"\n\n";
 
         if (currentLootGold <= 0 && currentLootItems <= 0)
         {
-            descText.text += "<color=red>Ancak şu an sefer çantanda gönderecek hiçbir ganimetin yok.</color>";
+            descText.text += "Ancak şu an sefer çantanda gönderecek hiçbir ganimetin yok.";
             
             CreateButton("Teşekkür Et ve Ayrıl", () => { ClosePanel(); });
         }
@@ -692,7 +759,7 @@ private void ResolveVillageBattle(int difficulty)
             int fee = Mathf.RoundToInt(currentLootGold * 0.1f);
             int safeGold = currentLootGold - fee;
             
-            descText.text += $"<color=yellow>Çantandaki Altın: {currentLootGold}\nKesinti (%10): -{fee}\nKampa Ulaşacak: {safeGold}</color>";
+            descText.text += $"Çantandaki Altın: {currentLootGold}\nKesinti (%10): -{fee}\nKampa Ulaşacak: {safeGold}";
 
             CreateButton($"Ganimetleri Yolla (Komisyon: {fee} Akçe)", () => 
             {
@@ -701,7 +768,7 @@ private void ResolveVillageBattle(int difficulty)
                 
                 foreach(Transform child in buttonContainer) Destroy(child.gameObject);
                 
-                descText.text = "<color=green>GÜVENDESİN!</color>\n\nKervan muhafızları ganimetlerini teslim aldı. Artık haritada başına ne gelirse gelsin, bu eşyalar ve altınlar kampındaki hazinede seni bekliyor olacak.\n\n<size=85%>(Hafifleyen çantanla yola daha cesur devam edebilirsin!)</size>";
+                descText.text = "GÜVENDESİN!\n\nKervan muhafızları ganimetlerini teslim aldı. Artık haritada başına ne gelirse gelsin, bu eşyalar ve altınlar kampındaki hazinede seni bekliyor olacak.\n\n<size=85%>(Hafifleyen çantanla yola daha cesur devam edebilirsin!)</size>";
                 
                 CreateButton("Yola Devam Et", () => { ClosePanel(); });
             });
@@ -719,11 +786,11 @@ private void ResolveVillageBattle(int difficulty)
     
         if (readySoldiers == 0)
         {
-            descText.text += "\n\n<color=red>SAVAŞA HAZIR ASKER YOK!</color>\nHerkes görevde, çalışıyor veya yaralı.";
+            descText.text += "\n\nSAVAŞA HAZIR ASKER YOK!\nHerkes görevde, çalışıyor veya yaralı.";
         }
         else
         {
-            descText.text += $"\n\nSavaşa Hazır Asker: <color=green>{readySoldiers}</color>";
+            descText.text += $"\n\nSavaşa Hazır Asker: {readySoldiers}";
         }
 
         GameObject atkBtnObj = Instantiate(buttonPrefab, buttonContainer);
@@ -767,11 +834,11 @@ private void ResolveVillageBattle(int difficulty)
     
         if (readySoldiers == 0)
         {
-            descText.text += "\n\n<color=red>SAVAŞA HAZIR ASKER YOK!</color>\nHerkes görevde, çalışıyor veya yaralı.";
+            descText.text += "\n\nSAVAŞA HAZIR ASKER YOK!\nHerkes görevde, çalışıyor veya yaralı.";
         }
         else
         {
-            descText.text += $"\n\nSavaşa Hazır Asker: <color=green>{readySoldiers}</color>";
+            descText.text += $"\n\nSavaşa Hazır Asker: {readySoldiers}";
         }
         
 
@@ -818,17 +885,17 @@ private void ResolveVillageBattle(int difficulty)
             bool isWin = totalScore >= kacisBaraji;
 
             // RPG Matematik Yazısı
-            string mathText = $"\n\n<size=85%><b><color=#FFD700>Nasip ({mevcutNasip}) + Zar ({zarSonucu}) = {totalScore}</color></b> / Kaçış Barajı ({kacisBaraji})</size>\n";
+            string mathText = $"\n\n<size=85%><b>=Nasip ({mevcutNasip}) + Zar ({zarSonucu}) = {totalScore}</b> / Kaçış Barajı ({kacisBaraji})</size>\n";
 
             if (isWin)
             {
-                descText.text = $"<color=green>YOLUMUZ AÇIKMIŞ!</color>\n\nNasibimiz yaver gitti, pusuyu fark edip sessizce etraflarından dolanmayı başardık. Kan dökülmeden izimizi kaybettirdik!\n" + mathText;
+                descText.text = $"YOLUMUZ AÇIKMIŞ!\n\nNasibimiz yaver gitti, pusuyu fark edip sessizce etraflarından dolanmayı başardık. Kan dökülmeden izimizi kaybettirdik!\n" + mathText;
                 
                 CreateButton("Yola Devam Et", () => { ClosePanel(); });
             }
             else
             {
-                descText.text = $"<color=red>NASİP KAPALIYMIŞ!</color>\n\nKaçmaya çalışırken kuru bir dala bastık... Bizi fark ettiler! Üstelik hazırlıksız yakalandığımız için moraller bozuldu(-10).\n" + mathText;
+                descText.text = $"NASİP KAPALIYMIŞ!\n\nKaçmaya çalışırken kuru bir dala bastık... Bizi fark ettiler! Üstelik hazırlıksız yakalandığımız için moraller bozuldu(-10).\n" + mathText;
                 
                 if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-10); 
 
@@ -856,7 +923,7 @@ private void ResolveVillageBattle(int difficulty)
 public void SetupDervishEvent()
     {
         titleText.text = "Yolcu Derviş";
-        descText.text = "Tozlu yolların kenarında, üstü başı yamalı ama gözleri huzurla parlayan yaşlı bir derviş oturuyor. Önündeki boş ahşap kaseye bakarak mırıldanıyor:\n\n<color=#FFD700>\"Dünya malı dünyada kalır Uç Beyim... Yolda kalmışa bir lokma, bir akçe sadakan var mıdır? Veren el, alan elden üstündür.\"</color>";
+        descText.text = "Tozlu yolların kenarında, üstü başı yamalı ama gözleri huzurla parlayan yaşlı bir derviş oturuyor. Önündeki boş ahşap kaseye bakarak mırıldanıyor:\n\n\"Dünya malı dünyada kalır Uç Beyim... Yolda kalmışa bir lokma, bir akçe sadakan var mıdır? Veren el, alan elden üstündür.\"";
         
         // if(dervishSprite != null) eventImage.sprite = dervishSprite;
 
@@ -867,7 +934,7 @@ public void SetupDervishEvent()
             {
                 foreach(Transform child in buttonContainer) Destroy(child.gameObject);
                 
-                descText.text = "Dervişin yüzünde sıcacık bir tebessüm belirdi. Ellerini göğe açıp sana dualar etti.\n\n<color=green>\"Allah kılıcını keskin, atını kavi, nasibini gür eylesin evlat...\"</color>\n\n<size=85%><color=yellow>(Nasip Arttı! Askerlerin içi huzurla doldu.)</color></size>";
+                descText.text = "Dervişin yüzünde sıcacık bir tebessüm belirdi. Ellerini göğe açıp sana dualar etti.\n\n\"Allah kılıcını keskin, atını kavi, nasibini gür eylesin evlat...\"\n\n<size=85%>(Nasip Arttı! Askerlerin içi huzurla doldu.)</size>";
                 
                 if (NasipManager.Instance != null) NasipManager.Instance.AddNasip(2); // Nasibi artır
                 if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(10); // Vicdani rahatlık
@@ -888,7 +955,7 @@ public void SetupDervishEvent()
                 SupplyManager.Instance.SpendFood(20);
                 foreach(Transform child in buttonContainer) Destroy(child.gameObject);
                 
-                descText.text = "Derviş uzattığın ekmeği ve suyu minnetle kabul etti.\n\n<color=green>\"Sofranız bereketli olsun Beyim...\"</color>\n\n<size=85%><color=yellow>(Nasip Arttı!)</color></size>";
+                descText.text = "Derviş uzattığın ekmeği ve suyu minnetle kabul etti.\n\n\"Sofranız bereketli olsun Beyim...\"\n\n<size=85%>(Nasip Arttı!)</size>";
                 
                 if (NasipManager.Instance != null) NasipManager.Instance.AddNasip(1); 
                 
@@ -905,7 +972,7 @@ public void SetupDervishEvent()
         {
             foreach(Transform child in buttonContainer) Destroy(child.gameObject);
             
-            descText.text = "Askerlerine yürüyüş kararı verdin. Derviş arkandan sessizce bakakaldı. Havanın aniden soğuduğunu ve rüzgarın tersine esmeye başladığını hissettin...\n\n<size=85%><color=red>(Nasip Kapandı... Ordunun morali bozuldu.)</color></size>";
+            descText.text = "Askerlerine yürüyüş kararı verdin. Derviş arkandan sessizce bakakaldı. Havanın aniden soğuduğunu ve rüzgarın tersine esmeye başladığını hissettin...\n\n<size=85%>(Nasip Kapandı... Ordunun morali bozuldu.)</size>";
             
             if (NasipManager.Instance != null) NasipManager.Instance.SpendNasip(1); 
             if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-5); 
@@ -917,14 +984,14 @@ public void SetupDervishEvent()
     public void SetupCaravanEvent()
     {
         titleText.text = "Savunmasız Kervan";
-        descText.text = "Orman yolunda ilerlerken çamura saplanmış, tekerleği kırılmış zengin bir tüccar kervanı gördün. Muhafızları kaçmış, tüccar ise çaresizce mallarını kurtarmaya çalışıyor. Arabanın kasası altın ve erzakla dolup taşıyor.\n\n<color=#FFD700>\"Uç Beyim! Yetiş imdadıma! Kurtların ve eşkıyaların insafına kaldım!\"</color>";
+        descText.text = "Orman yolunda ilerlerken çamura saplanmış, tekerleği kırılmış zengin bir tüccar kervanı gördün. Muhafızları kaçmış, tüccar ise çaresizce mallarını kurtarmaya çalışıyor. Arabanın kasası altın ve erzakla dolup taşıyor.\n\n\"Uç Beyim! Yetiş imdadıma! Kurtların ve eşkıyaların insafına kaldım!\"";
         
 
         CreateButton("Yardım Eli Uzat (Askerleri Yor)", () => 
         {
             foreach(Transform child in buttonContainer) Destroy(child.gameObject);
             
-            descText.text = "Askerlerine emir verdin, omuz omuza verip arabayı çamurdan çıkardınız. Tüccar minnetle ellerine sarıldı ve sana helalinden bir miktar ödül verdi.\n\n<color=green>\"Hızır gibi yetiştiniz Beyim! Bu kadarı ancak helaldir!\"</color>\n\n<size=85%><color=yellow>(Nasip Arttı! +100 Akçe, +10 Odun, Ancak askerler yoruldu.)</color></size>";
+            descText.text = "Askerlerine emir verdin, omuz omuza verip arabayı çamurdan çıkardınız. Tüccar minnetle ellerine sarıldı ve sana helalinden bir miktar ödül verdi.\n\n\"Hızır gibi yetiştiniz Beyim! Bu kadarı ancak helaldir!\"\n\n<size=85%>(Nasip Arttı! +100 Akçe, +10 Odun, Ancak askerler yoruldu.)</size>";
             
             if (NasipManager.Instance != null) NasipManager.Instance.AddNasip(1);
             if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-5); // Yorulma cezası
@@ -938,7 +1005,7 @@ public void SetupDervishEvent()
         {
             foreach(Transform child in buttonContainer) Destroy(child.gameObject);
             
-            descText.text = "<color=red>ZULÜM!</color>\n\nKılıçları çektiniz. Tüccar ağlayarak ormana kaçtı. Arabadaki tüm zenginliğe çöktünüz. Hazinen dolup taştı ama askerlerinin yüzündeki o onurlu ifade yerini hırsızlık utancına bıraktı. Gökyüzü karardı...\n\n<size=85%><color=red>(Nasip Ciddi Şekilde Düştü! Büyük Kul Hakkı... Ordunun Şerefi Zedelendi.)</color></size>";
+            descText.text = "ZULÜM!\n\nKılıçları çektiniz. Tüccar ağlayarak ormana kaçtı. Arabadaki tüm zenginliğe çöktünüz. Hazinen dolup taştı ama askerlerinin yüzündeki o onurlu ifade yerini hırsızlık utancına bıraktı. Gökyüzü karardı...\n\n<size=85%>(Nasip Ciddi Şekilde Düştü! Büyük Kul Hakkı... Ordunun Şerefi Zedelendi.)</size>";
             
             if (NasipManager.Instance != null) NasipManager.Instance.SpendNasip(3);
             if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-20);
@@ -954,7 +1021,7 @@ public void SetupDervishEvent()
         {
             foreach(Transform child in buttonContainer) Destroy(child.gameObject);
             
-            descText.text = "Tüccarın feryatlarına kulak tıkayıp yoluna devam ettin. Arkada onu kurtlara ve eşkıyalara yem olarak bıraktın.\n\n<size=85%><color=gray>(Zaman kaybetmediniz ama vicdanlar sızladı.)</color></size>";
+            descText.text = "Tüccarın feryatlarına kulak tıkayıp yoluna devam ettin. Arkada onu kurtlara ve eşkıyalara yem olarak bıraktın.\n\n<size=85%>(Zaman kaybetmediniz ama vicdanlar sızladı.)</size>";
             if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-5); 
             if (ReputationManager.Instance != null)ReputationManager.Instance.ChangeReputation(-5);
             CreateButton("Yola Devam Et", () => { ClosePanel(); });
@@ -983,7 +1050,7 @@ public void SetupDervishEvent()
     void SetupArcheryEvent()
     {
         titleText.text = "Okçuluk Müsabakası";
-        descText.text  = "Bir Türkmen beyi senin yiğitliğini ölçmek için okçuluk müsabakasına davet etti.\n\n<color=#66001D>Hangi yiğidi göndereceksin? (Hızı yüksek asker rüzgardan daha az etkilenir!)</color>";
+        descText.text  = "Bir Türkmen beyi senin yiğitliğini ölçmek için okçuluk müsabakasına davet etti.\n\nHangi yiğidi göndereceksin? (Hızı yüksek asker rüzgardan daha az etkilenir!)";
         if (bossSprite != null) eventImage.sprite = archerySprite;
 
         // Asker seçim butonları
@@ -1010,7 +1077,7 @@ public void SetupDervishEvent()
         }
 
         if (!hasValidSoldier)
-            descText.text += "\n\n<color=red>Gönderecek boşta askerin yok!</color>";
+            descText.text += "\n\nGönderecek boşta askerin yok!";
 
         CreateButton("Teklifi Reddet (-5 İtibar)", () =>
         {
@@ -1021,13 +1088,13 @@ public void SetupDervishEvent()
     }
 
 
-    void SetupAtYarisi()
+   void SetupAtYarisi()
     {
         titleText.text = "Büyük At Yarışı";
-          if(villageSprite != null) eventImage.sprite = horseSprite;
+        if(horseSprite != null) eventImage.sprite = horseSprite;
         descText.text = $"Şehrin ileri gelenlerinden Mustafa Bey seni at yarışına davet etti. (Giriş: 30 Akçe)\n\n" +
-                        $"<color=#66001D>Rakip: {atYarisiRakipIsim} (Hızı: {atYarisiRakipHiz})</color>\n\n" +
-                        $"<color=yellow>Hangi yiğidi göndereceksin? (Askerinin hızı üzerine 6'lık zar atılacaktır.)</color>";
+                        $"Rakip: {atYarisiRakipIsim} (Hızı: {atYarisiRakipHiz})\n\n" +
+                        $"Hangi yiğidi göndereceksin?";
 
         Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
         bool hasValidSoldier = false;
@@ -1037,44 +1104,51 @@ public void SetupDervishEvent()
             if (soldier.CompareTag("MySoldier") && soldier.data != null && soldier.data.currentHealth > 0 && !soldier.isOnMission && soldier.data.currentActivity != SoldierActivity.Working)
             {
                 hasValidSoldier = true;
-                
                 int askerHiz = soldier.data.speed;
                 string btnText = $"{soldier.data.gladiatorName} (Hız: {askerHiz})";
 
                 CreateButton(btnText, () => {
-                    
                     if (MoneyManager.Instance.gold >= 30)
                     {
                         MoneyManager.Instance.Spend(30);
-                       
-                
-                        ResolveContest(soldier, NodeType.Atyarisi, askerHiz, atYarisiRakipHiz, atYarisiRakipIsim);
+                        ClosePanel();
+                        HorseRidingMiniGame.Instance.StartHorseRiding(soldier, (isWin) => 
+                        {
+                            eventPanel.SetActive(true);
+                            foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+
+                            if (isWin) {
+                                descText.text = $"ZAFER!\n\n{soldier.data.gladiatorName} rüzgar gibi esti! Yarışı birinci bitirdi.";
+                                MoneyManager.Instance.Add(150); 
+                                if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(15);
+                                AudioManager.Instance.PlayCheer(); 
+                            } else {
+                                descText.text = $"KAYBETTİN!\n\n{soldier.data.gladiatorName}'ın atı tökezledi, yarışı gerilerde tamamladı.";
+                                if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-10);
+                            }
+                            CreateButton("Devam Et", () => { ClosePanel(); });
+                        });
                     }
-                    else
-                    {
-                        NotificationManager.Instance.Show("Yarışa katılmak için 30 Akçen yok!", NotificationType.Error);
-                    }
+                    else NotificationManager.Instance.Show("Yarışa katılmak için 30 Akçen yok!", NotificationType.Error);
                 });
             }
         }
 
-        if (!hasValidSoldier) descText.text += "\n\n<color=red>Gönderecek boşta askerin yok!</color>";
-
-        AddEscapeButton(
-            escapeText:    "Teklifi Reddet",
-            escapeType:    EscapeType.Costly,
-            reputationPenalty: 5,
-            onEscape:      () => { ClosePanel(); }
-        );
+        // SOFT-LOCK KORUMASI: Sadece yetersiz durumdaysa çıkış ver, aksi takdirde kaçış yok.
+        if (!hasValidSoldier || MoneyManager.Instance.gold < 30)
+        {
+            descText.text += "\n\nYarışa katılacak akçen veya askerin yok. Ahali sana gülerek dağıldı.";
+            CreateButton("Meydandan Boynu Bükük Ayrıl", () => { ClosePanel(); });
+        }
     }
 
     void SetupYagliGures()
     {
         titleText.text = "Yağlı Güreş!";
-          if(villageSprite != null) eventImage.sprite = wrestlingSprite;
+        if(wrestlingSprite != null) eventImage.sprite = wrestlingSprite;
         descText.text = $"Meydanda davullar çalıyor. Başpehlivanlık için er meydanına bir yiğidini sal. (Giriş: 50 Akçe)\n\n" +
-                        $"<color=#66001D>Rakip Pehlivan: {guresRakipIsim} (Gücü: {guresRakipGuc})</color>\n\n" +
-                        $"<color=#66001D>Kimi yollayacaksın? (Askerinin gücü üzerine 6'lık zar atılacaktır.)</color>";
+                        $"Rakip Pehlivan: {guresRakipIsim} (Gücü: {guresRakipGuc})\n\n" +
+                        $"Kimi yollayacaksın?";
         
         Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
         bool hasValidSoldier = false;
@@ -1084,36 +1158,45 @@ public void SetupDervishEvent()
             if (soldier.CompareTag("MySoldier") && soldier.data != null && soldier.data.currentHealth > 0 && !soldier.isOnMission && soldier.data.currentActivity != SoldierActivity.Working)
             {
                 hasValidSoldier = true;
-                
                 int askerGuc = soldier.data.strength;
                 string btnText = $"{soldier.data.gladiatorName} (Güç: {askerGuc})";
                 
                 CreateButton(btnText, () => {
-                    
                     if (MoneyManager.Instance.gold >= 50)
                     {
                         MoneyManager.Instance.Spend(50);
-                    
-                        
-                        ResolveContest(soldier, NodeType.YagliGures, askerGuc, guresRakipGuc, guresRakipIsim);
+                        ClosePanel();
+                        WrestlingMiniGame.Instance.StartWrestling(soldier, guresRakipGuc, (isWin) => 
+                        {
+                            eventPanel.SetActive(true);
+                            foreach(Transform child in buttonContainer) Destroy(child.gameObject);
+
+                            if (isWin) {
+                                descText.text = $"ZAFER!\n\n{soldier.data.gladiatorName} sırtı yere gelmeden rakibi tuş etti!";
+                                MoneyManager.Instance.Add(250); 
+                                if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(15);
+                                AudioManager.Instance.PlayCheer(); 
+                            } else {
+                                descText.text = $"KAYBETTİN!\n\n{soldier.data.gladiatorName} elinden geleni yaptı ama dayanamadı.";
+                                if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-10);
+                            }
+                            CreateButton("Devam Et", () => { ClosePanel(); });
+                        });
                     }
-                    else
-                    {
-                        NotificationManager.Instance.Show("Güreşe katılmak için 50 Akçen yok!", NotificationType.Error);
-                    }
+                    else NotificationManager.Instance.Show("Güreşe katılmak için 50 Akçen yok!", NotificationType.Error);
                 });
             }
         }
 
-        if (!hasValidSoldier) descText.text += "\n\n<color=red>Gönderecek boşta askerin yok!</color>";
-        
-        AddEscapeButton(
-            escapeText:    "Bize Göre Değil",
-            escapeType:    EscapeType.Costly,
-            reputationPenalty: 5,
-            onEscape:      () => { ClosePanel(); }
-        );
+        // SOFT-LOCK KORUMASI
+        if (!hasValidSoldier || MoneyManager.Instance.gold < 50)
+        {
+            descText.text += "\n\nMeydana çıkacak gücün veya akçen yok.";
+            CreateButton("Utançla Ayrıl", () => { ClosePanel(); });
+        }
     }
+
+  
 
    
    private void ResolveContest(Gladiator selectedSoldier, NodeType eventType, int askerStat, int rakipStat, string rakipAd)
@@ -1129,7 +1212,7 @@ public void SetupDervishEvent()
             string statAd = eventType == NodeType.Atyarisi ? "Hızı" : "Gücü";
 
             // RPG Matematik Yazısı
-            string mathText = $"\n\n<size=85%><b><color=#FFD700>Askerin {statAd} ({askerStat}) + Zar ({zarSonucu}) = {totalScore}</color></b> / Hakem Puanı ({rakipStat})</size>\n";
+            string mathText = $"\n\n<size=85%><b>=Askerin {statAd} ({askerStat}) + Zar ({zarSonucu}) = {totalScore}</b> / Hakem Puanı ({rakipStat})</size>\n";
 
             if (isWin)
             {
@@ -1137,7 +1220,7 @@ public void SetupDervishEvent()
                     ? $"{selectedSoldier.data.gladiatorName} rüzgar gibi esti! Yarışı birinci bitirdi."
                     : $"{selectedSoldier.data.gladiatorName} sırtı yere gelmeden rakibi {rakipAd}'i tuş etti!";
 
-                descText.text = $"<color=green>ZAFER!</color>\n\nYiğidimiz beklentileri aştı ve müsabakayı kazandı!\n\n" + flavorText + mathText;
+                descText.text = $"ZAFER!\n\nYiğidimiz beklentileri aştı ve müsabakayı kazandı!\n\n" + flavorText + mathText;
 
                 int reward = eventType == NodeType.Atyarisi ? 150 : 250;
                 MoneyManager.Instance.Add(reward); 
@@ -1150,7 +1233,7 @@ public void SetupDervishEvent()
                     ? $"{selectedSoldier.data.gladiatorName}'ın atı tökezledi, yarışı gerilerde tamamladı. Ahali bize güldü."
                     : $"{selectedSoldier.data.gladiatorName} elinden geleni yaptı ama rakibine dayanamadı. Meydandan boynu bükük ayrıldık.";
 
-                descText.text = $"<color=red>KAYBETTİN!</color>\n\nMaalesef yiğidimiz müsabakayı kaybetti.\n\n" + flavorText + mathText;
+                descText.text = $"KAYBETTİN!\n\nMaalesef yiğidimiz müsabakayı kaybetti.\n\n" + flavorText + mathText;
                 
                 if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-10);
             }
@@ -1240,7 +1323,7 @@ public void SetupDervishEvent()
 
         descText.text =
             $"Yolun üzerinde bir han var. İçeride birkaç er seni Cenk masasına çağırıyor.\n\n" +
-            $"<color=#66001D>Rakip Gücü: ~{opponentPts} puan</color>\n\n" +
+            $"Rakip Gücü: ~{opponentPts} puan\n\n" +
             $"Kazanırsan itibar kazanırsın. Kaybedersen moral düşer.";
 
         CreateButton("Masaya Otur", () =>

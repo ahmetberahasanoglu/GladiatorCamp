@@ -27,7 +27,7 @@ public class GladiatorAI : MonoBehaviour
     public Transform arrowSpawnPoint; 
 
     [Header("Özellikler")]
-    public string enemyTag = "Enemy"; 
+    public string enemyTag = "EnemySoldier"; 
     public float baseAttackAnimLength = 1.733f; 
 
     [Header("Durum")]
@@ -87,6 +87,9 @@ public ParticleSystem ultimateVFX; // Ulti atarken çıkacak partikül (örn: al
     private bool isCastingUltimate = false; 
     private bool isUltimateStrike = false;
 
+    [Header("Özel Hedef (RTS Sistemi)")]
+    public Transform forcedTarget;
+
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -108,7 +111,8 @@ public ParticleSystem ultimateVFX; // Ulti atarken çıkacak partikül (örn: al
       
         HandleStatusEffects();
 
-        if (BattleManager.Instance.state != BattleState.Fighting || !isInBattle || isGettingHit) return;
+      if (!isInBattle || isGettingHit) return;
+      if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Fighting) return;
 
 
         if (_delayTimer < battleStartDelay)
@@ -399,6 +403,20 @@ IEnumerator CastUltimateRoutine()
                     }
                     // ─────────────────────────────────────────────────────
                 }
+                else 
+        {
+            // ── YENİ: HEDEF BİR KÖYLÜ MÜ? ONA DA VUR! ──
+            VillagerNPC villager = target.GetComponent<VillagerNPC>();
+            if (villager != null && !villager.IsDead)
+            {
+                // Köylü zırhsız olduğu için net hasar alır
+                villager.TakeDamage(attackDamage);
+                
+                // Vuruş sesi
+                if (AudioManager.Instance != null) 
+                    AudioManager.Instance.PlaySFX(AudioManager.Instance.hitSound, 0.6f);
+            }
+        }
             }
         }
     }
@@ -579,6 +597,8 @@ IEnumerator CastUltimateRoutine()
         {
             BattleManager.Instance.ClearFocusTarget();
         }
+        if (VillageDefenseManager.Instance != null && VillageDefenseManager.Instance.currentFocusTarget == this.transform)
+            VillageDefenseManager.Instance.ClearFocusTarget();
          if (AudioManager.Instance != null)
         {
             if (isBeast)
@@ -625,47 +645,78 @@ IEnumerator CastUltimateRoutine()
         
         if (BattleManager.Instance != null) BattleManager.Instance.CheckBattleStatus();
         if (NotificationManager.Instance != null) NotificationManager.Instance.Show($"{gladiator.data.gladiatorName} öldü", NotificationType.Error);
-
+        
         Destroy(gameObject, 2f);
+        BattleElementUI.Instance?.Refresh();
     }
 
     // ... FindNearestTarget, ReviveForCamp, MakeGazi, LifeCycleRoutine, vb. diğer fonksiyonlar aynı kalacak ...
     
     void FindNearestTarget()
     {
-        Gladiator[] allEnemies = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
-        float minDst = Mathf.Infinity;
-        Transform bestTarget = null;
-         if (gameObject.CompareTag("MySoldier") && BattleManager.Instance != null && BattleManager.Instance.currentFocusTarget != null)
+        // 1. Biz kimiz? Avımız kim?
+        // Eğer ben "MySoldier" isem düşmanları arayacağım, değilsem senin askerlerini ve köylüleri arayacağım
+        if (forcedTarget != null)
         {
-            GladiatorAI focusAI = BattleManager.Instance.currentFocusTarget.GetComponent<GladiatorAI>();
-            if (focusAI != null && !focusAI.isDead)
+            GladiatorAI fAI = forcedTarget.GetComponent<GladiatorAI>();
+            VillagerNPC fNPC = forcedTarget.GetComponent<VillagerNPC>();
+            
+            bool isForcedAlive = (fAI != null && !fAI.isDead) || (fNPC != null && !fNPC.IsDead);
+            
+            if (isForcedAlive)
             {
-                target = BattleManager.Instance.currentFocusTarget;
+                target = forcedTarget; // Başka hiç kimseye bakma, buna git!
                 return; 
             }
-        }
-        
-        foreach (Gladiator e in allEnemies)
-        {
-            // Eğer bizimle aynı takımdaysa es geç (Tag kontrolü yerine dinamik kontrol daha iyidir ama kendi mantığına göre uyarlayabilirsin)
-            if (e.gameObject.CompareTag(this.gameObject.tag)) continue; 
-
-            GladiatorAI ai = e.GetComponent<GladiatorAI>();
-            if (ai != null && !ai.isDead && ai.isInBattle)
+            else
             {
-                float dst = Vector3.Distance(transform.position, e.transform.position);
+                forcedTarget = null; // Hedef öldüyse kilidi aç, serbest kal
+            }
+        }
+        string targetTag = this.CompareTag("MySoldier") ? "EnemySoldier" : "MySoldier";
+        
+        // 2. Sahnedeki o etikete sahip tüm hedefleri (Askerler ve Köylüler dahil) listele
+        GameObject[] potentialTargets = GameObject.FindGameObjectsWithTag(targetTag);
+        
+        float minDst = Mathf.Infinity;
+        Transform bestTarget = null;
+        
+       
+
+        // 4. En yakın CANLI hedefi seç (Hem Askerleri hem Köylüleri kontrol et)
+        foreach (var pt in potentialTargets)
+        {
+            if (pt == this.gameObject) continue;
+
+            bool isAlive = false;
+
+            // A) Hedef bir Asker/Düşman mı?
+            GladiatorAI ai = pt.GetComponent<GladiatorAI>();
+            if (ai != null && !ai.isDead && ai.isInBattle) 
+            {
+                isAlive = true;
+            }
+
+            // B) Hedef bir Köylü mü? (Köylülerin GladiatorAI scripti yoktur!)
+            VillagerNPC villager = pt.GetComponent<VillagerNPC>();
+            if (villager != null && !villager.IsDead) 
+            {
+                isAlive = true;
+            }
+
+            // Eğer hedef yaşıyorsa, mesafesini ölç
+            if (isAlive)
+            {
+                float dst = Vector3.Distance(transform.position, pt.transform.position);
                 if (dst < minDst) 
                 { 
                     minDst = dst; 
-                    bestTarget = e.transform; 
+                    bestTarget = pt.transform; 
                 }
             }
         }
-       
-GladiatorAI[] allUnits = FindObjectsByType<GladiatorAI>(FindObjectsSortMode.None);
-        float bestValue = Mathf.Infinity;
-        // Eğer şu an bir hedefimiz YOKSA veya YENİ HEDEF eskisine göre bariz şekilde daha yakındaysa değiştir!
+
+        // 5. Kararsızlığı (Ping-pong) önleyerek yeni hedefe kitlen
         if (target == null)
         {
             target = bestTarget;
@@ -673,8 +724,7 @@ GladiatorAI[] allUnits = FindObjectsByType<GladiatorAI>(FindObjectsSortMode.None
         else if (bestTarget != null && bestTarget != target)
         {
             float currentTargetDst = Vector3.Distance(transform.position, target.position);
-            // Kararsızlığı (Ping-pong) önlemek için: Yeni düşman %30 daha yakınsa dön!
-            if (minDst < currentTargetDst * 0.7f) 
+            if (minDst < currentTargetDst * 0.7f) // Yeni hedef %30 daha yakınsa ona dön
             {
                 target = bestTarget;
             }

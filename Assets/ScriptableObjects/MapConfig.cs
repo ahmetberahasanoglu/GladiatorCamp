@@ -26,6 +26,7 @@ public class MapConfig : ScriptableObject
     public Sprite tuccarIcon; 
     public Sprite dungeonIcon; 
     public Sprite towerIcon; 
+    public Sprite asikIcon; 
 
 
      
@@ -55,6 +56,7 @@ public class MapConfig : ScriptableObject
             case NodeType.Tuccar: return tuccarIcon;
             case NodeType.Vahsi: return wildIcon;
             case NodeType.Zindan: return dungeonIcon;
+            case NodeType.AsikAtismasi: return dungeonIcon;
             default: return villageIcon;
         }
     }

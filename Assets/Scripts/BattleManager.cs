@@ -100,6 +100,12 @@ public class BattleManager : MonoBehaviour
 
     [Header("Vahşi Hayvan")]
     public GameObject bearPrefab;
+
+
+    [Header("RTS Seçim Sistemi")]
+    public GladiatorAI currentlySelectedSoldier; // O an tıkladığımız asker
+    public GameObject selectionIndicatorPrefab; // Askerin altında çıkacak yeşil halka
+    private GameObject _activeSelectionIndicator;
     private bool _isBearBattle = false;
 
     void Awake() => Instance = this;
@@ -142,7 +148,7 @@ public class BattleManager : MonoBehaviour
                 $"Geri çekilmek istiyor musun?\n" +
                 $"Sağ asker sayısı: <color=yellow>{aliveSoldiers}</color>\n" +
                 $"İtibar cezası: <color=red>-{penalty}</color>\n" +
-                $"<size=80%>Geri çekilmek bu savaşı kaybettirir.</size>";
+                $"Geri çekilmek bu savaşı kaybettirir.";
         }
 
         // Zamanı dondur
@@ -396,7 +402,7 @@ public class BattleManager : MonoBehaviour
                     $"<color=yellow>+{goldReward} Akçe (Çantaya)</color>\n" +
                     $"<color=green>+{repReward} İtibar (Çantaya)</color>\n" +
                     $"+{foodReward} Erzak\n+{moraleReward} Moral" + nushaMetni+
-                    (lootMult > 1f ? $"\n<color=yellow><size=75%>★ Bereketli Yol bonusu aktif</size></color>" : "");
+                    (lootMult > 1f ? $"\n<color=yellow><size=75%> Bereketli Yol bonusu aktif</size></color>" : "");
 
             if (ExpeditionManager.Instance != null && ExpeditionManager.Instance.isExpeditionActive)
                 ExpeditionManager.Instance.AddLoot(goldReward, repReward);
@@ -425,7 +431,7 @@ public class BattleManager : MonoBehaviour
                     $"AĞIR YENİLGİ...\n\nOtağ yasa boğuldu.\n" +
                     $"<color=red>{moralePenalty} Moral</color>\n" +
                     $"<color=red>{repPenalty} İtibar (Çantaya)</color>" +
-                    (moraleMult < 1f ? "\n<color=#64B5F6><size=75%>★ Cesur Yürek relic'i moral kaybını azalttı</size></color>" : "");
+                    (moraleMult < 1f ? "\n<color=#64B5F6><size=75%> Cesur Yürek relic'i moral kaybını azalttı</size></color>" : "");
 
             CampMoraleManager.Instance?.ChangeMorale(moralePenalty);
 
@@ -545,7 +551,7 @@ public class BattleManager : MonoBehaviour
         }
     }
 
-   void SpawnGenericEnemyArray(GameObject prefabToSpawn, int count)
+  void SpawnGenericEnemyArray(GameObject prefabToSpawn, int count)
     {
         if (prefabToSpawn == null) return;
         int row = 0, col = 0;
@@ -567,63 +573,79 @@ public class BattleManager : MonoBehaviour
             var gladiator = newEnemy.GetComponent<Gladiator>();
             if (gladiator != null && gladiator.data != null)
             {
-                // ── YENİ: HER DÜŞMAN İÇİN HAVUZDAN RASTGELE BİR TİP ÇEK! ──
-                EnemyLoadout randomEnemyType = null;
-                if (enemyTierConfig != null)
+                // ── YENİ: KİMLİK KONTROLÜ (AYI MI, İNSAN MI?) ──
+                if (ai != null && ai.isBeast)
                 {
-                    randomEnemyType = enemyTierConfig.GetRandomLoadout(_currentTier);
-                }
+                    // 1. HAYVAN İSE: Havuza hiç girme, kendi vahşi doğasını koru
+                    gladiator.data.gladiatorName = "Vahşi Ayı";
+                    gladiator.data.weaponClass = WeaponClass.Unarmed;
+                    gladiator.data.isRanged = false;
+                    gladiator.data.attackRange = 2.5f; // Ayının pençe menzili biraz daha geniş olabilir
 
-                if (randomEnemyType != null)
-                {
-                    // Çekilen rastgele tipi bu askere uygula
-                    gladiator.data.strength    = randomEnemyType.baseStrength + randomEnemyType.weaponBonus;
-                    gladiator.data.defense     = randomEnemyType.baseDefense  + randomEnemyType.armorBonus;
-                    gladiator.data.speed       = randomEnemyType.baseSpeed;
-                    gladiator.data.stamina     = randomEnemyType.baseStamina;
-                    gladiator.data.level       = randomEnemyType.baseLevel;
-                    gladiator.data.elementType = randomEnemyType.elementType;
-                    gladiator.data.weaponClass = randomEnemyType.weaponClass;
-                    gladiator.data.attackRange = randomEnemyType.weaponRange;
-                    gladiator.data.isRanged    = randomEnemyType.isRanged;
-
-                    if (!string.IsNullOrEmpty(randomEnemyType.displayName))
-                        gladiator.data.gladiatorName = randomEnemyType.displayName;
-
-                    // Mesh'leri aç (Kılıç, Yay, Kalkan vs.)
-                    if (randomEnemyType.activeMeshNames != null)
-                    {
-                        foreach (var meshName in randomEnemyType.activeMeshNames)
-                        {
-                            // ESKİ KOD: var meshObj = newEnemy.transform.Find(meshName);
-                            
-                            // YENİ KOD: Derinlemesine arama yap
-                            Transform meshObj = FindDeepChild(newEnemy.transform, meshName);
-                            
-                            if (meshObj != null) 
-                            {
-                                meshObj.gameObject.SetActive(true);
-                            }
-                            else
-                            {
-                                // Eğer ismini yanlış yazarsan konsolda seni uyarsın
-                                Debug.LogWarning($"{randomEnemyType.displayName} prefabı içinde '{meshName}' bulunamadı! Harf hatası olabilir mi?");
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    // Fallback (ScriptableObject atanmamışsa eski standart çarpana dön)
+                    // Hayvanı da mevcut zorluk seviyesine (Tier) göre güçlendir
                     float tierMult = 1f + (_currentTier - 1) * 0.4f;
                     gladiator.data.strength = Mathf.RoundToInt(gladiator.data.strength * tierMult);
                     gladiator.data.defense  = Mathf.RoundToInt(gladiator.data.defense  * tierMult);
                     gladiator.data.stamina  = Mathf.RoundToInt(gladiator.data.stamina  * tierMult);
                     gladiator.data.level    = _currentTier;
-                    gladiator.data.weaponClass = WeaponClass.Sword; 
-                    gladiator.data.attackRange = 2.0f;
                 }
-                
+                else
+                {
+                    // 2. İNSAN İSE: Havuzdan rastgele bir tip (Şövalye, Okçu vb.) çek!
+                    EnemyLoadout randomEnemyType = null;
+                    if (enemyTierConfig != null)
+                    {
+                        randomEnemyType = enemyTierConfig.GetRandomLoadout(_currentTier);
+                    }
+
+                    if (randomEnemyType != null)
+                    {
+                        // Çekilen rastgele tipi bu askere uygula
+                        gladiator.data.strength    = randomEnemyType.baseStrength + randomEnemyType.weaponBonus;
+                        gladiator.data.defense     = randomEnemyType.baseDefense  + randomEnemyType.armorBonus;
+                        gladiator.data.speed       = randomEnemyType.baseSpeed;
+                        gladiator.data.stamina     = randomEnemyType.baseStamina;
+                        gladiator.data.level       = randomEnemyType.baseLevel;
+                        gladiator.data.elementType = randomEnemyType.elementType;
+                        gladiator.data.weaponClass = randomEnemyType.weaponClass;
+                        gladiator.data.attackRange = randomEnemyType.weaponRange;
+                        gladiator.data.isRanged    = randomEnemyType.isRanged;
+
+                        if (!string.IsNullOrEmpty(randomEnemyType.displayName))
+                            gladiator.data.gladiatorName = randomEnemyType.displayName;
+
+                        // Mesh'leri aç (Kılıç, Yay, Kalkan vs.)
+                        if (randomEnemyType.activeMeshNames != null)
+                        {
+                            foreach (var meshName in randomEnemyType.activeMeshNames)
+                            {
+                                Transform meshObj = FindDeepChild(newEnemy.transform, meshName);
+                                
+                                if (meshObj != null) 
+                                {
+                                    meshObj.gameObject.SetActive(true);
+                                }
+                                else
+                                {
+                                    Debug.LogWarning($"{randomEnemyType.displayName} prefabı içinde '{meshName}' bulunamadı! Harf hatası olabilir mi?");
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Fallback (ScriptableObject atanmamışsa eski standart çarpana dön)
+                        float tierMult = 1f + (_currentTier - 1) * 0.4f;
+                        gladiator.data.strength = Mathf.RoundToInt(gladiator.data.strength * tierMult);
+                        gladiator.data.defense  = Mathf.RoundToInt(gladiator.data.defense  * tierMult);
+                        gladiator.data.stamina  = Mathf.RoundToInt(gladiator.data.stamina  * tierMult);
+                        gladiator.data.level    = _currentTier;
+                        gladiator.data.weaponClass = WeaponClass.Sword; 
+                        gladiator.data.attackRange = 2.0f;
+                    }
+                }
+                // ────────────────────────────────────────────────────────
+
                 gladiator.RecalculateMaxHealth();
             }
 
@@ -631,7 +653,6 @@ public class BattleManager : MonoBehaviour
             if (col > 5) { col = 0; row++; }
         }
     }
- 
     Transform FindDeepChild(Transform parent, string childName)
     {
         foreach (Transform child in parent)

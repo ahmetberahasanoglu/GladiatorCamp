@@ -15,12 +15,16 @@ MonoBehaviour:
   displayName: Haydut
   portrait: {fileID: 0}
   elementType: 3
-  baseStrength: 8
-  baseDefense: 5
-  baseSpeed: 5
-  baseStamina: 8
+  baseStrength: 3
+  baseDefense: 3
+  baseSpeed: 3
+  baseStamina: 3
   baseLevel: 1
   weaponBonus: 0
   armorBonus: 0
-  activeMeshNames: []
+  weaponClass: 0
+  weaponRange: 2
+  isRanged: 0
+  activeMeshNames:
+  - Sword
   bonusGoldOnKill: 0

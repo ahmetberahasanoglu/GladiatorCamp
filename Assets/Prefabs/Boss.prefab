@@ -28706,12 +28706,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d917012af73fce4f9cc7b038675e414, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GladiatorAI
+  agent: {fileID: 0}
+  poisonVFXPrefab: {fileID: 0}
+  fireVFXPrefab: {fileID: 0}
+  healVFXPrefab: {fileID: 0}
   deathEffectPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
+  arrowPrefab: {fileID: 0}
+  arrowSpawnPoint: {fileID: 0}
   enemyTag: MySoldier
-  attackRange: 2
   baseAttackAnimLength: 1.733
   target: {fileID: 0}
+  animator: {fileID: 0}
   isDead: 0
+  retargetInterval: 1
+  battleStartDelay: 0
+  isBeast: 0
+  isInBattle: 0
+  currentEnergy: 0
+  maxEnergy: 100
+  energyFillImage: {fileID: 0}
+  ultimateVFX: {fileID: 0}
 --- !u!114 &8241489688479809323
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -28728,6 +28742,8 @@ MonoBehaviour:
   armor: {fileID: 0}
   helmet: {fileID: 0}
   shield: {fileID: 0}
+  activeSet: 0
+  activeSetPieceCount: 0
   data: {fileID: 0}
 --- !u!114 &2512141871109426859
 MonoBehaviour:
@@ -28736,7 +28752,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9031658654919893134}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: abb7504bc63c5624fa17660fdc9b4e1d, type: 3}
   m_Name: 
@@ -28749,7 +28765,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9031658654919893134}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 01d578b8429c3d84c8980bd66ecf1ce9, type: 3}
   m_Name: 

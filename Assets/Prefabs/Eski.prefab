@@ -5813,9 +5813,10 @@ GameObject:
   - component: {fileID: 8846162879912719116}
   - component: {fileID: 2723834791854419390}
   - component: {fileID: 3378033263690317912}
+  - component: {fileID: 2661242775429946964}
   m_Layer: 0
   m_Name: Eski
-  m_TagString: MySoldier
+  m_TagString: EnemySoldier
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -5898,6 +5899,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gladiator
   _templateData: {fileID: 11400000, guid: 44ae5cc109a9c2744976bcf710c27a3f, type: 2}
+  data: {fileID: 0}
   healthBar: {fileID: 937421641266255293}
   candidateName: 
   nameLabel: {fileID: 5716913825191560638}
@@ -5927,13 +5929,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d917012af73fce4f9cc7b038675e414, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GladiatorAI
+  agent: {fileID: 0}
+  poisonVFXPrefab: {fileID: 0}
+  fireVFXPrefab: {fileID: 0}
+  healVFXPrefab: {fileID: 0}
   deathEffectPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
+  arrowPrefab: {fileID: 0}
+  arrowSpawnPoint: {fileID: 0}
   enemyTag: EnemySoldier
-  attackRange: 2.9
   baseAttackAnimLength: 1.5
   target: {fileID: 0}
+  animator: {fileID: 0}
   isDead: 0
+  retargetInterval: 1
+  battleStartDelay: 0
+  isBeast: 0
   isInBattle: 0
+  currentEnergy: 0
+  maxEnergy: 100
+  energyFillImage: {fileID: 0}
+  ultimateVFX: {fileID: 0}
 --- !u!114 &8846162879912719116
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5950,6 +5965,8 @@ MonoBehaviour:
   armor: {fileID: 0}
   helmet: {fileID: 0}
   shield: {fileID: 0}
+  activeSet: 0
+  activeSetPieceCount: 0
   data: {fileID: 0}
 --- !u!114 &2723834791854419390
 MonoBehaviour:
@@ -5958,7 +5975,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1398814345269466347}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: abb7504bc63c5624fa17660fdc9b4e1d, type: 3}
   m_Name: 
@@ -5971,7 +5988,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1398814345269466347}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 01d578b8429c3d84c8980bd66ecf1ce9, type: 3}
   m_Name: 
@@ -6004,6 +6021,19 @@ MonoBehaviour:
   - "K\u0131\u015F kap\u0131ya dayand\u0131, erzaklar yetecek mi acaba?"
   - "Ayaz kemiklerime i\u015Fliyor..."
   - "Umar\u0131m k\u0131\u015F gelmeden yuvam\u0131za d\xF6neriz."
+--- !u!114 &2661242775429946964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1398814345269466347}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43a78d9d0b4ee354bacfe3ed4ba73768, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CursorInteractable
+  isEnemy: 1
 --- !u!1 &1413329021936571628
 GameObject:
   m_ObjectHideFlags: 0

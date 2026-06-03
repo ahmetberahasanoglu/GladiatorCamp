@@ -27075,6 +27075,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d917012af73fce4f9cc7b038675e414, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GladiatorAI
+  agent: {fileID: 0}
   poisonVFXPrefab: {fileID: 4425129568585013132, guid: bbeeb0ddc21369746aaaae5c5c1c09cf, type: 3}
   fireVFXPrefab: {fileID: 7251879486380165639, guid: c2f6a8962aac3814aa56cb9647c93470, type: 3}
   healVFXPrefab: {fileID: 1590415177872986601, guid: acdb90624a404aa438447006f1026065, type: 3}
@@ -27084,11 +27085,16 @@ MonoBehaviour:
   enemyTag: MySoldier
   baseAttackAnimLength: 1.5
   target: {fileID: 0}
+  animator: {fileID: 0}
   isDead: 0
   retargetInterval: 1
   battleStartDelay: 1.8
   isBeast: 1
   isInBattle: 0
+  currentEnergy: 0
+  maxEnergy: 100
+  energyFillImage: {fileID: 4719452544380187788}
+  ultimateVFX: {fileID: 4772634663558126228, guid: e1385af346f4e624eb313ec1ea4fcd7e, type: 3}
 --- !u!1 &8167962176218064783
 GameObject:
   m_ObjectHideFlags: 0

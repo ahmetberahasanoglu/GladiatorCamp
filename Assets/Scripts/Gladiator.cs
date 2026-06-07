@@ -8,7 +8,7 @@ public enum SoldierActivity { Training, Working, Idling, Praying, Healing, OnMis
 public class Gladiator : MonoBehaviour
 {
     [SerializeField] private JanissaryData _templateData;
-    public JanissaryData data { get; private set; }
+    public JanissaryData data; //{ get; private set; }
 
     [Header("Kişilik Sistemi")]
     public HealthBar healthBar;
@@ -171,6 +171,20 @@ public class Gladiator : MonoBehaviour
             healthBar.UpdateBar(data.currentHealth, data.maxHealth);
     }
 
+public void Heal(float amount)
+    {
+        if (currentHealth <= 0) return; // Ölü askerler iyileşemez
+
+        currentHealth += amount;
+        
+        // Canın maksimum canı geçmesini engelle
+        if (currentHealth > maxHealth) 
+        {
+            currentHealth = maxHealth;
+        }
+
+        RefreshStats();
+    }
     public void UpdateNameLabel()
     {
         if (nameLabel != null && data != null)

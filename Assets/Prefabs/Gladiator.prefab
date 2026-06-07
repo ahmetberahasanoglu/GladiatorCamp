@@ -739,6 +739,7 @@ MonoBehaviour:
   deathEffectPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
   arrowPrefab: {fileID: 2330921226067030540, guid: 20bb95f069dcc0249a4738162871e42f, type: 3}
   arrowSpawnPoint: {fileID: 8836211747445951740}
+  bloodEffectPrefab: {fileID: 6823200998282874702, guid: 8f8fe12323625f5499b2853dd2ad3e58, type: 3}
   enemyTag: EnemySoldier
   baseAttackAnimLength: 1.5
   target: {fileID: 0}

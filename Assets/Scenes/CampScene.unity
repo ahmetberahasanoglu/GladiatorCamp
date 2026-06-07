@@ -3058,6 +3058,81 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GladiatorSelector
   cam: {fileID: 1020920761}
+--- !u!1 &64849179
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 64849180}
+  - component: {fileID: 64849182}
+  - component: {fileID: 64849181}
+  m_Layer: 5
+  m_Name: Image
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &64849180
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64849179}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 414537259}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 1920, y: 1080}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &64849181
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64849179}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.40784314}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &64849182
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64849179}
+  m_CullTransparentMesh: 1
 --- !u!1 &65129350
 GameObject:
   m_ObjectHideFlags: 0
@@ -14327,8 +14402,8 @@ MonoBehaviour:
     isUsedUp: 0
     slotIndex: 0
   battleCamera: {fileID: 1020920761}
-  topDownOffset: {x: 0, y: 12, z: -4}
-  topDownRotation: {x: 65, y: 0, z: 0}
+  topDownOffset: {x: 0, y: 10, z: -15}
+  topDownRotation: {x: 60, y: 0, z: 0}
   cameraTransitionSpeed: 0.5
   isTargeting: 0
 --- !u!114 &265606906
@@ -19217,7 +19292,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef23e14390fd42542a103bc9f189a182, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventoryStorage
-  storedItems: []
+  storedItems:
+  - {fileID: 11400000, guid: 0a7743e7b0b94e146bed8f0ae55847f8, type: 2}
+  - {fileID: 11400000, guid: df0a57cefe61ebc4393cf9f8612244f6, type: 2}
+  - {fileID: 11400000, guid: 49a12314dbca5e240bc0012b57f3a188, type: 2}
 --- !u!114 &380247867
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20225,6 +20303,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 64849180}
   - {fileID: 188518710}
   - {fileID: 386565455}
   - {fileID: 1267060208}
@@ -33137,6 +33216,8 @@ MonoBehaviour:
   currentFocusTarget: {fileID: 0}
   focusMarkerPrefab: {fileID: 5824670795371433373, guid: f6fd568b816c64943a44efc3add3a881, type: 3}
   bearPrefab: {fileID: 8109588309812663795, guid: d51840f66321d5d48b7a235a2a45f6dd, type: 3}
+  currentlySelectedSoldier: {fileID: 0}
+  selectionIndicatorPrefab: {fileID: 0}
 --- !u!114 &583988969
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -83854,7 +83935,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ceaa51736536e6c419467363c7c5cafb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MoneyManager
-  gold: 1000
+  gold: 4000
   trainingCost: 50
   maxGold: 10000
 --- !u!1 &1549889947
@@ -111503,7 +111584,11 @@ MonoBehaviour:
   currentEncounterCount: 0
   tempGold: 0
   tempReputation: 0
-  tempItems: []
+  tempItems:
+  - {fileID: 11400000, guid: 0a7743e7b0b94e146bed8f0ae55847f8, type: 2}
+  - {fileID: 11400000, guid: df0a57cefe61ebc4393cf9f8612244f6, type: 2}
+  - {fileID: 11400000, guid: 1a53159e9144da3479f2f274bc0e0f58, type: 2}
+  - {fileID: 11400000, guid: 475c27ab767bcc147a4ce4bcb8009d51, type: 2}
   relicProgressText: {fileID: 1639440583}
 --- !u!114 &2049665941
 MonoBehaviour:
@@ -111517,8 +111602,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 604ba5a8bb73f9646a426269352ae82c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapRandomizer
-  tier1Pool: 0100000001000000010000000100000001000000
-  tier2Pool: 02000000040000000f00000013000000140000000b000000080000001500000003000000
+  tier1Pool: 0a0000000a0000000a0000000a0000000a0000000a0000000a000000
+  tier2Pool: 02000000040000000f00000013000000140000000b00000008000000150000000300000005000000
   tier3Pool: 05000000030000000c0000000a0000000d000000140000000b000000
   mapConfig: {fileID: 11400000, guid: 864deb91d1864bf459db6e54da03a392, type: 2}
   tier1MaxDepth: 4

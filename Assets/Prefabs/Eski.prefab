@@ -5936,6 +5936,7 @@ MonoBehaviour:
   deathEffectPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
   arrowPrefab: {fileID: 0}
   arrowSpawnPoint: {fileID: 0}
+  bloodEffectPrefab: {fileID: 4553287630450876385, guid: 15483e51212e3d74886ea57291f4639a, type: 3}
   enemyTag: EnemySoldier
   baseAttackAnimLength: 1.5
   target: {fileID: 0}
@@ -5949,6 +5950,7 @@ MonoBehaviour:
   maxEnergy: 100
   energyFillImage: {fileID: 0}
   ultimateVFX: {fileID: 0}
+  forcedTarget: {fileID: 0}
 --- !u!114 &8846162879912719116
 MonoBehaviour:
   m_ObjectHideFlags: 0

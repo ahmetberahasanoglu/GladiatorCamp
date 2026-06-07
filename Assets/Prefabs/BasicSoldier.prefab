@@ -700,6 +700,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gladiator
   _templateData: {fileID: 11400000, guid: adeed194f321afd4bbf230add56098ba, type: 2}
+  data: {fileID: 0}
   healthBar: {fileID: 3646057390651392921}
   candidateName: 
   nameLabel: {fileID: 9153447922391545415}
@@ -729,18 +730,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d917012af73fce4f9cc7b038675e414, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GladiatorAI
+  agent: {fileID: 0}
   poisonVFXPrefab: {fileID: 4425129568585013132, guid: bbeeb0ddc21369746aaaae5c5c1c09cf, type: 3}
   fireVFXPrefab: {fileID: 7251879486380165639, guid: c2f6a8962aac3814aa56cb9647c93470, type: 3}
   healVFXPrefab: {fileID: 1590415177872986601, guid: acdb90624a404aa438447006f1026065, type: 3}
   deathEffectPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
   arrowPrefab: {fileID: 2330921226067030540, guid: 20bb95f069dcc0249a4738162871e42f, type: 3}
   arrowSpawnPoint: {fileID: 8836211747445951740}
+  bloodEffectPrefab: {fileID: 4553287630450876385, guid: 15483e51212e3d74886ea57291f4639a, type: 3}
   enemyTag: EnemySoldier
   baseAttackAnimLength: 1.5
   target: {fileID: 0}
+  animator: {fileID: 0}
   isDead: 0
   retargetInterval: 1
+  battleStartDelay: 0
+  isBeast: 0
   isInBattle: 0
+  currentEnergy: 0
+  maxEnergy: 100
+  energyFillImage: {fileID: 0}
+  ultimateVFX: {fileID: 0}
+  forcedTarget: {fileID: 0}
 --- !u!114 &8161922304838044321
 MonoBehaviour:
   m_ObjectHideFlags: 0

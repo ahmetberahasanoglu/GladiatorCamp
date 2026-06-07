@@ -27060,6 +27060,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gladiator
   _templateData: {fileID: 11400000, guid: a551788f8056f704f85b9637103dc9c9, type: 2}
+  data: {fileID: 0}
   healthBar: {fileID: 6428878120602949334}
   candidateName: 
   nameLabel: {fileID: 5747600965718398438}
@@ -27082,6 +27083,7 @@ MonoBehaviour:
   deathEffectPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
   arrowPrefab: {fileID: 2330921226067030540, guid: 20bb95f069dcc0249a4738162871e42f, type: 3}
   arrowSpawnPoint: {fileID: 0}
+  bloodEffectPrefab: {fileID: 6823200998282874702, guid: 8f8fe12323625f5499b2853dd2ad3e58, type: 3}
   enemyTag: MySoldier
   baseAttackAnimLength: 1.5
   target: {fileID: 0}
@@ -27095,6 +27097,7 @@ MonoBehaviour:
   maxEnergy: 100
   energyFillImage: {fileID: 4719452544380187788}
   ultimateVFX: {fileID: 4772634663558126228, guid: e1385af346f4e624eb313ec1ea4fcd7e, type: 3}
+  forcedTarget: {fileID: 0}
 --- !u!1 &8167962176218064783
 GameObject:
   m_ObjectHideFlags: 0

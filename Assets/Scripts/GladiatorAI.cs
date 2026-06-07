@@ -25,6 +25,7 @@ public class GladiatorAI : MonoBehaviour
     public GameObject deathEffectPrefab;
     public GameObject arrowPrefab; 
     public Transform arrowSpawnPoint; 
+    public GameObject bloodEffectPrefab;
 
     [Header("Özellikler")]
     public string enemyTag = "EnemySoldier"; 
@@ -502,6 +503,15 @@ IEnumerator CastUltimateRoutine()
     public void TakeDamage(float incomingDamage, bool isCritical = false, bool isDoT = false)
     {
         if (isDead || gladiator.data == null) return;
+        if (bloodEffectPrefab != null && !isDoT)
+        {
+            // Karakterin göğüs/boyun hizasında (Y ekseninde +1.2f yukarda) efekti yarat
+            Vector3 bloodSpawnPos = transform.position + Vector3.up * 1.2f;
+            GameObject bloodInstance = Instantiate(bloodEffectPrefab, bloodSpawnPos, Quaternion.identity);
+            
+            // Efektin arkasında çöp bırakmaması için 1.5 saniye sonra yok et
+            Destroy(bloodInstance, 1.5f); 
+        }
         
         float campMorale = CampMoraleManager.Instance != null ? CampMoraleManager.Instance.currentMorale : 50f;
         float defensePower = gladiator.data.defense + (campMorale / 10.0f);

@@ -23,6 +23,7 @@ public class MapEventManager : MonoBehaviour
 
     [Header("Olay Görselleri")]
     public Sprite villageSprite;  
+    public Sprite nasibSprite;  
     public Sprite battleSprite;
     public Sprite treasureSprite;
     public Sprite bossSprite;
@@ -34,9 +35,15 @@ public class MapEventManager : MonoBehaviour
     public Sprite dungeonSprite;
     public Sprite wildSprite;
     public Sprite merchant; 
+    public Sprite kervanSprite; 
+    public Sprite caravanSprite; 
+    public Sprite asikSprite; 
+    public Sprite cenkSprite; 
+    public Sprite dervishSprite; 
   
     public Sprite diceSprite; 
     public Sprite wrestlingSprite; 
+    public Sprite nightraidSprite; 
   
 
    
@@ -88,9 +95,25 @@ public class MapEventManager : MonoBehaviour
             case NodeType.CaravanEncounter:   SetupCaravanEvent(); break;
             case NodeType.KervanEncounter:   SetupKervansarayEvent(); break;
             case NodeType.CenkOyunu:          SetupCenkEvent(); break;
+            case NodeType.AsikAtismasi:          SetupAsikEvent(); break;
+            case NodeType.NightRaid:          SetupNightRaidEvent(); break;
+        }
+    }
+void AddReward(int gold = 0, int rep = 0)
+    {
+        if (ExpeditionManager.Instance != null && ExpeditionManager.Instance.isExpeditionActive)
+            ExpeditionManager.Instance.AddLoot(gold, rep);
+        else
+        {
+            if (gold > 0) MoneyManager.Instance?.Add(gold);
+            else if (gold < 0) MoneyManager.Instance?.Spend(Mathf.Abs(gold));
+            if (rep != 0) ReputationManager.Instance?.ChangeReputation(rep);
         }
     }
 
+    // Harcamalar her zaman direkt kasadan
+    bool Spend(int amount) => MoneyManager.Instance != null && MoneyManager.Instance.Spend(amount);
+    int  Gold              => MoneyManager.Instance != null ? MoneyManager.Instance.gold : 0;
  
     private void AdjustButtonContainerWidth()
     {
@@ -356,7 +379,7 @@ public class MapEventManager : MonoBehaviour
     {
         titleText.text = "Gezgin Tüccar";
         if (merchant != null) eventImage.sprite = merchant;
-        descText.text = "Uzak diyarlardan gelmiş kurnaz bir tüccar sana mallarını sunuyor. Bugün arabasında şunlar var:\n\n";
+        descText.text = "Uzak diyarlardan gelmiş kurnaz tüccar Salih sana mallarını sunuyor. Bugün arabasında şunlar var:\n\n";
 
         // Tüccarın satacağı 2 farklı eşyayı rastgele seçelim
         List<int> shopPool = new List<int> { 0, 1, 2, 3 }; // 0: Nüsha, 1: Odun, 2: Erzak, 3: İtibar
@@ -483,7 +506,7 @@ public class MapEventManager : MonoBehaviour
         });
     }
 
-    private void ClearAllButtons()
+    public void ClearAllButtons()
     {
         if (buttonContainer != null)
         {
@@ -551,27 +574,46 @@ public class MapEventManager : MonoBehaviour
         }
     }
    
-    public void SetupVillageEvent()
+     public void SetupVillageEvent()
     {
         titleText.text = "İşgal Edilmiş Köy";
-        descText.text = "Ufukta dumanlar tüten bir köy belirdi. Yaklaştıkça durumu anlıyorsun; acımasız bir eşkıya grubu köyü işgal etmiş. Ahalinin çığlıkları ta buraya kadar geliyor.\n\nAskerlerin kılıçlarının kabzalarını sıkarak senin ağzından çıkacak emri bekliyor.";
-        
-        CreateButton("Köyü Kurtar (Saldır)", () => 
-        {
-            ResolveVillageBattle(1);
-        });
+        if (villageSprite != null) eventImage.sprite = villageSprite;
 
-        CreateButton("Bulaşma (Etrafından Dolan)", () => 
+        int tier = GetCurrentTier();
+        descText.text =
+            "Ufukta dumanlar tüten bir köy belirdi. Yaklaştıkça durumu anlıyorsun; " +
+            "acımasız bir eşkıya grubu köyü işgal etmiş. Ahalinin çığlıkları ta buraya kadar geliyor.\n\n" +
+            "Köylüler kapıda sana bakıyor. Yardım edecek misin?\n\n" +
+            $"3 dalga haydut — Tier {tier}";
+
+     CreateButton("Kılıcını Çek ve Meydana İn!", () => {
+
+        CampManager.Instance.activeMissionArmy.Clear();
+        foreach (var soldier in CampManager.Instance.GetLivingSoldiers())
         {
-            foreach(Transform child in buttonContainer) Destroy(child.gameObject);
-            
-            descText.text = "Köydeki feryatlara kulak tıkayıp askerlerini ormanın derinliklerine doğru yönlendirdin. Kimse tek kelime etmedi ama herkesin başı öne eğikti...\n\n<size=85%>(Nasip Azaldı! Ordunun morali bozuldu.)</size>";
-            
-            if (NasipManager.Instance != null) NasipManager.Instance.SpendNasip(1); 
-            if (CampMoraleManager.Instance != null) CampMoraleManager.Instance.ChangeMorale(-10); 
-            
-            CreateButton("Vicdan Azabıyla Devam Et", () => { ClosePanel(); });
-        });
+            CampManager.Instance.activeMissionArmy.Add(soldier.data); 
+        }
+Debug.Log($"[SEFER] {CampManager.Instance.activeMissionArmy.Count} asker çantaya alındı, savaşa gidiliyor!");
+if (MapManager.Instance != null) MapManager.Instance.isMapOpen = false;
+        // 2. Sahneyi Yükle
+        UnityEngine.SceneManagement.SceneManager.LoadScene("VillageDefenseScene"); 
+    });
+
+        // Kaçmak — nasip cezalı
+        AddEscapeButton(
+            escapeText:        "Bulaşma, etrafından dolan",
+            escapeType:        EscapeType.Costly,
+            reputationPenalty: 0,   // İtibar değil nasip cezası
+            onEscape: () =>
+            {
+                NasipManager.Instance?.SpendNasip(1);
+                CampMoraleManager.Instance?.ChangeMorale(-10);
+                NotificationManager.Instance?.Show(
+                    "Köylüleri terk ettin. Nasip azaldı, moral bozuldu.",
+                    NotificationType.Warning);
+                ClosePanel();
+            }
+        );
     }
   
     void SetupStartEvent()
@@ -589,7 +631,7 @@ public class MapEventManager : MonoBehaviour
             topPanel.SetActive(true);
             BattleManager.Instance.ReturnToCamp();
         });
-    }
+    }/*
 private void ResolveVillageBattle(int difficulty)
     {
         foreach(Transform child in buttonContainer) Destroy(child.gameObject);
@@ -673,7 +715,7 @@ private void ResolveVillageBattle(int difficulty)
             
             CreateButton("Onurla Yola Devam Et", () => { ClosePanel(); });
         });
-    }
+    }*/
    void SetupFirstBattleEvent()
     {
         titleText.text = "Çapulcu Pusu";
@@ -1290,7 +1332,7 @@ public void SetupDervishEvent()
         return false; 
     }
 
-    void CreateButton(string text, UnityEngine.Events.UnityAction action)
+    public void CreateButton(string text, UnityEngine.Events.UnityAction action)
     {
         
         GameObject btnObj = Instantiate(buttonPrefab, buttonContainer);
@@ -1358,7 +1400,92 @@ public void SetupDervishEvent()
             onEscape:      () => { ClosePanel(); }
         );
     }
+   
+     void SetupNightRaidEvent()
+    {
+        titleText.text = "Gece Baskını!";
+        if (battleSprite != null) eventImage.sprite = battleSprite;
+ 
+        int tier = GetCurrentTier();
+        descText.text =
+            "Gecenin karanlığında kamp ateşinin etrafında toplanmışken uzaktan çığlıklar duyuldu.\n\n" +
+            "Düşman kamp'a baskın düzenliyor! 3 dalgayı savuşturmak zorundasın.\n\n" +
+            $"Tahmini tehdit: Tier {tier} — {3 + tier} düşman / dalga";
+ 
+        CreateButton("Savunmaya Geç!", () =>
+        {
+            // Asker seçimini kaydet
+            PlayerPrefs.SetInt("NightRaidTier", tier);
+            PlayerPrefs.Save();
+            ClosePanel();
+            UnityEngine.SceneManagement.SceneManager.LoadScene("VillageDefenseScene");
+        });
+ 
+        // Gece baskınından kaçmak çok pahalı
+        AddEscapeButton(
+            escapeText:        "Karanlığa Çekil",
+            escapeType:        EscapeType.Costly,
+            reputationPenalty: 20,
+            onEscape:          () => { ClosePanel(); }
+        );
+    }
+ void SetupAsikEvent()
+    {
+        AsikAtismasi.RivalType rival = AsikAtismasi.PickRivalType();
 
+        string rivalName = rival switch
+        {
+            AsikAtismasi.RivalType.GezginAsik => "Gezgin Aşık Karaçalı",
+            AsikAtismasi.RivalType.PirSultan  => "Pir Sultan",
+            _                                  => "Köy Ozanı Veli"
+        };
+
+        titleText.text = "Aşık Atışması!";
+        descText.text  =
+            $"Yolun ortasında sazını takan {rivalName} karşınıza çıktı.\n\n" +
+            "Sözü kuvvetli bir asker bu atışmayı kazanabilir. " +
+            "Hızı yüksek asker daha çok düşünme süresi alır.\n\n" +
+            "<size=85%>Hangi yiğidi göndereceksin?</size>";
+
+        bool hasValidSoldier = false;
+        foreach (var soldier in FindObjectsByType<Gladiator>(FindObjectsSortMode.None))
+        {
+            if (!soldier.CompareTag("MySoldier") || soldier.data == null ||
+                soldier.data.currentHealth <= 0  || soldier.isOnMission ||
+                soldier.data.currentActivity == SoldierActivity.Working) continue;
+
+            hasValidSoldier = true;
+            Gladiator captured     = soldier;
+            AsikAtismasi.RivalType capturedRival = rival;
+
+            string traitNote = soldier.data.trait switch
+            {
+                SoldierTrait.Dindar    => " <size=75%>[Dini mısralarda 1 şık elinir]</size>",
+                SoldierTrait.Yetenekli => " <size=75%>[Her doğru = +1sn]</size>",
+                _                      => ""
+            };
+
+            CreateButton(
+                $"{soldier.data.gladiatorName}  Hız: {soldier.data.speed}{traitNote}",
+                () =>
+                {
+                    if (AsikAtismasi.Instance != null)
+                        AsikAtismasi.Instance.StartAtisma(captured, capturedRival);
+                    else
+                        Debug.LogError("[MapEventManager] AsikAtismasi sahnede bulunamadı!");
+                });
+        }
+
+        if (!hasValidSoldier)
+            descText.text += "\n\nGönderecek boşta askerin yok!";
+
+        CreateButton("Adamı Savuştur (-5 İtibar)", () =>
+        {
+            AddReward(0, -5);
+            NotificationManager.Instance?.Show("Ozandan kaçtın. Biraz itibar kaybettin.", NotificationType.Warning);
+            ClosePanel();
+        });
+    }
     // ══════════════════════════════════════════════════════════════════════
     // MERKEZİ KAÇIŞ SİSTEMİ
     // ══════════════════════════════════════════════════════════════════════

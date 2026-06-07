@@ -46,6 +46,7 @@ public class MapRandomizer : MonoBehaviour
         NodeType.Archery,
         NodeType.KervanEncounter,  
         NodeType.Zindan,
+     NodeType.NightRaid,
     };
     [Header("Map Config Referansı")]
     public MapConfig mapConfig;
@@ -266,6 +267,7 @@ public class MapRandomizer : MonoBehaviour
         NodeType.Kalkan            => "Savunma",
         NodeType.StartPoint        => "Kamp",
         NodeType.CenkOyunu         => "Cenk",
+         NodeType.NightRaid        => "Gece Baskını",
         _                          => "?"
     };
 
@@ -290,11 +292,13 @@ public class MapRandomizer : MonoBehaviour
             NodeType.Vahsi             => em.wildSprite,
             NodeType.Dice              => em.diceSprite,
             NodeType.YagliGures        => em.wrestlingSprite,
-            NodeType.NasibEncounter    => em.villageSprite,
-            NodeType.DervishEncounter  => em.villageSprite,
-            NodeType.CaravanEncounter  => em.merchant,
-            NodeType.KervanEncounter   => em.merchant,
-            NodeType.CenkOyunu         => em.villageSprite, 
+            NodeType.NasibEncounter    => em.nasibSprite,
+            NodeType.DervishEncounter  => em.dervishSprite,
+            NodeType.CaravanEncounter  => em.caravanSprite,
+            NodeType.KervanEncounter   => em.kervanSprite,
+            NodeType.CenkOyunu         => em.cenkSprite, 
+            NodeType.AsikAtismasi         => em.asikSprite, 
+            NodeType.NightRaid        => em.battleSprite,
             _                          => em.villageSprite,
         };
     }

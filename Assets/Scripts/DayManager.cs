@@ -138,9 +138,9 @@ public GameObject endDayButtonPrefab;
     endDayTitleText.text = $"GÜN {currentDay} RAPORU";
     
     string report = "Ordunun giderleri:\n\n";
-    report += $"<color=red> {SupplyManager.Instance.GetExpectedDailyFoodCost()} erzak tüketildi.</color>\n";
-    report += $"<color=red> {MoneyManager.Instance.GetExpectedDailyWageCost()} akçe maaş ödendi.</color>\n";
-    report += $"<color=green> Birlikler dinlendi ve yaralarını sardı.</color>\n";
+    report += $" {SupplyManager.Instance.GetExpectedDailyFoodCost()} erzak tüketildi.\n";
+    report += $" {MoneyManager.Instance.GetExpectedDailyWageCost()} akçe maaş ödendi.\n";
+    report += $" Birlikler dinlendi ve yaralarını sardı.\n";
 
     endDayDescText.text = report;
 

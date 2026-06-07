@@ -20,5 +20,7 @@ public enum NodeType
     DervishEncounter,  
     CaravanEncounter,  
     KervanEncounter,   
-    CenkOyunu,         
+    CenkOyunu,
+   AsikAtismasi,
+     NightRaid,     
 }

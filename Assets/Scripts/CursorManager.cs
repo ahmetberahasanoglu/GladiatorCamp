@@ -35,6 +35,7 @@ public class CursorManager : MonoBehaviour
     {
         Instance = this;
         Cursor.visible = false; 
+       // DontDestroyOnLoad(gameObject);
     }
 
     void Start()

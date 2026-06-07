@@ -394,7 +394,7 @@ public class AsikAtismasi : MonoBehaviour
                         new string('♡', _rival.lives - _playerLives);
 
         MapEventManager.Instance.descText.text =
-            $"{message}\n\n{hearts}   Tur {_currentRound}/{_maxRounds}";
+            $"<size=85%>{message}\n\n{hearts}   Tur {_currentRound}/{_maxRounds}</size>";
 
         MapEventManager.Instance.CreateButton("Devam →", () => onContinue?.Invoke());
     }

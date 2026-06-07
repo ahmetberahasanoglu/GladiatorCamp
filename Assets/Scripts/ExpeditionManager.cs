@@ -20,11 +20,26 @@ public class ExpeditionManager : MonoBehaviour
     public TMPro.TextMeshProUGUI relicProgressText;
 
     void Awake()
+{
+    if (Instance == null)
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        Instance = this;
+        DontDestroyOnLoad(gameObject); 
     }
+    else
+    {
+        Destroy(gameObject);
+    }
+}
 
+void Start()
+    {
+        // Eğer sefer açıksa (isExpeditionActive true ise), kamp yüklendiği an MapPanel'i aç
+        if (isExpeditionActive && MapEventManager.Instance != null)
+        {
+           MapManager.Instance.ShowMap();
+        }
+    }
     public void StartExpedition()
     {
         isExpeditionActive = true;

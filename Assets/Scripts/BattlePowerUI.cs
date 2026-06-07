@@ -15,22 +15,27 @@ public class BattlePowerUI : MonoBehaviour
     public int currentSpeedLevel = 1;
 
 public void ChangeGameSpeed()
-{
-    currentSpeedLevel++;
-    
-    if(currentSpeedLevel > 2)
     {
-        currentSpeedLevel = 1; 
-    }
+        currentSpeedLevel++;
+        
+        if(currentSpeedLevel > 2)
+        {
+            currentSpeedLevel = 1; 
+        }
 
-    Time.timeScale = currentSpeedLevel;
-    speedButtonText.text = currentSpeedLevel + "x";
-}
+        Time.timeScale = currentSpeedLevel;
+        
+        // Hız yazısını renklendir (2x olduğunda altın sarısı parlasın)
+        if (currentSpeedLevel == 2)
+            speedButtonText.text = "<color=#FFD700>2x</color>"; // Altın rengi
+        else
+            speedButtonText.text = "<color=#EAEAEA>1x</color>"; // Kirli beyaz
+    }
 public void ResetGameSpeed()
     {
         currentSpeedLevel = 1;
         Time.timeScale = 1f;
-        if(speedButtonText != null) speedButtonText.text = "1x";
+        if(speedButtonText != null) speedButtonText.text = "<color=#EAEAEA>1x</color>";
     }
 
     // YENİ: GÜVENLİK KİLİDİ
@@ -70,25 +75,25 @@ public void ResetGameSpeed()
         }
 
         // 3. Yazıları Güncelle
-        if (playerTotalHpText != null) playerTotalHpText.text = Mathf.RoundToInt(playerTotalHp).ToString();
-        if (enemyTotalHpText != null) enemyTotalHpText.text = Mathf.RoundToInt(enemyTotalHp).ToString();
+        if (playerTotalHpText != null) 
+            playerTotalHpText.text = $"<color=#5D9CEC>{Mathf.RoundToInt(playerTotalHp)}</color>"; // Mavi ton
+            
+        if (enemyTotalHpText != null) 
+            enemyTotalHpText.text = $"<color=#E04343>{Mathf.RoundToInt(enemyTotalHp)}</color>"; // Kırmızı ton
 
-        // 4. Slider'ı Güncelle (Sihrin Gerçekleştiği Yer)
+        // 4. Slider'ı Güncelle
         if (powerBalanceSlider != null)
         {
             float totalPower = playerTotalHp + enemyTotalHp;
             
             if (totalPower > 0)
             {
-                // Bizim gücümüzün toplam güce oranı. Örn: Bizde 600, onlarda 400 can varsa oran 0.6 olur.
                 float targetValue = playerTotalHp / totalPower;
-                
-                // Mathf.Lerp ile barın aniden değil, yumuşak ve tatmin edici bir şekilde kaymasını sağlıyoruz
                 powerBalanceSlider.value = Mathf.Lerp(powerBalanceSlider.value, targetValue, Time.deltaTime * sliderSpeed);
             }
             else
             {
-                powerBalanceSlider.value = 0.5f; // İki taraf da ölüyse bar tam ortada durur
+                powerBalanceSlider.value = 0.5f; 
             }
         }
     }

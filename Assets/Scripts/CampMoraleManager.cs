@@ -20,6 +20,7 @@ public class CampMoraleManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+         DontDestroyOnLoad(gameObject);
     }
 
     void OnDestroy()

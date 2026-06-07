@@ -44,6 +44,9 @@ public class CampManager : MonoBehaviour
 
     // ── ASKER CACHE — FindObjectsOfType yerine bu kullanılacak ──────────
     private readonly List<Gladiator> _soldiers = new List<Gladiator>();
+    /////xd
+    [Header("Sefer Verileri (Sahneler Arası Taşınır)")]
+    public List<JanissaryData> activeMissionArmy = new List<JanissaryData>();
 
     /// <summary>Kayıtlı asker listesini döner (ölüler dahil).</summary>
     public IReadOnlyList<Gladiator> AllSoldiers => _soldiers;
@@ -81,6 +84,7 @@ public class CampManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+         DontDestroyOnLoad(gameObject);
         InitializeBuildings();
     }
 

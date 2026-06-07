@@ -84,26 +84,26 @@ public class ExpeditionSummaryUI : MonoBehaviour
         if (goldText != null)
         {
             goldText.text  = goldGained >= 0
-                ? $"<color=#FFD700>+{goldGained} Akçe</color>"
-                : $"<color=red>{goldGained} Akçe</color>";
+                ? $"+{goldGained} Akçe"
+                : $"{goldGained} Akçe";
         }
 
         if (repText != null)
         {
             repText.text = repGained >= 0
-                ? $"<color=#4CAF50>+{repGained} İtibar</color>"
-                : $"<color=red>{repGained} İtibar</color>";
+                ? $"+{repGained} İtibar"
+                : $"{repGained} İtibar";
         }
 
         if (itemsText != null)
             itemsText.text = itemCount > 0
-                ? $"<color=#00BCD4>+{itemCount} Eşya</color>"
-                : "<color=#888888>Eşya yok</color>";
+                ? $"+{itemCount} Eşya"
+                : "Eşya yok";
 
         if (relicText != null)
         {
             relicText.gameObject.SetActive(relicsEarned > 0);
-            relicText.text = $"<color=#FFD700>✦ {relicsEarned} Miras Hakkı Kazanıldı!</color>";
+            relicText.text = $"{relicsEarned} Miras Hakkı Kazanıldı!";
         }
 
         // Asker listesi
@@ -140,20 +140,20 @@ public class ExpeditionSummaryUI : MonoBehaviour
             string hpColor  = hp > maxHp * 0.6f ? "green"
                             : hp > maxHp * 0.3f ? "orange" : "red";
 
-            string gaziTag  = s.data.isGazi ? " <color=#FFD700>[GAZİ]</color>" : "";
+            string gaziTag  = s.data.isGazi ? " <color=#FFD700>[GAZİ]" : "";
             string traitTag = GetTraitShortTag(s.data.trait);
-            string dead     = hp <= 0 ? " <color=red>[DÜŞTÜ]</color>" : "";
+            string dead     = hp <= 0 ? " [DÜŞTÜ]" : "";
 
             texts[0].text = $"{s.data.gladiatorName}{gaziTag}{traitTag}{dead}  " +
-                            $"<color={hpColor}>{hp}/{maxHp} Can</color>";
+                            $"{hp}/{maxHp} Can";
         }
     }
 
     private string GetTraitShortTag(SoldierTrait trait) => trait switch
     {
-        SoldierTrait.Obur    => " <color=#FF9800>[Obur]</color>",
-        SoldierTrait.Dindar  => " <color=#64B5F6>[Dindar]</color>",
-        SoldierTrait.Yetenekli => " <color=#81C784>[Yetenekli]</color>",
+        SoldierTrait.Obur    => " [Obur]",
+        SoldierTrait.Dindar  => " [Dindar]",
+        SoldierTrait.Yetenekli => " [Yetenekli]",
         _                    => ""
     };
 

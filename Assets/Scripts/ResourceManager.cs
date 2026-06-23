@@ -15,6 +15,7 @@ public class ResourceManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
    public void AddWood(int amount)

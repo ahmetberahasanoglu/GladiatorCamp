@@ -49,8 +49,15 @@ public class RunManager : MonoBehaviour
     // ────────────────────────────────────────────────────────────────────────
     void Awake()
     {
-        if (Instance == null) Instance = this;
-        else { Destroy(gameObject); return; }
+       if (Instance == null)
+    {
+        Instance = this;
+        DontDestroyOnLoad(gameObject); // YENİ SAHNEYE GEÇİLSE BİLE SİLİNMEZ!
+    }
+    else
+    {
+        Destroy(gameObject);
+    }
 
         if (exilePanel   != null) exilePanel.SetActive(false);
         if (victoryPanel != null) victoryPanel.SetActive(false);

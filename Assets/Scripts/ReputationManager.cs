@@ -16,7 +16,7 @@ public class ReputationManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-
+        DontDestroyOnLoad(gameObject);
       //  currentReputation = PlayerPrefs.GetInt("PlayerReputation", 100);
     }
 

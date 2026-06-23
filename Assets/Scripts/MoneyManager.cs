@@ -13,12 +13,18 @@ public class MoneyManager : MonoBehaviour
     public int maxGold = 10000;
     public event Action<int> OnGoldChanged;
 
-    void Awake()
+   void Awake()
+{
+    if (Instance == null)
     {
         Instance = this;
-
-       // gold = PlayerPrefs.GetInt("PlayerGold", 200);
+        DontDestroyOnLoad(gameObject); // YENİ SAHNEYE GEÇİLSE BİLE SİLİNMEZ!
     }
+    else
+    {
+        Destroy(gameObject);
+    }
+}
 
     void Start()
     {

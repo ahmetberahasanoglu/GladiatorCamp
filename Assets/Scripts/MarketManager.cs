@@ -33,7 +33,7 @@ public class MarketManager : MonoBehaviour
 
     void OnDestroy()
     {
-        if (CampManager.Instance != null)
+      if (CampManager.Instance != null)
         {
             CampManager.Instance.OnCampUpdated -= RefreshMarket;
         }
@@ -41,6 +41,7 @@ public class MarketManager : MonoBehaviour
 
     public void RefreshMarket()
     {
+        if (this == null || contentParent == null) return;
         // 1. Önce eski listeyi temizle (Çöp kalmasın)
         foreach (Transform child in contentParent)
         {

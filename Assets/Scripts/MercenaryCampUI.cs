@@ -50,12 +50,12 @@ public class MercenaryCampUI : MonoBehaviour
 
         if (capacityText != null)
         {
-            capacityText.text = $"Koğuş: <color={(isFull ? "red" : "black")}>{soldierCount}/{capacity}</color>";
+            capacityText.text = $"Koğuş: {soldierCount}/{capacity}";
         }
 
         if (titleText != null)
             titleText.text = isFull
-                ? "<color=red>Koğuş Dolu — Önce Koğuşu Yükselt</color>"
+                ? "Koğuş Dolu"
                 : "Paralı Asker Çadırı";
 
         // Kartları temizle

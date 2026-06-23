@@ -11,7 +11,7 @@ public class RecruitCandidate
 
     public void InitializeRandomly()
     {
-        string[] names = { "Ali", "Veli", "Hasan", "Mehmet", "Osman", "Murat", "Yusuf", "Hamza", "Kemal", "Selim", "Mustafa", "Fatih" };
+        string[] names = { "Ali", "Veli", "Hasan", "Mehmet", "Osman", "Doğanay", "Yusuf", "Kaan", "Kemal", "Selim", "Mustafa", "Fatih" };
         candidateName = names[Random.Range(0, names.Length)];
         
         potentialStrength = Random.Range(1, 6); 

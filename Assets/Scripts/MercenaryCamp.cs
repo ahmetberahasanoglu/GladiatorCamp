@@ -45,7 +45,7 @@ public class MercenaryCamp : MonoBehaviour
         if (soldierCount >= capacity)
         {
             NotificationManager.Instance?.Show(
-                $"Koğuş dolu! Maksimum {capacity} asker alabilirsin. Koğuşu yükselt.",
+                $"Koğuş dolu! Maksimum {capacity} asker alabilirsin.",
                 NotificationType.Error);
             return false;
         }

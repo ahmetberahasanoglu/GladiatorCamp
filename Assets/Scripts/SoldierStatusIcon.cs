@@ -114,9 +114,19 @@ public class SoldierStatusIcon : MonoBehaviour
     }
 
     // ── Hangi sprite gösterilecek? ────────────────────────────────────────
+   // ── Hangi sprite gösterilecek? ────────────────────────────────────────
     Sprite DetermineSprite()
     {
         if (_gladiator == null || _gladiator.data == null) return null;
+
+        // ── YENİ: SAVAŞ KONTROLÜ (Eğer savaştaysa ikonu gizle) ──
+        GladiatorAI ai = _gladiator.GetComponent<GladiatorAI>();
+        // Asker savaş modundaysa veya ölüyle asla ikon gösterme!
+        if (ai != null && (ai.isInBattle || ai.isDead || BattleManager.Instance.state == BattleState.Fighting))
+        {
+            return null; // Null döndüğünde sistem arka planı da otomatik kapatır
+        }
+        // ────────────────────────────────────────────────────────
 
         // Öncelik sırası: Şifa > Eğitim > Dua > Çalışma > Keşif > Yaralı
         if (_healing  != null && _healing.IsHealing)    return healingSprite;

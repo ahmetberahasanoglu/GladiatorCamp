@@ -71,14 +71,14 @@ public class ExpeditionSummaryUI : MonoBehaviour
 
         // Başlık
         if (titleText != null)
-            titleText.text = hadCasualties ? "Sefer Sona Erdi..." : "Sefer Tamamlandı!";
+            titleText.text = hadCasualties ? "Sefer sona erdi..." : "Sefer tamamlandı!";
 
         // Sayılar
         if (encounterText != null)
-            encounterText.text = $"{encountersCompleted} Düğüm İlerlendi";
+            encounterText.text = $"{encountersCompleted} Adım ilerlendi";
 
         if (daysText != null)
-            daysText.text = $"{daysSpent} Gün Harcandı";
+            daysText.text = $"{daysSpent} Gün harcandı";
 
         // Kazanımlar
         if (goldText != null)
@@ -103,7 +103,7 @@ public class ExpeditionSummaryUI : MonoBehaviour
         if (relicText != null)
         {
             relicText.gameObject.SetActive(relicsEarned > 0);
-            relicText.text = $"{relicsEarned} Miras Hakkı Kazanıldı!";
+            relicText.text = $"{relicsEarned} Miras hakkı kazanıldı!";
         }
 
         // Asker listesi

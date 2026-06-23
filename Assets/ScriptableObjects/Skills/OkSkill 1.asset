@@ -18,5 +18,5 @@ MonoBehaviour:
   skillType: 4
   cooldownTime: 10
   powerAmount: 25
-  effectPrefab: {fileID: 8923590646714700985, guid: d59204bdacfe7674e9b8bb4a454fd954, type: 3}
+  effectPrefab: {fileID: 4593184484909914552, guid: 49d08218f30232842bb7db29bd5dbe13, type: 3}
   isSingleUse: 0

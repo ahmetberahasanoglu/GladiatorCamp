@@ -104,8 +104,7 @@ public class BattleManager : MonoBehaviour
 
     [Header("RTS Seçim Sistemi")]
     public GladiatorAI currentlySelectedSoldier; // O an tıkladığımız asker
-    public GameObject selectionIndicatorPrefab; // Askerin altında çıkacak yeşil halka
-    private GameObject _activeSelectionIndicator;
+  
     private bool _isBearBattle = false;
 
     void Awake() => Instance = this;
@@ -146,7 +145,7 @@ public class BattleManager : MonoBehaviour
         {
             retreatConfirmText.text =
                 $"Geri çekilmek istiyor musun?\n" +
-                $"Sağ asker sayısı: <color=yellow>{aliveSoldiers}</color>\n" +
+                $"Sağ asker sayısı: {aliveSoldiers}\n" +
                 $"İtibar cezası: <color=red>-{penalty}</color>\n" +
                 $"Geri çekilmek bu savaşı kaybettirir.";
         }
@@ -225,30 +224,121 @@ public class BattleManager : MonoBehaviour
     }
 
     // ── HEDEF İŞARETLEME ─────────────────────────────────────────────────
+   // ════════════════════════════════════════════════════════════════════
+    //  DİNAMİK RTS SEÇİM VE AKILLI FOCUS MARKER MOTORU
+    // ════════════════════════════════════════════════════════════════════
     void HandleMouseClick()
     {
         if (!Input.GetMouseButtonDown(0)) return;
+
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit) && hit.collider.CompareTag("EnemySoldier"))
+        if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            GladiatorAI enemyAI = hit.collider.GetComponent<GladiatorAI>();
-            if (enemyAI != null && !enemyAI.isDead) SetFocusTarget(hit.collider.transform);
+            // ── 1. KENDİ ASKERİMİZİ SEÇME ─────────────────────────────────
+            if (hit.collider.CompareTag("MySoldier"))
+            {
+                GladiatorAI friendlyAI = hit.collider.GetComponentInParent<GladiatorAI>();
+                if (friendlyAI != null && !friendlyAI.isDead)
+                {
+                    SelectSoldier(friendlyAI);
+                }
+                return;
+            }
+
+            // ── 2. DÜŞMANA EMİR VERME VEYA KÜRESEL ODAKLANMA ───────────────
+            if (hit.collider.CompareTag("EnemySoldier"))
+            {
+                GladiatorAI enemyAI = hit.collider.GetComponentInParent<GladiatorAI>();
+                if (enemyAI != null && !enemyAI.isDead)
+                {
+                    if (currentlySelectedSoldier != null)
+                    {
+                        // Tek bir askeri düşmana kilitliyoruz
+                        CommandSingleSoldierToAttack(currentlySelectedSoldier, enemyAI.transform);
+                    }
+                    else
+                    {
+                        // Seçili asker yoksa tüm orduyu o düşmana odakla (Küresel Odak)
+                        SetFocusTarget(hit.collider.transform);
+                    }
+                }
+                return;
+            }
+
+            // ── 3. BOŞLUĞA TIKLANDIĞINDA SEÇİMLERİ TEMIZLE ────────────────
+            if (!hit.collider.CompareTag("UI")) 
+            {
+                DeselectSoldier();
+            }
+        }
+    }
+
+    void SelectSoldier(GladiatorAI soldier)
+    {
+        currentlySelectedSoldier = soldier;
+
+        // ── GÖRSEL İPTAL EDİLDİ ──
+        // Başka bir sistem zaten halkayı yaktığı için buradaki Instantiate kodlarını tamamen temizledik.
+
+        // Seçtiğimiz askerin halihazırda saldırdığı biri varsa marker'ı ona taşı
+        if (soldier.target != null)
+        {
+            ApplyFocusMarkerVisual(soldier.target);
+        }
+        else if (currentFocusTarget == null) 
+        {
+            HideFocusMarkerVisual();
+        }
+        
+        Debug.Log($"[RTS Sistem] {soldier.gameObject.name} mekanik olarak seçildi. Komut bekliyor.");
+    }
+
+    
+    void CommandSingleSoldierToAttack(GladiatorAI soldier, Transform enemyTransform)
+    {
+        if (soldier == null || soldier.isDead || enemyTransform == null) return;
+
+        soldier.forcedTarget = enemyTransform;
+        soldier.target = enemyTransform;
+
+        var agent = soldier.GetComponent<UnityEngine.AI.NavMeshAgent>();
+        if (agent != null && agent.isActiveAndEnabled)
+        {
+            agent.isStopped = false;
+            agent.SetDestination(enemyTransform.position);
+        }
+
+        if (DamageTextManager.Instance != null)
+            DamageTextManager.Instance.ShowCustomText(soldier.transform.position, "HÜCUM!", Color.green);
+
+        // ── YENİ: Tekil komut verildiğinde Focus Marker'ı anında o düşmanın tepesine dik! ──
+        ApplyFocusMarkerVisual(enemyTransform);
+    }
+
+    void DeselectSoldier()
+    {
+        currentlySelectedSoldier = null;
+
+        // ── GÖRSEL İPTAL EDİLDİ ──
+        // Halka gizleme kodları silindi.
+
+        if (currentFocusTarget == null)
+        {
+            HideFocusMarkerVisual();
+        }
+        else
+        {
+            ApplyFocusMarkerVisual(currentFocusTarget);
         }
     }
 
     public void SetFocusTarget(Transform enemyTransform)
     {
+        // Tüm ordu tek bir düşmana odaklanıyor (Küresel Odak)
         currentFocusTarget = enemyTransform;
 
-        if (_activeFocusMarker == null && focusMarkerPrefab != null)
-            _activeFocusMarker = Instantiate(focusMarkerPrefab);
-
-        if (_activeFocusMarker != null)
-        {
-            _activeFocusMarker.SetActive(true);
-            _activeFocusMarker.transform.SetParent(enemyTransform);
-            _activeFocusMarker.transform.localPosition = new Vector3(0, 0.1f, 0);
-        }
+        // ── YENİ: Ortak fonksiyon ile marker'ı genel hedefe yerleştir ──
+        ApplyFocusMarkerVisual(enemyTransform);
 
         GladiatorAI[] allUnits = FindObjectsByType<GladiatorAI>(FindObjectsSortMode.None);
         foreach (var unit in allUnits)
@@ -269,6 +359,28 @@ public class BattleManager : MonoBehaviour
     public void ClearFocusTarget()
     {
         currentFocusTarget = null;
+        // Eğer o sırada seçili tekil bir askerimiz yoksa marker'ı tamamen söndür
+        if (currentlySelectedSoldier == null)
+        {
+            HideFocusMarkerVisual();
+        }
+    }
+
+    // ── GÖRSEL MOTOR: FOCUS MARKER YÖNETİMİ (MÜKERRER KOD ENGELLEYİCİ) ────
+    private void ApplyFocusMarkerVisual(Transform targetEnemy)
+    {
+        if (focusMarkerPrefab == null || targetEnemy == null) return;
+
+        if (_activeFocusMarker == null)
+            _activeFocusMarker = Instantiate(focusMarkerPrefab);
+
+        _activeFocusMarker.SetActive(true);
+        _activeFocusMarker.transform.SetParent(targetEnemy);
+        _activeFocusMarker.transform.localPosition = new Vector3(0, 0.1f, 0); // Karakterin duruşuna göre yükseklik ayarı
+    }
+
+    private void HideFocusMarkerVisual()
+    {
         if (_activeFocusMarker != null)
         {
             _activeFocusMarker.SetActive(false);
@@ -380,20 +492,31 @@ public class BattleManager : MonoBehaviour
             int moraleReward = 10 + (_currentDifficulty * 5);
             int repReward    = 5 * _currentDifficulty;
             string nushaMetni = "";
+           // ── BATTLEMANAGER.CS - ENDBATTLE FONKSİYONU İÇİ ──
             if ((pendingEnv == BattleEnvironment.Cave || _currentDifficulty >= 5) && MapEventManager.Instance != null && MapEventManager.Instance.nadirFermanlar.Count > 0)
             {
                 ItemData dusenFerman = MapEventManager.Instance.nadirFermanlar[Random.Range(0, MapEventManager.Instance.nadirFermanlar.Count)];
-                ExpeditionManager.Instance.tempItems.Add(dusenFerman);
                 
-                nushaMetni = $"\n<color=#00FFFF>Düşman Komutanından düştü: {dusenFerman.itemName}</color>";
+                // ── DEĞİŞİKLİK: Çantaya değil, doğrudan Komutan Deposuna ekle! ──
+                if (CommanderStorage.Instance != null)
+                    CommanderStorage.Instance.AddNusha(dusenFerman);
+                else
+                    ExpeditionManager.Instance.tempItems.Add(dusenFerman); // Fallback
+                
+                nushaMetni = $"\nDüşman Komutanından düştü: {dusenFerman.itemName}";
             }
             // Normal savaşlarda çok düşük ihtimalle (%10) yaygın nüsha düşsün
             else if (Random.Range(0, 100) < 10 && MapEventManager.Instance != null && MapEventManager.Instance.yayginNushalar.Count > 0)
             {
                 ItemData dusenNusha = MapEventManager.Instance.yayginNushalar[Random.Range(0, MapEventManager.Instance.yayginNushalar.Count)];
-                ExpeditionManager.Instance.tempItems.Add(dusenNusha);
                 
-                nushaMetni = $"\n<color=#00FFFF>Cesetlerin arasında bulundu: {dusenNusha.itemName}</color>";
+                // ── DEĞİŞİKLİK: Çantaya değil, doğrudan Komutan Deposuna ekle! ──
+                if (CommanderStorage.Instance != null)
+                    CommanderStorage.Instance.AddNusha(dusenNusha);
+                else
+                    ExpeditionManager.Instance.tempItems.Add(dusenNusha); // Fallback
+                
+                nushaMetni = $"\nCesetlerin arasında bulundu: {dusenNusha.itemName}";
             }
 
             if (lootText != null)
@@ -402,7 +525,7 @@ public class BattleManager : MonoBehaviour
                     $"<color=yellow>+{goldReward} Akçe (Çantaya)</color>\n" +
                     $"<color=green>+{repReward} İtibar (Çantaya)</color>\n" +
                     $"+{foodReward} Erzak\n+{moraleReward} Moral" + nushaMetni+
-                    (lootMult > 1f ? $"\n<color=yellow><size=75%> Bereketli Yol bonusu aktif</size></color>" : "");
+                    (lootMult > 1f ? $"\n<size=75%> Bereketli Yol bonusu aktif</size>" : "");
 
             if (ExpeditionManager.Instance != null && ExpeditionManager.Instance.isExpeditionActive)
                 ExpeditionManager.Instance.AddLoot(goldReward, repReward);
@@ -431,7 +554,7 @@ public class BattleManager : MonoBehaviour
                     $"AĞIR YENİLGİ...\n\nOtağ yasa boğuldu.\n" +
                     $"<color=red>{moralePenalty} Moral</color>\n" +
                     $"<color=red>{repPenalty} İtibar (Çantaya)</color>" +
-                    (moraleMult < 1f ? "\n<color=#64B5F6><size=75%> Cesur Yürek relic'i moral kaybını azalttı</size></color>" : "");
+                    (moraleMult < 1f ? "\n<size=75%> Cesur Yürek relic'i moral kaybını azalttı</size>" : "");
 
             CampMoraleManager.Instance?.ChangeMorale(moralePenalty);
 
@@ -500,6 +623,11 @@ public class BattleManager : MonoBehaviour
         }
 
         SeasonManager.Instance?.ForceCampLighting();
+        if (SeasonManager.Instance != null)
+    {
+ 
+        SeasonManager.Instance.ResetAndCleanParticles(isWinter); 
+    }
         StartCoroutine(CinematicTransitionRoutine(campCameraPos));
 
         state = BattleState.Idle;
@@ -507,17 +635,30 @@ public class BattleManager : MonoBehaviour
         TopInfoBarUI.Instance?.ForceUpdateAll();
     }
 
-    // ── SPAWN ─────────────────────────────────────────────────────────────
-    void SpawnBoss()
+
+   void SpawnBoss()
     {
         if (bossPrefab == null) { Debug.LogError("Boss Prefab atanmamış!"); return; }
         Vector3 spawnPos = enemySpawnPoint.position;
         GameObject boss = Instantiate(bossPrefab, spawnPos, enemySpawnPoint.rotation);
         var agent = boss.GetComponent<UnityEngine.AI.NavMeshAgent>();
         if (agent != null) { agent.Warp(spawnPos); agent.isStopped = true; }
-        boss.GetComponent<GladiatorAI>().isInBattle = true;
+        
+        // ── YENİ: Boss İçin Yapay Zeka Menzil Senkronizasyonu ──
+        GladiatorAI bossAI = boss.GetComponent<GladiatorAI>();
+        Gladiator bossGlad = boss.GetComponent<Gladiator>();
+        
+        if (bossAI != null)
+        {
+            bossAI.isInBattle = true;
+            
+            if (bossGlad != null && bossGlad.data != null)
+            {
+                // Boss'un kendi data değerlerini lokal olarak AI'ına işle ki menzil sorunu yaşamasın
+                bossAI.ForceSetupWeaponStats(bossGlad.data.attackRange, bossGlad.data.isRanged, bossGlad.data.weaponClass);
+            }
+        }
     }
-
     public void SpawnPlayerArmy(List<Gladiator> selectedSquad)
     {
         var allAI = FindObjectsOfType<GladiatorAI>();
@@ -573,25 +714,26 @@ public class BattleManager : MonoBehaviour
             var gladiator = newEnemy.GetComponent<Gladiator>();
             if (gladiator != null && gladiator.data != null)
             {
-                // ── YENİ: KİMLİK KONTROLÜ (AYI MI, İNSAN MI?) ──
+                // ── 1. DURUM: HEYVAN / AYI İSE ──
                 if (ai != null && ai.isBeast)
                 {
-                    // 1. HAYVAN İSE: Havuza hiç girme, kendi vahşi doğasını koru
                     gladiator.data.gladiatorName = "Vahşi Ayı";
                     gladiator.data.weaponClass = WeaponClass.Unarmed;
                     gladiator.data.isRanged = false;
-                    gladiator.data.attackRange = 2.5f; // Ayının pençe menzili biraz daha geniş olabilir
+                    gladiator.data.attackRange = 2.5f; 
 
-                    // Hayvanı da mevcut zorluk seviyesine (Tier) göre güçlendir
                     float tierMult = 1f + (_currentTier - 1) * 0.4f;
                     gladiator.data.strength = Mathf.RoundToInt(gladiator.data.strength * tierMult);
                     gladiator.data.defense  = Mathf.RoundToInt(gladiator.data.defense  * tierMult);
                     gladiator.data.stamina  = Mathf.RoundToInt(gladiator.data.stamina  * tierMult);
                     gladiator.data.level    = _currentTier;
+
+                    // ── YENİ: Ayının Yapay Zeka Menzilini Zorla Kilitle! ──
+                    ai.ForceSetupWeaponStats(2.5f, false, WeaponClass.Unarmed);
                 }
+                // ── 2. DURUM: İNSAN / DÜŞMAN ASKERİ İSE ──
                 else
                 {
-                    // 2. İNSAN İSE: Havuzdan rastgele bir tip (Şövalye, Okçu vb.) çek!
                     EnemyLoadout randomEnemyType = null;
                     if (enemyTierConfig != null)
                     {
@@ -600,7 +742,6 @@ public class BattleManager : MonoBehaviour
 
                     if (randomEnemyType != null)
                     {
-                        // Çekilen rastgele tipi bu askere uygula
                         gladiator.data.strength    = randomEnemyType.baseStrength + randomEnemyType.weaponBonus;
                         gladiator.data.defense     = randomEnemyType.baseDefense  + randomEnemyType.armorBonus;
                         gladiator.data.speed       = randomEnemyType.baseSpeed;
@@ -614,27 +755,25 @@ public class BattleManager : MonoBehaviour
                         if (!string.IsNullOrEmpty(randomEnemyType.displayName))
                             gladiator.data.gladiatorName = randomEnemyType.displayName;
 
-                        // Mesh'leri aç (Kılıç, Yay, Kalkan vs.)
+                        // ── YENİ: Düşmanın Yapay Zeka Menzilini Çekilen Tipe Göre Kilitle! ──
+                        if (ai != null)
+                        {
+                            ai.ForceSetupWeaponStats(randomEnemyType.weaponRange, randomEnemyType.isRanged, randomEnemyType.weaponClass);
+                        }
+
+                        // Mesh'leri açma döngüsü...
                         if (randomEnemyType.activeMeshNames != null)
                         {
                             foreach (var meshName in randomEnemyType.activeMeshNames)
                             {
                                 Transform meshObj = FindDeepChild(newEnemy.transform, meshName);
-                                
-                                if (meshObj != null) 
-                                {
-                                    meshObj.gameObject.SetActive(true);
-                                }
-                                else
-                                {
-                                    Debug.LogWarning($"{randomEnemyType.displayName} prefabı içinde '{meshName}' bulunamadı! Harf hatası olabilir mi?");
-                                }
+                                if (meshObj != null) meshObj.gameObject.SetActive(true);
                             }
                         }
                     }
                     else
                     {
-                        // Fallback (ScriptableObject atanmamışsa eski standart çarpana dön)
+                        // Fallback (ScriptableObject yüklenemezse eski koruma)
                         float tierMult = 1f + (_currentTier - 1) * 0.4f;
                         gladiator.data.strength = Mathf.RoundToInt(gladiator.data.strength * tierMult);
                         gladiator.data.defense  = Mathf.RoundToInt(gladiator.data.defense  * tierMult);
@@ -642,9 +781,11 @@ public class BattleManager : MonoBehaviour
                         gladiator.data.level    = _currentTier;
                         gladiator.data.weaponClass = WeaponClass.Sword; 
                         gladiator.data.attackRange = 2.0f;
+
+                        // ── YENİ: Yedek olarak kılıç menzilini kilitle ──
+                        if (ai != null) ai.ForceSetupWeaponStats(2.0f, false, WeaponClass.Sword);
                     }
                 }
-                // ────────────────────────────────────────────────────────
 
                 gladiator.RecalculateMaxHealth();
             }

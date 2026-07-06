@@ -91,7 +91,7 @@ public class CampManager : MonoBehaviour
     void InitializeBuildings()
     {
         AddBuilding("kogus",     "Acemi Koğuşu",        250, 3, 2, 3, kogusVisuals);
-        AddBuilding("demirci",   "Demirci Atölyesi",    200, 3, 2, 3, demirciVisuals);
+        AddBuilding("demirci",   "Demirci Atölyesi",    200, 5, 2, 3, demirciVisuals);
         AddBuilding("talimhane", "Enderun Talimhanesi", 300, 15, 10, 3, null);
 
         foreach (var b in buildings) b.UpdateVisuals();

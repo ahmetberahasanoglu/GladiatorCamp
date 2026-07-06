@@ -15,15 +15,15 @@ MonoBehaviour:
   displayName: "Baltal\u0131 \xC7apulcu"
   portrait: {fileID: 21300000, guid: 1a15e3355ad845445a593e8fe55f7174, type: 3}
   elementType: 0
-  baseStrength: 6
-  baseDefense: 1
+  baseStrength: 4
+  baseDefense: 4
   baseSpeed: 1
   baseStamina: 3
   baseLevel: 1
   weaponBonus: 5
   armorBonus: 1
   weaponClass: 1
-  weaponRange: 2
+  weaponRange: 3
   isRanged: 0
   activeMeshNames:
   - Balta

@@ -748,11 +748,17 @@ MonoBehaviour:
   retargetInterval: 1
   battleStartDelay: 0
   isBeast: 0
+  useLocalWeaponStats: 0
+  localAttackRange: 2
+  localIsRanged: 0
+  localWeaponClass: 4
   isInBattle: 0
   currentEnergy: 0
   maxEnergy: 100
   energyFillImage: {fileID: 6822462889914041138}
   ultimateVFX: {fileID: 4772634663558126228, guid: e1385af346f4e624eb313ec1ea4fcd7e, type: 3}
+  ultimateActivationVFXPrefab: {fileID: 4772634663576830964, guid: e1385af346f4e624eb313ec1ea4fcd7e, type: 3}
+  ultimateImpactVFXPrefab: {fileID: 3432958286849152088, guid: 87ee7299dd44ed747af24dbb91bcd33b, type: 3}
   forcedTarget: {fileID: 0}
 --- !u!114 &8161922304838044321
 MonoBehaviour:
@@ -6377,7 +6383,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -16533,7 +16539,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:

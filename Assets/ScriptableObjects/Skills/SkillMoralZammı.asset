@@ -16,7 +16,7 @@ MonoBehaviour:
   skillIcon: {fileID: 21300000, guid: 7900d2368e0df6f4686ad5bbc6a9d257, type: 3}
   description: "Zam yap\u0131laca\u011F\u0131 hayk\u0131r\u0131r ve askerlerini g\xFC\xE7lendirirsin"
   skillType: 5
-  cooldownTime: 10
-  powerAmount: 30
-  effectPrefab: {fileID: 0}
-  isSingleUse: 0
+  cooldownTime: 5
+  powerAmount: 5
+  effectPrefab: {fileID: 2883797502249945402, guid: 1e54877675f6e4a46ad7ca7c4d7a5bf6, type: 3}
+  isSingleUse: 1

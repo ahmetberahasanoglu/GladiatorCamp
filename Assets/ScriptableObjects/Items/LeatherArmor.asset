@@ -13,14 +13,17 @@ MonoBehaviour:
   m_Name: LeatherArmor
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   itemID: Cloth cape/Inanc
+  itemName: 
   type: 1
-  setType: 3
+  setType: 1
   icon: {fileID: 21300000, guid: ce4d1947a5da2414395158cf93a7dbfd, type: 3}
   price: 100
   targetMeshName: Cape1
+  spellData: {fileID: 0}
   bonusStrength: 0
   bonusDefense: 15
   bonusSpeed: 5
   bonusStamina: 20
+  weaponClass: 0
   weaponRange: 2
   isRanged: 0

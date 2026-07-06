@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6661865734177447470}
   - component: {fileID: 8928967395261993265}
   - component: {fileID: 904137277081584769}
+  - component: {fileID: 2068434644155550042}
   - component: {fileID: 569203721554511184}
   m_Layer: 5
   m_Name: rosterCardPrefab
@@ -77,6 +78,30 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2068434644155550042
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 195168886553417973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a67703b59c586a48811dc3388801076, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SquadSlotUI
+  nameText: {fileID: 7099814885145361288}
+  powerText: {fileID: 8960141245420213313}
+  backgroundImage: {fileID: 904137277081584769}
+  borderImage: {fileID: 4091646743143092295}
+  toggleButton: {fileID: 569203721554511184}
+  normalBg: {r: 1, g: 1, b: 1, a: 1}
+  selectedBg: {r: 0.6039216, g: 0.9490196, b: 0.6039216, a: 1}
+  injuredBg: {r: 0.3137255, g: 0, b: 0, a: 1}
+  normalBorder: {r: 0.4, g: 0.4, b: 0.4, a: 1}
+  selectedBorder: {r: 1, g: 0.84, b: 0.1, a: 1}
+  selectScale: 1.08
+  animDuration: 0.12
 --- !u!114 &569203721554511184
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -291,7 +316,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 12, y: -82}
+  m_AnchoredPosition: {x: 3, y: -82}
   m_SizeDelta: {x: 24, y: 24}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &466796713910114227
@@ -475,14 +500,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.6226415, g: 0.6226415, b: 0.6226415, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: c9b92ac477d943f49915298417f2e0ad, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 98736c43f6b967c42b7bdee75378cac8, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -665,7 +690,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -1037,7 +1062,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 51.051, y: -82}
+  m_AnchoredPosition: {x: 34.4, y: -82}
   m_SizeDelta: {x: 54.1012, y: 24}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3914756386458710519
@@ -1068,7 +1093,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 22
+  m_text: G:12
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: fbe5565e4dd7a1148b1541ab8fd85882, type: 2}
   m_sharedMaterial: {fileID: -6674717547585697400, guid: fbe5565e4dd7a1148b1541ab8fd85882, type: 2}

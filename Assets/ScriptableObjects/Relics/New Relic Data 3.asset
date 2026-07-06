@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de94787a81dff524c8acd304fd1fe467, type: 3}
+  m_Name: New Relic Data 3
+  m_EditorClassIdentifier: Assembly-CSharp::RelicData
+  relicID: HazineNefesi
+  relicName: Miras
+  description: "Hazine Nefesi (Kampa d\xF6n\xFCnce +%10 Alt\u0131n). Ganimetlerin
+    \xFCst\xFCne yatmadan \xF6nce bir nefes \xFCfle. Bereketlenir."
+  icon: {fileID: 21300000, guid: 3d0fb9c2b1481bf4ba8435ed62bca56e, type: 3}

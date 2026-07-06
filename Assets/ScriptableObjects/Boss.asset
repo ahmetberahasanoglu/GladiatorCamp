@@ -19,8 +19,13 @@ MonoBehaviour:
   stamina: 100
   level: 5
   isGazi: 0
+  trait: 0
+  elementType: 0
   currentHealth: 500
   maxHealth: 500
   isOnMission: 0
   currentActivity: 2
+  weaponClass: 4
+  attackRange: 5
+  isRanged: 0
   dailyWage: 50

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de94787a81dff524c8acd304fd1fe467, type: 3}
+  m_Name: New Relic Data 1
+  m_EditorClassIdentifier: Assembly-CSharp::RelicData
+  relicID: BereketliYol
+  relicName: Miras
+  description: "Bereketli Yol (Seferde +%25 Alt\u0131n). Atan\u0131n bast\u0131\u011F\u0131
+    yerde alt\u0131n biter derler. Bo\u015F s\xF6z de\u011Filmi\u015F."
+  icon: {fileID: 21300000, guid: 3d0fb9c2b1481bf4ba8435ed62bca56e, type: 3}

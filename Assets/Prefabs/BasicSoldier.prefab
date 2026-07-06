@@ -748,7 +748,7 @@ MonoBehaviour:
   isBeast: 0
   isInBattle: 0
   currentEnergy: 0
-  maxEnergy: 100
+  maxEnergy: 0
   energyFillImage: {fileID: 0}
   ultimateVFX: {fileID: 0}
   forcedTarget: {fileID: 0}

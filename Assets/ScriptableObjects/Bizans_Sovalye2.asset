@@ -16,14 +16,14 @@ MonoBehaviour:
   portrait: {fileID: 21300000, guid: 9841d4a0ba338394082f982dac60c56e, type: 3}
   elementType: 0
   baseStrength: 5
-  baseDefense: 1
+  baseDefense: 3
   baseSpeed: 4
   baseStamina: 3
   baseLevel: 2
   weaponBonus: 1
   armorBonus: 0
   weaponClass: 0
-  weaponRange: 2
+  weaponRange: 2.5
   isRanged: 0
   activeMeshNames:
   - Sword2

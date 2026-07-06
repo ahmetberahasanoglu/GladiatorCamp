@@ -20,8 +20,12 @@ MonoBehaviour:
   level: 10
   isGazi: 0
   trait: 1
+  elementType: 0
   currentHealth: 0
   maxHealth: 0
   isOnMission: 0
   currentActivity: 2
+  weaponClass: 4
+  attackRange: 3
+  isRanged: 0
   dailyWage: 50

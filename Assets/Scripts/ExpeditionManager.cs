@@ -49,7 +49,11 @@ void Start()
         tempReputation = 0;
         tempItems.Clear();
 
-        Debug.Log("Sefer Başladı! Geçici çanta sıfırlandı.");
+      
+        if (AudioManager.Instance != null)
+{
+    AudioManager.Instance.PlayMapMusic();
+}
         UpdateTopBarUI();
     }
 
@@ -134,6 +138,12 @@ void Start()
                 soldiers, hadCasualties);
 
         ResetExpedition();
+        if (AudioManager.Instance != null)
+{
+
+    bool isWinterNow = CampSurvivalManager.Instance != null && CampSurvivalManager.Instance.currentTemperature <= 0; 
+    AudioManager.Instance.PlayCampMusic(isWinterNow);
+}
     }
     public void FailExpedition()
     {
@@ -189,7 +199,6 @@ void Start()
 
     private void UpdateTopBarUI()
     {
-        // 1/5 Görselini ayarlama
         if (relicProgressText != null)
         {
             int currentStep = currentEncounterCount % 5;

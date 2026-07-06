@@ -36,6 +36,16 @@ public class TopInfoBarUI : MonoBehaviour
     public Color flashColor = new Color(0.1f, 1f, 0.2f); // Altın Sarısı / Parlak bir renk
     private bool isInitialized = false; // Başlangıçtaki toplu parlamayı engellemek için
     // -----------------------------------
+    [Header("Relic Ana Buton Bileşenleri")]
+    public GameObject relicMasterButton;     // Üst barda duran ana buton objesi
+    public TextMeshProUGUI relicCountText;    // Üst bardaki "x3" yazısı
+
+    [Header("Sürgülü Relic Paneli (Drawer)")]
+    public GameObject relicDrawerPanel;       // Yana/aşağı açılan parşömen paneliniz
+    public Transform relicIconContainer;     // İkonların doğacağı Grid/Horizontal parent
+    public GameObject relicIconPrefab;       // Image + Tooltip içeren o minik prefab
+
+    private bool _isDrawerOpen = false;
 
     void Awake()
     {
@@ -52,7 +62,16 @@ public class TopInfoBarUI : MonoBehaviour
         if (ResourceManager.Instance != null) ResourceManager.Instance.OnResourcesChanged += UpdateWood;
         if (CampSurvivalManager.Instance != null) CampSurvivalManager.Instance.OnTemperatureChanged += UpdateTemp;
         if (NasipManager.Instance != null) NasipManager.Instance.OnNasipChanged += UpdateNasipFromEvent;
+        if (relicDrawerPanel != null) relicDrawerPanel.SetActive(false);
+        
+        // Ana butona tıklanınca çekmeceyi aç/kapat fonksiyonunu bağla
+        if (relicMasterButton != null)
+        {
+            Button btn = relicMasterButton.GetComponent<Button>();
+            if (btn != null) btn.onClick.AddListener(ToggleRelicDrawer);
+        }
 
+        RefreshRelics();
         ForceUpdateAll();
         isInitialized = true; // İlk yükleme bitti, artık tetiklenen her şey parlayabilir!
     }
@@ -71,6 +90,30 @@ public class TopInfoBarUI : MonoBehaviour
 
     // --- GÜNCELLEME FONKSİYONLARI ---
 
+public void ToggleRelicDrawer()
+    {
+      
+        if (RelicJournalUI.Instance != null)
+        {
+            RelicJournalUI.Instance.OpenJournal();
+        }
+        else
+        {
+            Debug.LogWarning("[TopInfoBarUI] Sahnede 'RelicJournalUI' (Defter Paneli) bulunamadı! Prefabın aktif olduğundan emin olun.");
+        }
+    }    public void RefreshRelics()
+    {
+        if (CommanderStorage.Instance == null) return;
+
+        int totalRelics = CommanderStorage.Instance.activeRelics.Count;
+
+        // Üst bardaki sayaç metnini güncelle (Örn: x3)
+        if (relicCountText != null)
+        {
+            relicCountText.text = totalRelics > 0 ? $"x{totalRelics}" : "0";
+        }
+
+    }
    void UpdateDay(int day)
     {
         // ... (Eski text güncelleme kodun) ...

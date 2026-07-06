@@ -1,13 +1,16 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
 using System.Collections.Generic;
 
 public class SquadSelectionUIManager : MonoBehaviour
 {
     public GameObject panel;
     public Transform rosterContentArea; // Kamptaki tüm askerlerin listeleneceği yer
-    public GameObject rosterCardPrefab; // Askerlerin ufak UI kartı
+    
+    [Tooltip("DİKKAT: Bu prefabın en üstünde 'SquadSlotUI' scripti takılı olmalıdır!")]
+    public GameObject rosterCardPrefab; // Askerlerin animasyonlu UI kartı (SquadSlotUI taşır)
 
     [Header("Seçilen Asker Yuvaları (Önden Arkaya)")]
     public List<TextMeshProUGUI> slotTexts; // Seçilen askerin adını yazacağımız 3 text
@@ -16,8 +19,8 @@ public class SquadSelectionUIManager : MonoBehaviour
     private List<Gladiator> availableRoster = new List<Gladiator>();
     private List<Gladiator> selectedSquad = new List<Gladiator>();
     private bool _isBossBattle;
+
     [Header("Komutan Yetenekleri Seçimi")]
-  // public List<CommanderSkillData> unlockedSkills; 
     public Transform skillInventoryArea; 
     public GameObject skillCardPrefab; 
     
@@ -25,6 +28,10 @@ public class SquadSelectionUIManager : MonoBehaviour
     public List<Image> selectedSkillSlots; 
     private List<CommanderSkillData> selectedSkills = new List<CommanderSkillData>();
     private Dictionary<CommanderSkillData, int> availableSpells = new Dictionary<CommanderSkillData, int>();
+    
+    // Yeteneklerin yumuşak büyüme animasyonları için takipli coroutine sözlüğü
+    private Dictionary<GameObject, Coroutine> activeSkillAnimations = new Dictionary<GameObject, Coroutine>();
+
     void Start()
     {
         if (panel != null) panel.SetActive(false);
@@ -42,13 +49,14 @@ public class SquadSelectionUIManager : MonoBehaviour
         PopulateSkills();
     }
 
+    // ── ASKER LİSTESİ (SQUAD SLOT UI ENTEGRASYONU) ───────────────────────────
     void PopulateRoster()
     {
-        // 1. Önce listeyi temizle
+        // 1. Önce hiyerarşiyi temizle
         foreach (Transform child in rosterContentArea) Destroy(child.gameObject);
         availableRoster.Clear();
 
-        // 2. Kamptaki tüm MÜSAİT askerleri bul
+        // 2. Kamptaki tüm MÜSAİT ve canlı askerleri bul
         Gladiator[] allSoldiers = FindObjectsByType<Gladiator>(FindObjectsSortMode.None);
         foreach (var soldier in allSoldiers)
         {
@@ -58,50 +66,74 @@ public class SquadSelectionUIManager : MonoBehaviour
             }
         }
 
-        // 3. UI Kartlarını oluştur
+        // 3. UI Kartlarını oluştur ve SquadSlotUI'a bağla
         foreach (var soldier in availableRoster)
         {
             GameObject card = Instantiate(rosterCardPrefab, rosterContentArea);
-            
-            // Kartın içindeki yazıları ayarla (Prefab'ında TextMeshProUGUI'ler olmalı)
-            TextMeshProUGUI[] texts = card.GetComponentsInChildren<TextMeshProUGUI>();
-            if (texts.Length > 0) texts[0].text = soldier.data.gladiatorName;
+             TextMeshProUGUI[] texts = card.GetComponentsInChildren<TextMeshProUGUI>();
             if (texts.Length > 1) texts[1].text = $"{Mathf.RoundToInt(soldier.currentHealth)}";
-            if (texts.Length > 2) texts[2].text = $"{soldier.data.strength}";
+            SquadSlotUI slotUI = card.GetComponent<SquadSlotUI>();
 
-            // Karta tıklanma olayını ata
-            Button btn = card.GetComponent<Button>();
-            if (btn != null)
+            if (slotUI != null)
             {
-                btn.onClick.AddListener(() => OnSoldierCardClicked(soldier, card));
+                // Sefer sistemindeki akıllı Setup'ı çağırıyoruz!
+                slotUI.Setup(soldier, (glad, isSelected) => 
+                {
+                    // Tıklama olayı tetiklendiğinde çalışacak akıllı mantık:
+                    if (isSelected)
+                    {
+                        // 3 kişilik ordu sınır kontrolü
+                        if (selectedSquad.Count < 3)
+                        {
+                            selectedSquad.Add(glad);
+                        }
+                        else
+                        {
+                            // Sınır aşıldıysa kartın kendi içindeki seçimi zorla GERİ İPTAL ET (Animasyonu geri sarar)
+                            slotUI.ForceDeselect(); 
+
+                            if (NotificationManager.Instance != null)
+                                NotificationManager.Instance.Show("En fazla 3 asker seçebilirsin!", NotificationType.Warning);
+                        }
+                    }
+                    else
+                    {
+                        // Seçim iptal edildiyse listeden çıkar
+                        selectedSquad.Remove(glad);
+                    }
+
+                    // Üst bar yazılarını/slot durumlarını tazele
+                    UpdateSlotVisuals();
+                });
+            }
+            else
+            {
+                Debug.LogWarning("[SquadSelection] rosterCardPrefab üzerinde 'SquadSlotUI' bileşeni bulunamadı!");
             }
         }
     }
+
+    // ── KOMUTAN YETENEKLERİ LİSTESİ ─────────────────────────────────────────
     void PopulateSkills()
     {
-        // 1. Önce UI'ı temizle
         foreach (Transform child in skillInventoryArea) Destroy(child.gameObject);
         selectedSkills.Clear();
         availableSpells.Clear();
+        activeSkillAnimations.Clear();
         UpdateSkillSlotVisuals();
 
-        // 2. ÇANTADAKİ (InventoryStorage) NÜSHALARI BUL VE SAY
-        if (InventoryStorage.Instance != null)
+        if (CommanderStorage.Instance != null)
         {
-            foreach (var item in InventoryStorage.Instance.storedItems)
+            foreach (var nusha in CommanderStorage.Instance.ownedNushas)
             {
-                // Eğer eşya bir Nüsha ise ve içinde büyü verisi varsa
-                if (item.type == ItemType.Nusha && item.spellData != null)
-                {
-                    if (availableSpells.ContainsKey(item.spellData))
-                        availableSpells[item.spellData]++;
-                    else
-                        availableSpells[item.spellData] = 1;
-                }
+                if (nusha?.spellData == null) continue;
+                if (availableSpells.ContainsKey(nusha.spellData))
+                    availableSpells[nusha.spellData]++;
+                else
+                    availableSpells[nusha.spellData] = 1;
             }
         }
 
-        // 3. BULUNAN NÜSHALARI EKRANA ÇİZ
         foreach (var kvp in availableSpells)
         {
             CommanderSkillData skill = kvp.Key;
@@ -109,13 +141,11 @@ public class SquadSelectionUIManager : MonoBehaviour
 
             GameObject card = Instantiate(skillCardPrefab, skillInventoryArea);
             
-            Image icon = card.transform.Find("Icon").GetComponent<Image>();
-            TextMeshProUGUI nameText = card.transform.Find("Name").GetComponent<TextMeshProUGUI>();
-            
-            // Eğer prefabında Miktar (Count) gösteren bir text varsa (Örn: CountText):
+            Image icon = card.transform.Find("Icon")?.GetComponent<Image>();
+            TextMeshProUGUI nameText = card.transform.Find("Name")?.GetComponent<TextMeshProUGUI>();
             Transform countObj = card.transform.Find("CountText");
-            if (countObj != null) countObj.GetComponent<TextMeshProUGUI>().text = $"x{count}";
 
+            if (countObj != null) countObj.GetComponent<TextMeshProUGUI>().text = $"x{count}";
             if (icon != null) icon.sprite = skill.skillIcon;
             if (nameText != null) nameText.text = skill.skillName;
 
@@ -126,21 +156,30 @@ public class SquadSelectionUIManager : MonoBehaviour
             }
         }
     }
-void OnSkillCardClicked(CommanderSkillData skill, GameObject cardObject)
+
+    // ── YETENEK KARTLARINA ÖZEL JUICE (ANİMASYONLU SEÇİM) ────────────────────
+    void OnSkillCardClicked(CommanderSkillData skill, GameObject cardObject)
     {
-        // Zaten seçiliyse çıkart
+        Image bgImage = cardObject.GetComponent<Image>();
+
         if (selectedSkills.Contains(skill))
         {
             selectedSkills.Remove(skill);
-            cardObject.GetComponent<Image>().color = Color.white; // Seçim iptal rengi
+            if (bgImage != null) bgImage.color = Color.white; // Normale dön
+            
+            // Küçülme animasyonunu tetikle
+            AnimateSkillCardScale(cardObject, Vector3.one);
         }
         else
         {
-            // Seçili değilse ve slotta yer varsa (Max 3) ekle
-            if (selectedSkills.Count < 3) // İleride bu 3 sayısını oyuncunun Kamp yükseltmesine göre değişken yapabilirsin
+            if (selectedSkills.Count < 3)
             {
                 selectedSkills.Add(skill);
-                cardObject.GetComponent<Image>().color = Color.yellow; // Seçildiğini belli et
+                // Seçildiğinde efsanevi altın sarısı parlasın
+                if (bgImage != null) bgImage.color = new Color(1f, 0.85f, 0.2f, 1f); 
+                
+                // Tıpkı asker kartları gibi hafifçe öne çıksın (Büyüsün)
+                AnimateSkillCardScale(cardObject, Vector3.one * 1.06f);
             }
             else
             {
@@ -152,57 +191,59 @@ void OnSkillCardClicked(CommanderSkillData skill, GameObject cardObject)
         UpdateSkillSlotVisuals();
     }
 
+    void AnimateSkillCardScale(GameObject targetCard, Vector3 targetScale)
+    {
+        if (activeSkillAnimations.ContainsKey(targetCard) && activeSkillAnimations[targetCard] != null)
+        {
+            StopCoroutine(activeSkillAnimations[targetCard]);
+            activeSkillAnimations.Remove(targetCard);
+        }
+
+        Coroutine anim = StartCoroutine(SmoothScaleSkillCard(targetCard, targetScale));
+        activeSkillAnimations.Add(targetCard, anim);
+    }
+
+    IEnumerator SmoothScaleSkillCard(GameObject targetCard, Vector3 targetScale)
+    {
+        if (targetCard == null) yield break;
+        Vector3 startScale = targetCard.transform.localScale;
+        float elapsed = 0f;
+        float duration = 0.12f; // SquadSlotUI ile aynı hızda pürüzsüz geçiş
+
+        while (elapsed < duration)
+        {
+            if (targetCard == null) yield break;
+            elapsed += Time.unscaledDeltaTime;
+            targetCard.transform.localScale = Vector3.Lerp(startScale, targetScale, elapsed / duration);
+            yield return null;
+        }
+        if (targetCard != null) targetCard.transform.localScale = targetScale;
+    }
+
+    // ── GÖRSEL YAZI VE SLOT TAZELEMELERİ ─────────────────────────────────────
     void UpdateSkillSlotVisuals()
     {
-        // Seçilen yeteneklerin ikonlarını boş yuvalara yerleştir
         for (int i = 0; i < selectedSkillSlots.Count; i++)
         {
             if (i < selectedSkills.Count)
             {
                 selectedSkillSlots[i].sprite = selectedSkills[i].skillIcon;
-                selectedSkillSlots[i].enabled = true; // İkonu göster
+                selectedSkillSlots[i].enabled = true; 
             }
             else
             {
                 selectedSkillSlots[i].sprite = null;
-                selectedSkillSlots[i].enabled = false; // Boşsa gizle veya silik bir arka plan göster
+                selectedSkillSlots[i].enabled = false; 
             }
         }
-    }
-    void OnSoldierCardClicked(Gladiator soldier, GameObject cardObject)
-    {
-        // Zaten seçiliyse listeden çıkar
-        if (selectedSquad.Contains(soldier))
-        {
-            selectedSquad.Remove(soldier);
-            cardObject.GetComponent<Image>().color = Color.white; // Rengi eski haline çevir
-        }
-        else
-        {
-            // Seçili değilse ve slotta yer varsa (Max 3) ekle
-            if (selectedSquad.Count < 3)
-            {
-                selectedSquad.Add(soldier);
-                cardObject.GetComponent<Image>().color = Color.green; // Seçildiğini belli et
-            }
-            else
-            {
-                if (NotificationManager.Instance != null)
-                    NotificationManager.Instance.Show("En fazla 3 asker seçebilirsin!", NotificationType.Warning);
-            }
-        }
-
-        UpdateSlotVisuals();
     }
 
     void UpdateSlotVisuals()
     {
-        // 3 Slotun yazılarını güncelle
         for (int i = 0; i < slotTexts.Count; i++)
         {
             if (i < selectedSquad.Count)
             {
-                // İlk seçilen (Index 0) en öne gider
                 string rank = (i == 0) ? "Ön Saf (Tank)" : (i == 1) ? "Orta Saf" : "Arka Saf";
                 slotTexts[i].text = $"{rank}: {selectedSquad[i].data.gladiatorName}";
             }
@@ -212,15 +253,15 @@ void OnSkillCardClicked(CommanderSkillData skill, GameObject cardObject)
             }
         }
 
-        // En az 1 asker seçilmeden savaş başlatılamasın
         startBattleButton.interactable = (selectedSquad.Count > 0);
     }
 
     void ConfirmSquadAndStartBattle()
     {
         panel.SetActive(false);
-       AudioManager.Instance.PlayWarHorn();
-       if (BattleSkillManager.Instance != null)
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayWarHorn();
+        
+        if (BattleSkillManager.Instance != null)
         {
             BattleSkillManager.Instance.LoadSelectedSkills(selectedSkills);
         }

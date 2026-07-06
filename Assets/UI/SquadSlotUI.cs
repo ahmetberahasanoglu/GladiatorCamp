@@ -42,7 +42,7 @@ public class SquadSlotUI : MonoBehaviour
         _isInjured = glad.currentHealth < glad.maxHealth * 0.5f;
 
         nameText.text  = glad.data.gladiatorName;
-        powerText.text = "Güç: " + glad.data.GetTotalStats();
+        powerText.text = "G:"+ glad.data.GetTotalStats();
 
         // Yaralıysa ek bilgi
         if (_isInjured)

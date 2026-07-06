@@ -9,13 +9,15 @@ public class AudioManager : MonoBehaviour
     public AudioSource musicSource;  // Chill Kamp müzikleri için
     public AudioSource sfxSource;    // Anlık efektler (Tıklama, altın, kılıç)
     public AudioSource ambientSource;// Savaş ambiyansı veya rüzgar sesi için (Döngüsel)
-    public AudioSource dialogueSource;// Savaş ambiyansı veya rüzgar sesi için (Döngüsel)
+    public AudioSource dialogueSource;// Diyalog ve yazı sesleri için
 
     [Header("Müzikler (Kulağı Yormayan / Chill)")]
     public AudioClip summerCampMusic; // Normal günlerdeki sakin müzik
+    public AudioClip mapMusic;        // Sefer haritası müziği (YENİ)
     public AudioClip winterCampMusic; // Kış geldiğinde çalacak daha soğuk/melankolik müzik
-    public AudioClip battleAmbient;   // MÜZİK DEĞİL! Kılıç çarpışmaları, bağrışmalar, savaş alanı gürültüsü
-    [Range(0f, 1f)] public float musicVolume = 0.5f; // Müziğin genel sesi (Çok bağırıp kulağı yormasın)
+    public AudioClip battleAmbient;   // MÜZİK DEĞİL! Savaş alanı gürültüsü
+    
+    [Range(0f, 1f)] public float musicVolume = 0.5f; 
 
     [Header("Arayüz Sesleri (UI)")]
     public AudioClip buttonClick;
@@ -29,7 +31,7 @@ public class AudioManager : MonoBehaviour
     [Header("Ekonomi ve Olay Sesleri")]
     public AudioClip goldSound;
     public AudioClip diceRoll;
-    public AudioClip warHorn; // Savaş Başlangıç Borusu
+    public AudioClip warHorn; 
     [Range(0f, 1f)] public float eventVolume = 1f;
 
     [Header("Kamp İçi Eylem Sesleri (Her Şey İçin)")]
@@ -37,9 +39,10 @@ public class AudioManager : MonoBehaviour
     public AudioClip blacksmithOpen;    
     public AudioClip equipSound;
     public AudioClip barkSound;
+
     [Header("Savaş Sesleri")]
-    public AudioClip swordSwoosh; // Bu zaten vardı
-    public AudioClip swordHit; // Bu zaten vardı
+    public AudioClip swordSwoosh; 
+    public AudioClip swordHit; 
     public AudioClip hitSound;    
     public AudioClip gruntSound;  
     public AudioClip deathSound;  
@@ -55,13 +58,14 @@ public class AudioManager : MonoBehaviour
     public AudioClip gaziSoundClip;  
 
     [Range(0f, 1f)] public float actionVolume = 0.9f;
+
+    public bool IsAtCamp { get; private set; } = true;
     
     void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-           // DontDestroyOnLoad(gameObject);
         }
         else Destroy(gameObject);
     }
@@ -69,24 +73,19 @@ public class AudioManager : MonoBehaviour
     void Start()
     {
         musicSource.volume = musicVolume;
-        ambientSource.loop = true; // Ambiyans hep dönsün
+        ambientSource.loop = true; 
         PlayCampMusic(false); // Başlangıçta yaz müziğini çal
         
-        // Eğer kış sistemi tetiklenirse kış müziğine geçmek için evente abone olabiliriz
         if (DayManager.Instance != null)
             DayManager.Instance.OnWinterArrived += () => PlayCampMusic(true);
     }
-public void PlayTypewriter() 
+
+    public void PlayTypewriter() 
     {
         if (typewriterSound != null && sfxSource != null)
         {
-            // Sese organik bir his vermek için pitch'i rastgele değiştir (0.9 ile 1.1 arası idealdır)
             sfxSource.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
-            
-            // Sesi çal (uiVolume'un biraz daha düşüğünü kullanıyoruz ki kulak tırmalamasın)
             sfxSource.PlayOneShot(typewriterSound, uiVolume * 0.7f);
-            
-            // Pitch ayarını normal (1.0) haline geri döndür ki diğer oyun sesleri bozulmasın!
             sfxSource.pitch = 1.0f; 
         }
     }
@@ -96,8 +95,8 @@ public void PlayTypewriter()
         if (typewriterSound != null && dialogueSource != null)
         {
             dialogueSource.clip = typewriterSound;
-            dialogueSource.loop = true; // 13 saniye yetmezse diye başa sarsın
-            dialogueSource.volume = uiVolume * 0.5f; // Arka planda tatlı tatlı çalsın
+            dialogueSource.loop = true; 
+            dialogueSource.volume = uiVolume * 0.5f; 
             dialogueSource.Play();
         }
     }
@@ -106,11 +105,10 @@ public void PlayTypewriter()
     {
         if (dialogueSource != null && dialogueSource.isPlaying)
         {
-            dialogueSource.Stop(); // Yazı bittiği an sesi bıçak gibi keser
+            dialogueSource.Stop(); 
         }
     }
-    // --- GELİŞMİŞ SFX ÇALICI (VOLUME DESTEKLİ) ---
-    // clip: Çalınacak ses | volumeScale: Sesin yüksekliği (0 ile 1 arası)
+
     public void PlaySFX(AudioClip clip, float volumeScale)
     {
         if (clip != null && sfxSource != null)
@@ -119,9 +117,11 @@ public void PlayTypewriter()
         }
     }
 
-    // --- MÜZİK VE AMBİYANS GEÇİŞLERİ (Fade In/Out ile Kulağı Yormaz) ---
+    // ── MÜZİK VE AMBİYANS GEÇİŞLERİ (Fade In/Out) ───────────────────────────
+
     public void PlayCampMusic(bool isWinter)
     {
+        IsAtCamp = true;
         AudioClip targetMusic = isWinter ? winterCampMusic : summerCampMusic;
         StartCoroutine(FadeMusic(targetMusic, musicVolume));
         
@@ -129,27 +129,38 @@ public void PlayTypewriter()
         StartCoroutine(FadeAmbient(null, 0f)); 
     }
 
+    /// <summary>
+    /// YENİ: Oyuncu sefere çıktığında harita müziğini pürüzsüzce başlatır.
+    /// </summary>
+    public void PlayMapMusic()
+    {
+        IsAtCamp = false;
+        if (mapMusic != null)
+        {
+            StartCoroutine(FadeMusic(mapMusic, musicVolume));
+            // Haritadayken arka plandaki olası savaş gürültülerini susturur
+            StartCoroutine(FadeAmbient(null, 0f));
+        }
+    }
+
     public void StartBattleAcoustics()
     {
         // Savaşa girince chill müziği yavaşça sustur
+        IsAtCamp = false;
         StartCoroutine(FadeMusic(null, 0f)); 
         
-        // Savaş borusunu öttür!
         PlayWarHorn();
         
-        // Savaş alanı gürültüsünü (Kılıçlar, naralar) yavaşça yükselt
         ambientSource.clip = battleAmbient;
         ambientSource.Play();
         StartCoroutine(FadeAmbient(battleAmbient, 0.7f)); 
     }
 
-    // Müziklerin aniden kesilip kulağı tırmalamaması için yumuşak geçiş (AAA Kalitesi)
     private IEnumerator FadeMusic(AudioClip newClip, float targetVolume)
     {
         float fadeTime = 1.5f;
         float startVolume = musicSource.volume;
 
-        // Önce mevcut müziği yavaşça kıs
         for (float t = 0; t < fadeTime; t += Time.deltaTime)
         {
             musicSource.volume = Mathf.Lerp(startVolume, 0, t / fadeTime);
@@ -162,7 +173,6 @@ public void PlayTypewriter()
         if (newClip != null)
         {
             musicSource.Play();
-            // Yeni müziği yavaşça aç
             for (float t = 0; t < fadeTime; t += Time.deltaTime)
             {
                 musicSource.volume = Mathf.Lerp(0, targetVolume, t / fadeTime);
@@ -183,7 +193,7 @@ public void PlayTypewriter()
         if (targetVolume == 0) ambientSource.Stop();
     }
 
-    // --- KISA YOL ÇAĞIRICILARI (Volume ayarlarıyla birlikte) ---
+    // ── KISA YOL ÇAĞIRICILARI ───────────────────────────────────────────────
     public void PlayClick() => PlaySFX(buttonClick, uiVolume);
     public void PlayError() => PlaySFX(errorSound, uiVolume);
     public void PlayPaper() => PlaySFX(paperSound, uiVolume);
@@ -197,11 +207,13 @@ public void PlayTypewriter()
     public void PlayBlacksmith() => PlaySFX(blacksmithOpen, actionVolume);
     public void PlayCheer() => PlaySFX(cheerSound, actionVolume);
     public void PlayEquip() => PlaySFX(equipSound, actionVolume);
-    public void PlayTrainHit() => PlaySFX(trainHitSound, actionVolume * 0.7f); // Talim sesi biraz daha kısık olsun
+    public void PlayTrainHit() => PlaySFX(trainHitSound, actionVolume * 0.7f); 
     public void PlayEat() => PlaySFX(eatFoodSound, actionVolume);
     public void PlayBark() => PlaySFX(barkSound, actionVolume);
-    public void PlayWood() => PlaySFX(woodSound, actionVolume*0.1f);
+    public void PlayWood() => PlaySFX(woodSound, actionVolume * 0.1f);
     public void PlaySword() => PlaySFX(swordSwoosh, 0.8f);
     public void PlayMapMove() => PlaySFX(mapMoveSound, actionVolume);
-    public void PlayGazi() => PlaySFX(mapMoveSound, actionVolume);
+    
+    // DÜZELTME: mapMoveSound çalan hata gaziSoundClip olarak güncellendi.
+    public void PlayGazi() => PlaySFX(gaziSoundClip, actionVolume); 
 }

@@ -88,8 +88,7 @@ public class GladiatorInventory : MonoBehaviour
 
         if (oldItem != null)
         {
-            InventoryStorage.Instance.AddItem(oldItem);
-            NotificationManager.Instance.Show($"{oldItem.itemID} depoya geri gönderildi.", NotificationType.Info);
+            InventoryStorage.Instance.RemoveItem(oldItem); // Nüshalar taşındığı için temizleme kodu güncellendi
             ToggleMesh(oldItem.targetMeshName, false);
         }
 
@@ -144,7 +143,7 @@ public class GladiatorInventory : MonoBehaviour
         Debug.LogWarning($"<color=yellow>DİKKAT:</color> Karakterin içinde '{meshName}' adında bir model bulunamadı!");
     }
 
-   void RecalculateStats()
+    void RecalculateStats()
     {
         if (gameObject.CompareTag("EnemySoldier")) return;
         data.strength = baseStr;
@@ -157,7 +156,7 @@ public class GladiatorInventory : MonoBehaviour
         AddBonus(helmet);
         AddBonus(shield);
         
-        // ── YENİ: SİLAH TÜRÜ VE MENZİLİNİ DATA'YA AKTAR ──
+        // ── SİLAH TÜRÜ VE MENZİLİNİ DATA'YA AKTAR ──
         if (weapon != null)
         {
             data.weaponClass = weapon.weaponClass;
@@ -166,42 +165,55 @@ public class GladiatorInventory : MonoBehaviour
         }
         else
         {
-            // Silahsızsa (Yumruk) varsayılan değerler
             data.weaponClass = WeaponClass.Unarmed; 
             data.attackRange = 1.5f; 
             data.isRanged    = false;
         }
-        // ─────────────────────────────────────────────────
 
         CalculateSetBonus();
+
+        // ── YENİ: INVENTORDA TAKILDIĞI AN ANINDA GÖRSEL GÜNCELLEME (KÖPRÜ) ──
+        // Asker kamptayken veya envanter ekranında silah değiştiği an animasyon ağacını tetikler
+        Animator anim = GetComponentInChildren<Animator>();
+        if (anim != null)
+        {
+            anim.SetInteger("WeaponType", (int)data.weaponClass);
+            anim.SetBool("IsRanged", data.isRanged);
+            
+            // Değişimin anında arayüze yansıması için animatör karesini zorla yenile
+            anim.Update(0f); 
+        }
+
+        // Yapay zeka ajanının mesafesini de arka planda güncellemiş olalım
+        GladiatorAI ai = GetComponent<GladiatorAI>();
+        if (ai != null && ai.agent != null)
+        {
+            ai.agent.stoppingDistance = data.attackRange * 0.8f;
+        }
+        // ─────────────────────────────────────────────────────────────────
 
         GetComponent<Gladiator>().RefreshStats();
     }
 
-    // --- YENİ: SET DEDEKTİFİ ---
     void CalculateSetBonus()
     {
         activeSet = ItemSetType.None;
         activeSetPieceCount = 0;
 
-        // Üzerimizdeki setleri saymak için geçici sayaçlar
         int fireCount = 0;
         int poisonCount = 0;
         int faithCount = 0;
 
-        // Eşyaları kontrol et ve sayaçları artır
         CheckAndCountSet(weapon, ref fireCount, ref poisonCount, ref faithCount);
         CheckAndCountSet(armor, ref fireCount, ref poisonCount, ref faithCount);
         CheckAndCountSet(helmet, ref fireCount, ref poisonCount, ref faithCount);
         CheckAndCountSet(shield, ref fireCount, ref poisonCount, ref faithCount);
 
-        // Hangi setten en az 3 parça varsa, onu "Aktif Set" olarak belirle
         if (fireCount >= 3) { activeSet = ItemSetType.Fire; activeSetPieceCount = fireCount; }
         else if (poisonCount >= 3) { activeSet = ItemSetType.Poison; activeSetPieceCount = poisonCount; }
         else if (faithCount >= 3) { activeSet = ItemSetType.Faith; activeSetPieceCount = faithCount; }
     }
 
-    // Set türünü okuyup ilgili sayacı artıran yardımcı metod
     void CheckAndCountSet(ItemData item, ref int fCount, ref int pCount, ref int faCount)
     {
         if (item == null) return;
@@ -210,7 +222,6 @@ public class GladiatorInventory : MonoBehaviour
         else if (item.setType == ItemSetType.Poison) pCount++;
         else if (item.setType == ItemSetType.Faith) faCount++;
     }
-    // ------------------------------------
 
     public ItemData GetEquippedItem(ItemType type)
     {

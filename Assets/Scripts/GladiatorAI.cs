@@ -17,7 +17,6 @@ public class GladiatorAI : MonoBehaviour
     public GameObject fireVFXPrefab;
     public GameObject healVFXPrefab;
 
-
     private GameObject activePoisonVFX;
     private GameObject activeFireVFX;
 
@@ -45,7 +44,7 @@ public class GladiatorAI : MonoBehaviour
     private Coroutine _attackCoroutine;
     private Coroutine _hitStunCoroutine;
 
-    // --- DURUM EFEKTLERİ (YENİ: Zehir ve Ateş) ---
+    // --- DURUM EFEKTLERİ ---
     private float poisonDuration = 0f;
     private float poisonDamagePerTick = 0f;
     private float poisonTimer = 0f;
@@ -66,25 +65,46 @@ public class GladiatorAI : MonoBehaviour
     [Header("Savaş Öncesi (Intro)")]
     public float battleStartDelay = 0f; 
     private float _delayTimer = 0f;
-[Header("Birim Özellikleri")]
+
+    [Header("Birim Özellikleri")]
     public bool isBeast = false; 
 
-    // ESKİ inventory sorgularını sildik, doğrudan data'dan çekiyoruz!
-    private float CurrentAttackRange => (gladiator.data != null) ? gladiator.data.attackRange : 2.0f;
-    private bool IsRangedWeapon => (gladiator.data != null) ? gladiator.data.isRanged : false;
-    private WeaponClass CurrentWeaponClass => (gladiator.data != null) ? gladiator.data.weaponClass : WeaponClass.Unarmed;
+    // ── YENİ: DÜŞMAN MENZİL HATASINI ÇÖZEN LOKAL SİLAH SİSTEMİ ──
+    [Header("Düşman / Lokal Silah Ayarları")]
+    [Tooltip("Eğer bu bir düşmense veya ScriptableObject dışından silah atanacaksa bunu aktif edin.")]
+    public bool useLocalWeaponStats = false;
+    public float localAttackRange = 2.0f;
+    public bool localIsRanged = false;
+    public WeaponClass localWeaponClass = WeaponClass.Unarmed;
+
+   private float CurrentAttackRange => useLocalWeaponStats ? localAttackRange 
+        : ((inventory != null && inventory.weapon != null) ? inventory.weapon.weaponRange 
+        : ((gladiator.data != null) ? gladiator.data.attackRange : 2.0f));
+
+    private bool IsRangedWeapon => useLocalWeaponStats ? localIsRanged 
+        : ((inventory != null && inventory.weapon != null) ? inventory.weapon.isRanged 
+        : ((gladiator.data != null) ? gladiator.data.isRanged : false));
+
+    private WeaponClass CurrentWeaponClass => useLocalWeaponStats ? localWeaponClass 
+        : ((inventory != null && inventory.weapon != null) ? inventory.weapon.weaponClass 
+        : ((gladiator.data != null) ? gladiator.data.weaponClass : WeaponClass.Unarmed));
+    // ────────────────────────────────────────────────────────────
 
     [Header("Savaş Durumu")]
     public bool isInBattle = false; 
 
-    [Header("Enerji (Ulti) Sistemi")]
-public float currentEnergy = 0f;
-public float maxEnergy = 100f;
-public UnityEngine.UI.Image energyFillImage; // Inspector'dan yeni yaptığın ince barı bağla
-public ParticleSystem ultimateVFX; // Ulti atarken çıkacak partikül (örn: alev, parlama)
+  [Header("Enerji (Ulti) Sistemi")]
+    public float currentEnergy = 0f;
+    public float maxEnergy = 100f;
+    public UnityEngine.UI.Image energyFillImage; 
+    public ParticleSystem ultimateVFX; 
+    
+    // ── YENİ: SİNEMATİK ULTİ PREFABLARI ──
+    [Tooltip("Ulti tetiklendiği an askerin vücudundan fışkıracak aura patlaması")]
+    public GameObject ultimateActivationVFXPrefab;
+    [Tooltip("Ulti darbesi düşmana indiğinde çıkacak devasa şok dalgası/patlama efekti")]
+    public GameObject ultimateImpactVFXPrefab;
 
-
-    // YENİ: Ulti Kontrolcüleri
     private bool isCastingUltimate = false; 
     private bool isUltimateStrike = false;
 
@@ -97,6 +117,7 @@ public ParticleSystem ultimateVFX; // Ulti atarken çıkacak partikül (örn: al
         gladiator = GetComponent<Gladiator>();
         training = GetComponent<GladiatorTraining>();
         inventory = GetComponent<GladiatorInventory>(); 
+        animator = GetComponentInChildren<Animator>();
     }
 
     void Start()
@@ -108,28 +129,32 @@ public ParticleSystem ultimateVFX; // Ulti atarken çıkacak partikül (örn: al
     void Update()
     {
         if (isDead) return;
-
-      
+  if (animator)
+        {
+            animator.SetInteger("WeaponType", (int)CurrentWeaponClass);
+            animator.SetBool("IsRanged", IsRangedWeapon);
+        }
         HandleStatusEffects();
 
-      if (!isInBattle || isGettingHit) return;
-      if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Fighting) return;
-
+        if (!isInBattle || isGettingHit) return;
+        if (BattleManager.Instance != null && BattleManager.Instance.state != BattleState.Fighting) return;
 
         if (_delayTimer < battleStartDelay)
         {
             _delayTimer += Time.deltaTime;
-            
-            // Bekleme süresince ajanı durdur ve koşma animasyonunu kapat
             if (agent != null && agent.isActiveAndEnabled) agent.isStopped = true; 
             if (animator) animator.SetBool("isRunning", false);
-            
             return; 
         }
 
+        // ── YENİ: BİZİM ASKERLERİN ANİMASYON HATASINI ÇÖZEN GÜNCELLEME ──
+        // Savaş boyunca Animator parametrelerini sürekli güncel tutuyoruz ki 
+        // dururken veya koşarken elindeki silaha uygun blend-tree devreye girsin.
+      
+        // ──────────────────────────────────────────────────────────────
 
         agent.speed = CurrentMoveSpeed;
-        agent.stoppingDistance = CurrentAttackRange * 0.8f; 
+        agent.stoppingDistance = CurrentAttackRange * 0.8f; // Menzile göre otomatik durma mesafesi
 
         retargetTimer -= Time.deltaTime; 
 
@@ -162,20 +187,18 @@ public ParticleSystem ultimateVFX; // Ulti atarken çıkacak partikül (örn: al
             direction.y = 0;
             if(direction != Vector3.zero) transform.rotation = Quaternion.LookRotation(direction);
 
-          if (!isAttacking && !isCastingUltimate && Time.time > lastAttackTime + (0.1f / CurrentAttackSpeed))
-{
-    if (currentEnergy >= maxEnergy)
-    {
-        // Enerji tamamsa Ulti Rutinini başlat!
-        StartCoroutine(CastUltimateRoutine());
-    }
-    else
-    {
-        // Değilse normal saldırı
-        if (_attackCoroutine != null) StopCoroutine(_attackCoroutine);
-        _attackCoroutine = StartCoroutine(AttackRoutine());
-    }
-}
+            if (!isAttacking && !isCastingUltimate && Time.time > lastAttackTime + (0.1f / CurrentAttackSpeed))
+            {
+                if (currentEnergy >= maxEnergy)
+                {
+                    StartCoroutine(CastUltimateRoutine());
+                }
+                else
+                {
+                    if (_attackCoroutine != null) StopCoroutine(_attackCoroutine);
+                    _attackCoroutine = StartCoroutine(AttackRoutine());
+                }
+            }
         }
         else
         {
@@ -190,30 +213,39 @@ public ParticleSystem ultimateVFX; // Ulti atarken çıkacak partikül (örn: al
             }
         }
     }
+
+    /// <summary>
+    /// Düşmanlar veya harici birimler doğduğunda ScriptableObject'i bozmadan 
+    /// lokal silah verilerini ve yapay zeka radar menzilini eşitler.
+    /// </summary>
+    public void ForceSetupWeaponStats(float range, bool isRanged, WeaponClass wClass)
+    {
+        useLocalWeaponStats = true;
+        localAttackRange = range;
+        localIsRanged = isRanged;
+        localWeaponClass = wClass;
+
+        if (agent != null)
+        {
+            agent.stoppingDistance = range * 0.8f;
+        }
+    }
+
     public void GainEnergy(float amount)
-{
-    if (currentEnergy >= maxEnergy || isDead) return;
-
-    currentEnergy += amount;
-    
-    // UI Barını güncelle
-    if (energyFillImage != null)
     {
-        energyFillImage.fillAmount = currentEnergy / maxEnergy;
+        if (currentEnergy >= maxEnergy || isDead) return;
+        currentEnergy += amount;
+        if (energyFillImage != null) energyFillImage.fillAmount = currentEnergy / maxEnergy;
+
+        if (currentEnergy >= maxEnergy)
+        {
+            currentEnergy = maxEnergy;
+            energyFillImage.color = Color.yellow; 
+        }
     }
 
-    // Eğer enerji tam dolduysa, barın rengini parlatarak oyuncuya "Ulti Hazır" hissi ver
-    if (currentEnergy >= maxEnergy)
+    private void HandleStatusEffects()
     {
-        currentEnergy = maxEnergy;
-        energyFillImage.color = Color.yellow; // Veya parlak beyaz
-    }
-}
-
-    // --- YENİ: ZEHİR VE ATEŞ YANMA İŞLEMLERİ ---
-  private void HandleStatusEffects()
-    {
-        // Zehir İşleyişi
         if (poisonDuration > 0)
         {
             poisonTimer += Time.deltaTime;
@@ -222,13 +254,10 @@ public ParticleSystem ultimateVFX; // Ulti atarken çıkacak partikül (örn: al
                 TakeDamage(poisonDamagePerTick, false, true); 
                 poisonDuration -= 1.0f;
                 poisonTimer = 0f;
-                
-                // YENİ: Süre bittiyse efekti sil
                 if (poisonDuration <= 0 && activePoisonVFX != null) Destroy(activePoisonVFX);
             }
         }
 
-        // Ateş (Yanma) İşleyişi
         if (fireDuration > 0)
         {
             fireTimer += Time.deltaTime;
@@ -237,19 +266,15 @@ public ParticleSystem ultimateVFX; // Ulti atarken çıkacak partikül (örn: al
                 TakeDamage(fireDamagePerTick, false, true); 
                 fireDuration -= 1.0f;
                 fireTimer = 0f;
-
-                // YENİ: Süre bittiyse efekti sil
                 if (fireDuration <= 0 && activeFireVFX != null) Destroy(activeFireVFX);
             }
         }
     }
 
-   public void ApplyPoison(float dps, float duration) 
+    public void ApplyPoison(float dps, float duration) 
     { 
         poisonDamagePerTick = dps; 
         poisonDuration = duration; 
-        
-        // Eğer üstümüzde zaten zehir efekti yoksa, yenisini yarat ve içimize (child) al
         if (activePoisonVFX == null && poisonVFXPrefab != null)
         {
             activePoisonVFX = Instantiate(poisonVFXPrefab, transform.position + Vector3.up, Quaternion.identity, transform);
@@ -260,7 +285,6 @@ public ParticleSystem ultimateVFX; // Ulti atarken çıkacak partikül (örn: al
     { 
         fireDamagePerTick = dps; 
         fireDuration = duration; 
-        
         if (activeFireVFX == null && fireVFXPrefab != null)
         {
             activeFireVFX = Instantiate(fireVFXPrefab, transform.position + Vector3.up, Quaternion.identity, transform);
@@ -282,25 +306,29 @@ public ParticleSystem ultimateVFX; // Ulti atarken çıkacak partikül (örn: al
         lastAttackTime = Time.time;
         isAttacking = false;
     }
-IEnumerator CastUltimateRoutine()
+
+    IEnumerator CastUltimateRoutine()
     {
         isCastingUltimate = true;
         isAttacking = true;
-        isUltimateStrike = true; // Vuruş anında (ExecuteAttackEvent) bunun bir ulti olduğunu bileceğiz
+        isUltimateStrike = true; 
 
-        // 1. Enerjiyi ve UI'ı Sıfırla
         currentEnergy = 0f;
         if (energyFillImage != null)
         {
             energyFillImage.fillAmount = 0f;
-            energyFillImage.color = new Color(0f, 0.5f, 1f); // Orijinal maviye dön
+            energyFillImage.color = new Color(0f, 0.5f, 1f); 
         }
 
-        // 2. Ulti Şarj Efektini Patlat
-        if (ultimateVFX != null) ultimateVFX.Play();
-        // Varsa bir bağırış sesi: AudioManager.Instance.PlaySFX(AudioManager.Instance.warcrySound, 1f);
+        // ── YENİ: ULTİ TETİKLENME AURA EFEKTİ ──
+        if (ultimateActivationVFXPrefab != null)
+        {
+            GameObject activationVFX = Instantiate(ultimateActivationVFXPrefab, transform.position + Vector3.up * 0.2f, Quaternion.identity, transform);
+            Destroy(activationVFX, 2.0f); // Çöp kalmasın
+        }
 
-        // 3. Mevcut saldırı animasyonunu oynat
+        if (ultimateVFX != null) ultimateVFX.Play();
+
         float currentSpd = CurrentAttackSpeed;
         if (animator) 
         {
@@ -315,45 +343,40 @@ IEnumerator CastUltimateRoutine()
         lastAttackTime = Time.time;
         isCastingUltimate = false;
         isAttacking = false;
-        isUltimateStrike = false; // Güvenlik için kapat
+        isUltimateStrike = false; 
     }
-
-   // YENİ: Sadece Vuran ve Hasar Alan Donar (Lokal Hit-Stop)
     IEnumerator LocalHitStopEffect(GladiatorAI targetAI)
     {
-        // 1. Animasyon hızlarını 0'a çekerek karakterleri havada dondur
         if (animator != null) animator.speed = 0f;
         if (targetAI != null && targetAI.animator != null) targetAI.animator.speed = 0f;
-
-        // 2. Çok kısa bir an bekle (Vuruşun tokluk süresi)
         yield return new WaitForSeconds(0.12f); 
-
-        // 3. Animasyonları normale (1) döndür
         if (animator != null) animator.speed = 1f;
         if (targetAI != null && targetAI.animator != null) targetAI.animator.speed = 1f;
     }
-   public void ExecuteAttackEvent()
+
+    public void ExecuteAttackEvent()
     {
         if (target == null || isDead) return;
 
         float attackDamage = gladiator.data.strength * 2f + (gladiator.data.level * 2);
         bool isCrit = Random.Range(0, 100) < gladiator.data.speed;
 
-        // ── YENİ: EĞER BU BİR ULTİ VURUŞUYSA ──
         if (isUltimateStrike)
         {
-            attackDamage *= 3.0f; // Hasarı 3'e katla!
-            isCrit = true;        // Kesinlikle kritik vurur!
-            
-            // Eğer tok bir darbe sesin varsa burada çal:
-            // AudioManager.Instance.PlaySFX(AudioManager.Instance.heavyImpactSound, 1f);
+            attackDamage *= 3.0f; 
+            isCrit = true; 
+            if (ultimateImpactVFXPrefab != null)
+            {
+                // Darbenin indiği yer düşmanın ayak ucu olsun
+                Vector3 vfxPos = target != null ? target.position : transform.position + transform.forward * 2f;
+                GameObject impactVFX = Instantiate(ultimateImpactVFXPrefab, vfxPos + Vector3.up * 0.1f, Quaternion.identity);
+                Destroy(impactVFX, 2.5f);
+            }       
         }
         else
         {
-            // Normal saldırı kritiği
             if (isCrit) attackDamage *= 1.5f; 
         }
-        // ──────────────────────────────────────
 
         if (IsRangedWeapon)
         {
@@ -368,7 +391,7 @@ IEnumerator CastUltimateRoutine()
                 }
             }
         }
-       else
+        else
         {
             float currentDist = Vector3.Distance(transform.position, target.position);
             if (currentDist <= CurrentAttackRange * 1.5f) 
@@ -377,18 +400,16 @@ IEnumerator CastUltimateRoutine()
                 if (enemyAI != null && !enemyAI.isDead && gladiator.data != null)
                 {   
                     enemyAI.TakeDamage(attackDamage, isCrit);
+                    GainEnergy(15f);
                     ProcessOnHitEffects(enemyAI, attackDamage); 
 
-                    // ── YENİ: ULTİ VURUŞU İSE LOKAL DONDURMA VE TİTREME ──
                     if (isUltimateStrike)
                     {
-                        // 1. Sadece ikisini dondur
                         StartCoroutine(LocalHitStopEffect(enemyAI));
-                        
-                        // 2. Kamerayı Şiddetle Salla (Eğer scripti kurduysan)
-                        if (CameraShake.Instance != null) CameraShake.Instance.Shake(0.15f, 0.4f);
-
-                        // 3. Etrafa Sıçrama Hasarı (Şok Dalgası)
+                        //if (CameraShake.Instance != null) CameraShake.Instance.Shake(0.15f, 0.4f);
+                        Vector3 vfxPos = target != null ? target.position : transform.position + transform.forward * 2f;
+                GameObject impactVFX = Instantiate(ultimateImpactVFXPrefab, vfxPos + Vector3.up * 0.1f, Quaternion.identity);
+                Destroy(impactVFX, 2.5f);
                         Collider[] splashHits = Physics.OverlapSphere(target.position, 2.5f);
                         foreach (var hit in splashHits)
                         {
@@ -402,53 +423,44 @@ IEnumerator CastUltimateRoutine()
                             }
                         }
                     }
-                    // ─────────────────────────────────────────────────────
                 }
                 else 
-        {
-            // ── YENİ: HEDEF BİR KÖYLÜ MÜ? ONA DA VUR! ──
-            VillagerNPC villager = target.GetComponent<VillagerNPC>();
-            if (villager != null && !villager.IsDead)
-            {
-                // Köylü zırhsız olduğu için net hasar alır
-                villager.TakeDamage(attackDamage);
-                
-                // Vuruş sesi
-                if (AudioManager.Instance != null) 
-                    AudioManager.Instance.PlaySFX(AudioManager.Instance.hitSound, 0.6f);
-            }
-        }
+                {
+                    VillagerNPC villager = target.GetComponent<VillagerNPC>();
+                    if (villager != null && !villager.IsDead)
+                    {
+                        villager.TakeDamage(attackDamage);
+                        if (AudioManager.Instance != null) 
+                            AudioManager.Instance.PlaySFX(AudioManager.Instance.hitSound, 0.6f);
+                    }
+                }
             }
         }
     }
 
-    // --- YENİ: SİNERJİ VE EFSANEVİ SET MOTORU ---
     public void ProcessOnHitEffects(GladiatorAI enemyAI, float baseDamage)
     {
-        if (inventory == null || inventory.activeSetPieceCount < 3) return; // Set tamamlanmadıysa çık
+        if (inventory == null || inventory.activeSetPieceCount < 3) return; 
 
         SoldierTrait myTrait = gladiator.data.trait;
 
-        // 1. ZEHİR SETİ
         if (inventory.activeSet == ItemSetType.Poison)
         {
-            float poisonDps = baseDamage * 0.2f; // Hasarın %20'si kadar zehir
+            float poisonDps = baseDamage * 0.2f; 
             float pDuration = 3f;
-
-            if (myTrait == SoldierTrait.Obur) // SİNERJİ: Asitli Mide
+            if (myTrait == SoldierTrait.Obur) 
             {
                 poisonDps *= 2f; 
                 pDuration = 5f;
             }
             enemyAI.ApplyPoison(poisonDps, pDuration);
         }
-        // 2. ATEŞ SETİ
         else if (inventory.activeSet == ItemSetType.Fire)
         {
             float burnDps = baseDamage * 0.3f;
             enemyAI.ApplyBurn(burnDps, 2f);
 
-            if (myTrait == SoldierTrait.Yetenekli) // SİNERJİ: Cehennem Ustası (Alan Hasarı)
+            if (myTrait == SoldierTrait.Yetenekli) 
             {
                 Collider[] hitEnemies = Physics.OverlapSphere(enemyAI.transform.position, 2.5f);
                 foreach (var hit in hitEnemies)
@@ -458,29 +470,27 @@ IEnumerator CastUltimateRoutine()
                         GladiatorAI nearbyEnemy = hit.GetComponent<GladiatorAI>();
                         if (nearbyEnemy != null && nearbyEnemy != enemyAI && !nearbyEnemy.isDead)
                         {
-                            nearbyEnemy.TakeDamage(baseDamage * 0.4f, false, true); // Etrafa %40 sıçrama hasarı
+                            nearbyEnemy.TakeDamage(baseDamage * 0.4f, false, true); 
                         }
                     }
                 }
             }
         }
-        // 3. İNANÇ SETİ
         else if (inventory.activeSet == ItemSetType.Faith)
         {
-            float healAmount = baseDamage * 0.2f; // Hasarın %20'si kadar şifa
+            float healAmount = baseDamage * 0.2f; 
             float healRadius = 3.0f;
 
-            if (myTrait == SoldierTrait.Dindar) // SİNERJİ: Kutsal İrade
+            if (myTrait == SoldierTrait.Dindar) 
             {
                 healAmount *= 2f;
-                healRadius = 6.0f; // Etki alanı devasa olur
+                healRadius = 6.0f; 
             }
 
-            // Etraftaki DOSTLARI bul ve iyileştir
             Collider[] allies = Physics.OverlapSphere(transform.position, healRadius);
             foreach (var hit in allies)
             {
-                if (hit.CompareTag(this.gameObject.tag)) // Kendi takımımdansa
+                if (hit.CompareTag(this.gameObject.tag)) 
                 {
                     Gladiator ally = hit.GetComponent<Gladiator>();
                     if (ally != null && ally.currentHealth > 0)
@@ -492,24 +502,19 @@ IEnumerator CastUltimateRoutine()
                             GameObject healVFX = Instantiate(healVFXPrefab, ally.transform.position, Quaternion.identity);
                             Destroy(healVFX, 1.5f);
                         }    
-                        // Opsiyonel: Şifa texti gösterilebilir (+20) yeşil renkte
                     }
                 }
             }
         }
     }
 
-    // YENİ: isDoT parametresi eklendi!
     public void TakeDamage(float incomingDamage, bool isCritical = false, bool isDoT = false)
     {
         if (isDead || gladiator.data == null) return;
         if (bloodEffectPrefab != null && !isDoT)
         {
-            // Karakterin göğüs/boyun hizasında (Y ekseninde +1.2f yukarda) efekti yarat
             Vector3 bloodSpawnPos = transform.position + Vector3.up * 1.2f;
             GameObject bloodInstance = Instantiate(bloodEffectPrefab, bloodSpawnPos, Quaternion.identity);
-            
-            // Efektin arkasında çöp bırakmaması için 1.5 saniye sonra yok et
             Destroy(bloodInstance, 1.5f); 
         }
         
@@ -521,7 +526,7 @@ IEnumerator CastUltimateRoutine()
 
         gladiator.currentHealth -= finalDamage;
         GainEnergy(10f);
-        if (!IsRangedWeapon && !isDoT) // Zehir yerken radarı bozma
+        if (!IsRangedWeapon && !isDoT) 
         {
             retargetTimer = 0f; 
         }
@@ -546,7 +551,6 @@ IEnumerator CastUltimateRoutine()
 
         if (gladiator.currentHealth > 0)
         {
-            // ZAMANLA HASAR (DoT) YİYORSA ASLA SENDELEME (HITSTUN) YAŞATMA!
             if (isDoT) return; 
 
             bool isPoiseCooldownReady = Time.time > lastHitStunTime + CurrentPoise;
@@ -581,17 +585,12 @@ IEnumerator CastUltimateRoutine()
     IEnumerator HitStunRoutine()
     {
         isGettingHit = true;
-        
         if (agent.isActiveAndEnabled && agent.isOnNavMesh) agent.isStopped = true;
         if (animator) animator.SetBool("isRunning", false);
-        
-        // TakeDamage animasyonunun süresi (0.967s) göz önüne alınarak bekleme
         yield return new WaitForSeconds(0.6f); 
-        
         isGettingHit = false;
 
         if (animator) animator.ResetTrigger("getHit");
-
         if (target != null && agent.isActiveAndEnabled && agent.isOnNavMesh && !isDead) 
         {
             agent.isStopped = false;
@@ -601,25 +600,14 @@ IEnumerator CastUltimateRoutine()
     public void Die()
     {
         if (isDead) return; 
-        
         isDead = true;
-        if (BattleManager.Instance != null && BattleManager.Instance.currentFocusTarget == this.transform)
+        if (BattleManager.Instance != null && BattleManager.Instance.currentFocusTarget == this.transform) BattleManager.Instance.ClearFocusTarget();
+        if (VillageDefenseManager.Instance != null && VillageDefenseManager.Instance.currentFocusTarget == this.transform) VillageDefenseManager.Instance.ClearFocusTarget();
+        
+        if (AudioManager.Instance != null)
         {
-            BattleManager.Instance.ClearFocusTarget();
-        }
-        if (VillageDefenseManager.Instance != null && VillageDefenseManager.Instance.currentFocusTarget == this.transform)
-            VillageDefenseManager.Instance.ClearFocusTarget();
-         if (AudioManager.Instance != null)
-        {
-            if (isBeast)
-            {
-                // YENİ: AudioManager'a ayı/hayvan ölme sesi eklemelisin
-                AudioManager.Instance.PlaySFX(AudioManager.Instance.beastDeath, 1.0f);
-            }
-            else
-            {
-                AudioManager.Instance.PlaySFX(AudioManager.Instance.deathSound, 1.0f);
-            }
+            if (isBeast) AudioManager.Instance.PlaySFX(AudioManager.Instance.beastDeath, 1.0f);
+            else AudioManager.Instance.PlaySFX(AudioManager.Instance.deathSound, 1.0f);
         }
         isInBattle = false;
         if (_attackCoroutine != null)
@@ -652,131 +640,71 @@ IEnumerator CastUltimateRoutine()
             GameObject skullVFX = Instantiate(deathEffectPrefab, spawnPos, Quaternion.identity);
             Destroy(skullVFX, 3.0f);
         }
-        
         if (BattleManager.Instance != null) BattleManager.Instance.CheckBattleStatus();
         if (NotificationManager.Instance != null) NotificationManager.Instance.Show($"{gladiator.data.gladiatorName} öldü", NotificationType.Error);
-        
         Destroy(gameObject, 2f);
         BattleElementUI.Instance?.Refresh();
     }
 
-    // ... FindNearestTarget, ReviveForCamp, MakeGazi, LifeCycleRoutine, vb. diğer fonksiyonlar aynı kalacak ...
-    
     void FindNearestTarget()
     {
-        // 1. Biz kimiz? Avımız kim?
-        // Eğer ben "MySoldier" isem düşmanları arayacağım, değilsem senin askerlerini ve köylüleri arayacağım
         if (forcedTarget != null)
         {
             GladiatorAI fAI = forcedTarget.GetComponent<GladiatorAI>();
             VillagerNPC fNPC = forcedTarget.GetComponent<VillagerNPC>();
-            
             bool isForcedAlive = (fAI != null && !fAI.isDead) || (fNPC != null && !fNPC.IsDead);
-            
-            if (isForcedAlive)
-            {
-                target = forcedTarget; // Başka hiç kimseye bakma, buna git!
-                return; 
-            }
-            else
-            {
-                forcedTarget = null; // Hedef öldüyse kilidi aç, serbest kal
-            }
+            if (isForcedAlive) { target = forcedTarget; return; }
+            else { forcedTarget = null; }
         }
         string targetTag = this.CompareTag("MySoldier") ? "EnemySoldier" : "MySoldier";
-        
-        // 2. Sahnedeki o etikete sahip tüm hedefleri (Askerler ve Köylüler dahil) listele
         GameObject[] potentialTargets = GameObject.FindGameObjectsWithTag(targetTag);
         
         float minDst = Mathf.Infinity;
         Transform bestTarget = null;
-        
-       
 
-        // 4. En yakın CANLI hedefi seç (Hem Askerleri hem Köylüleri kontrol et)
         foreach (var pt in potentialTargets)
         {
             if (pt == this.gameObject) continue;
-
             bool isAlive = false;
 
-            // A) Hedef bir Asker/Düşman mı?
             GladiatorAI ai = pt.GetComponent<GladiatorAI>();
-            if (ai != null && !ai.isDead && ai.isInBattle) 
-            {
-                isAlive = true;
-            }
+            if (ai != null && !ai.isDead && ai.isInBattle) isAlive = true;
 
-            // B) Hedef bir Köylü mü? (Köylülerin GladiatorAI scripti yoktur!)
             VillagerNPC villager = pt.GetComponent<VillagerNPC>();
-            if (villager != null && !villager.IsDead) 
-            {
-                isAlive = true;
-            }
+            if (villager != null && !villager.IsDead) isAlive = true;
 
-            // Eğer hedef yaşıyorsa, mesafesini ölç
             if (isAlive)
             {
                 float dst = Vector3.Distance(transform.position, pt.transform.position);
-                if (dst < minDst) 
-                { 
-                    minDst = dst; 
-                    bestTarget = pt.transform; 
-                }
+                if (dst < minDst) { minDst = dst; bestTarget = pt.transform; }
             }
         }
 
-        // 5. Kararsızlığı (Ping-pong) önleyerek yeni hedefe kitlen
-        if (target == null)
-        {
-            target = bestTarget;
-        }
+        if (target == null) { target = bestTarget; }
         else if (bestTarget != null && bestTarget != target)
         {
             float currentTargetDst = Vector3.Distance(transform.position, target.position);
-            if (minDst < currentTargetDst * 0.7f) // Yeni hedef %30 daha yakınsa ona dön
-            {
-                target = bestTarget;
-            }
+            if (minDst < currentTargetDst * 0.7f) { target = bestTarget; }
         }
     }
-   public void ReviveForCamp()
+
+    public void ReviveForCamp()
     {
         if (isDead) return;
-
         target = null; 
         GetComponent<Collider>().enabled = true;
-        
-        if (animator) 
-        {
-            animator.Rebind(); 
-            animator.Update(0f);
-        }
-
-        if (agent != null)
-        {
-            agent.enabled = true; 
-            agent.isStopped = true; 
-        }
-
+        if (animator) { animator.Rebind(); animator.Update(0f); }
+        if (agent != null) { agent.enabled = true; agent.isStopped = true; }
     }
-    
 
     public void MakeGazi()
     {
         if (gladiator.data.isGazi) return;
-
         gladiator.data.isGazi = true;
         gladiator.data.level += 2;
         gladiator.RecalculateMaxHealth();
-
-        // Özel Gazi töreni ekranı
-        if (GaziFeedback.Instance != null)
-            GaziFeedback.Instance.ShowGaziCeremony(gladiator);
-        else if (NotificationManager.Instance != null)
-            NotificationManager.Instance.Show(
-                $"{gladiator.data.gladiatorName} artık bir GAZİ! (+2 Seviye)",
-                NotificationType.Success);
+        if (GaziFeedback.Instance != null) GaziFeedback.Instance.ShowGaziCeremony(gladiator);
+        else if (NotificationManager.Instance != null) NotificationManager.Instance.Show($"{gladiator.data.gladiatorName} artık bir GAZİ! (+2 Seviye)", NotificationType.Success);
     }
 
     IEnumerator LifeCycleRoutine()
@@ -786,20 +714,16 @@ IEnumerator CastUltimateRoutine()
             if (isDead) yield break; 
             if (isInBattle || (BattleManager.Instance != null && BattleManager.Instance.state == BattleState.Fighting))
             {
-                if (currentPoint != null) LeavePoint(); // Savaşı gördüğü an elindeki işi/çorbayı bıraksın
-                yield return new WaitForSeconds(0.5f); // Savaş bitene kadar yarım saniyede bir kontrol et
-                continue; // Aşağıdaki yürüme ve kamp kodlarını KESİNLİKLE çalıştırma!
+                if (currentPoint != null) LeavePoint(); 
+                yield return new WaitForSeconds(0.5f); 
+                continue; 
             }
 
-            if (gladiator.isOnMission || (training != null && training.IsTraining) || (gladiator.data != null && gladiator.data.currentActivity == SoldierActivity.Working&&gladiator.data.currentActivity==SoldierActivity.Praying))
+            if (gladiator.isOnMission || (training != null && training.IsTraining) || (gladiator.data != null && gladiator.data.currentActivity == SoldierActivity.Working && gladiator.data.currentActivity == SoldierActivity.Praying))
             {
                 if (currentPoint != null) LeavePoint(); 
-                
-                // askeri kampta görünmez yapabilirim
-                // gladiator.gameObject.SetActive(false); 
-
                 yield return new WaitForSeconds(2f);
-                continue; // Döngüyü başa sar, hiçbir yere yürüme!
+                continue; 
             }
 
             if (currentPoint != null)
@@ -811,58 +735,28 @@ IEnumerator CastUltimateRoutine()
                         if (animator) animator.SetBool("isRunning", false);
                         activityTimer -= Time.deltaTime;
                     }
-                    else
-                    {
-                        if (animator) animator.SetBool("isRunning", true);
-                    }
+                    else { if (animator) animator.SetBool("isRunning", true); }
                 }   
                 if (activityTimer <= 0) LeavePoint();
             }
-            else
-            {
-                FindNewActivity();
-            }
-
+            else { FindNewActivity(); }
             yield return null; 
         }
     }
-    
 
     void FindNewActivity()
     {
         ActivityPoint.PointType desiredType = ActivityPoint.PointType.Idle;
         float roll = Random.value;
-        
         if (roll < 0.3f) desiredType = ActivityPoint.PointType.Eating;
         else if (roll < 0.5f) desiredType = ActivityPoint.PointType.Praying;
 
         ActivityPoint p = CampLifeManager.Instance.GetFreePoint(desiredType);
-
         if (p != null) TakePoint(p);
         else activityTimer = Random.Range(2f, 5f);
     }
 
-    void TakePoint(ActivityPoint p)
-    {
-        currentPoint = p;
-        currentPoint.isOccupied = true; 
-        agent.SetDestination(currentPoint.transform.position);
-        activityTimer = Random.Range(10f, 20f); 
-    }
-
-    void LeavePoint()
-    {
-        if (currentPoint != null)
-        {
-            currentPoint.isOccupied = false; 
-            currentPoint = null;
-            
-        }
-    }
-    
-    
-    void OnDestroy()
-    {
-        LeavePoint();
-    }
+    void TakePoint(ActivityPoint p) { currentPoint = p; currentPoint.isOccupied = true; agent.SetDestination(currentPoint.transform.position); activityTimer = Random.Range(10f, 20f); }
+    void LeavePoint() { if (currentPoint != null) { currentPoint.isOccupied = false; currentPoint = null; } }
+    void OnDestroy() { LeavePoint(); }
 }

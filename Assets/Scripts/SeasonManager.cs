@@ -8,25 +8,28 @@ public class SeasonManager : MonoBehaviour
     [Header("Işık Ayarları (Directional Light)")]
     public Light sunLight;
     
-    [Header("1-50 Gün: Yaz / Erken Sonbahar")]
-    public Color summerColor = new Color(1f, 0.95f, 0.8f); // Açık, sıcak sarı
+    [Header("1-5 Gün: Yaz / Erken Sonbahar")]
+    public Color summerColor = new Color(1f, 0.95f, 0.8f); 
     public float summerIntensity = 1.2f;
+    public ParticleSystem summerParticle; 
 
-    [Header("50-80 Gün: Geç Sonbahar")]
-    public Color autumnColor = new Color(1f, 0.7f, 0.4f); // Turuncumsu, hüzünlü
+    [Header("5-10 Gün: Geç Sonbahar")]
+    public Color autumnColor = new Color(1f, 0.7f, 0.4f); 
     public float autumnIntensity = 0.9f;
-    public ParticleSystem autumnLeavesParticle; // Dökülen yapraklar
+    public ParticleSystem autumnLeavesParticle; 
 
-    [Header("80-100 Gün: Kışın Ayak Sesleri")]
-    public Color winterColor = new Color(0.7f, 0.8f, 0.9f); // Soğuk, gri-mavi
+    [Header("10+ Gün: Kışın Ayak Sesleri")]
+    public Color winterColor = new Color(0.7f, 0.8f, 0.9f); 
     public float winterIntensity = 0.6f;
-    public ParticleSystem snowParticle; // Kar yağışı
+    public ParticleSystem snowParticle; 
 
     [Header("Ses Efektleri")]
     public AudioSource windAudioSource;
+    public AudioClip summerWindClip;
     public AudioClip autumnWindClip;
     public AudioClip winterBlizzardClip;
 
+    [Header("Mevsim Durumu")]
     public int currentPhase = 0; // 1: Yaz, 2: Sonbahar, 3: Kış
 
     void Awake()
@@ -36,11 +39,9 @@ public class SeasonManager : MonoBehaviour
 
     void Start()
     {
-        // DayManager'ın OnNewDay eventine abone oluyoruz (Eğitim sistemindeki gibi!)
         if (DayManager.Instance != null)
         {
             DayManager.Instance.OnNewDay += CheckSeason;
-            // İlk açılışta atmosferi ayarla (DayManager'da gün değişkeninin adını currentDay varsayıyorum)
             UpdateAtmosphere(DayManager.Instance.currentDay); 
         }
     }
@@ -53,83 +54,153 @@ public class SeasonManager : MonoBehaviour
         }
     }
 
-    // Her gün atladığında bu tetiklenecek
     void CheckSeason()
     {
-        UpdateAtmosphere(DayManager.Instance.currentDay);
+        if (DayManager.Instance != null)
+        {
+            UpdateAtmosphere(DayManager.Instance.currentDay);
+        }
+    }
+
+    /// <summary>
+    /// Kampa geri dönüşlerde BattleManager tarafından çağrılır. 
+    /// Haritadayken biriken donmuş parçacıkları temizler ve güncel mevsimi sıfırdan pürüzsüz başlatır.
+    /// </summary>
+    public void ResetAndCleanParticles(bool isWinter)
+    {
+        StopAllWeatherEffects();
+        ApplyPhaseVisualsAndAudio();
+        
+        Debug.Log($"[Mevsim Motoru] Kampa geri dönüldü. Faz {currentPhase} parçacıkları ve ortam sesleri sıfırdan tertemiz başlatıldı.");
     }
 
     public void UpdateAtmosphere(int day)
     {
         if (sunLight == null) return;
 
-        // --- 1. FAZ: GÜNEŞLİ GÜNLER (1-50) ---
-        if (day < 5)
-        {
-            if (currentPhase != 1) // Sadece faza ilk geçildiğinde ayarla
-            {
-                currentPhase = 1;
-                StartCoroutine(TransitionLight(summerColor, summerIntensity, 2f));
-                
-                if (autumnLeavesParticle != null) autumnLeavesParticle.Stop();
-                if (snowParticle != null) snowParticle.Stop();
-                
-                if (windAudioSource != null) windAudioSource.Stop();
-                RenderSettings.fogDensity = 0.006f; // Sis az
-                RenderSettings.fogColor = summerColor;
-            }
-        }
-        // --- 2. FAZ: SONBAHAR YAPRAKLARI (50-80) ---
-        else if (day >= 5 && day < 10)//day >= 50 && day < 80
-        {
-            if (currentPhase != 2)
-            {
-                currentPhase = 2;
-                StartCoroutine(TransitionLight(autumnColor, autumnIntensity, 3f));
-                
-                if (autumnLeavesParticle != null && !autumnLeavesParticle.isPlaying) autumnLeavesParticle.Play();
-                if (snowParticle != null) snowParticle.Stop();
+        int targetPhase = 1;
+        if (day >= 5 && day < 10) targetPhase = 2;
+        else if (day >= 10) targetPhase = 3;
 
-                if (windAudioSource != null && autumnWindClip != null)
-                {
-                    windAudioSource.clip = autumnWindClip;
-                    windAudioSource.Play();
-                }
-
-                RenderSettings.fogDensity = 0.01f; // Sis biraz artar
-                RenderSettings.fogColor = autumnColor;
-                
-                if (NotificationManager.Instance != null)
-                    NotificationManager.Instance.Show("Havalar soğumaya başladı. Kış yaklaşıyor...", NotificationType.Warning);
-            }
-        }
-        // --- 3. FAZ: KIŞ GELİYOR (80-100) ---
-        else if (day >= 10)
+        if (currentPhase != targetPhase)
         {
-            if (currentPhase != 3)
+            currentPhase = targetPhase;
+            
+            Color targetColor = summerColor;
+            float targetIntensity = summerIntensity;
+            float fogDensity = 0.006f;
+
+            if (currentPhase == 2) { targetColor = autumnColor; targetIntensity = autumnIntensity; fogDensity = 0.01f; }
+            else if (currentPhase == 3) { targetColor = winterColor; targetIntensity = winterIntensity; fogDensity = 0.02f; }
+
+            // Artık bu coroutine aşağıda var olduğu için hata çözüldü!
+            StartCoroutine(TransitionLight(targetColor, targetIntensity, currentPhase == 2 ? 3f : (currentPhase == 3 ? 4f : 2f)));
+            RenderSettings.fogDensity = fogDensity;
+            RenderSettings.fogColor = targetColor;
+
+            if (AudioManager.Instance != null && !AudioManager.Instance.IsAtCamp)
             {
-                currentPhase = 3;
-                StartCoroutine(TransitionLight(winterColor, winterIntensity, 4f));
-                
-                if (autumnLeavesParticle != null) autumnLeavesParticle.Stop();
+                StopAllWeatherEffects();
+                Debug.Log($"[Mevsim Motoru] Haritadayken Faz {currentPhase} düzeyine geçildi. Efektler kampa dönüş için askıya aldı.");
+                return; 
+            }
+
+            TriggerPhaseNotifications();
+            ApplyPhaseVisualsAndAudio();
+        }
+    }
+
+    private void StopAllWeatherEffects()
+    {
+        if (summerParticle != null) { summerParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear); summerParticle.Clear(); }
+        if (autumnLeavesParticle != null) { autumnLeavesParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear); autumnLeavesParticle.Clear(); }
+        if (snowParticle != null) { snowParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear); snowParticle.Clear(); }
+        if (windAudioSource != null) { windAudioSource.Stop(); }
+    }
+
+    private void ApplyPhaseVisualsAndAudio()
+    {
+        if (currentPhase == 1)
+        {
+            if (summerParticle != null && !summerParticle.isPlaying) summerParticle.Play();
+            if (windAudioSource != null && summerWindClip != null) { windAudioSource.clip = summerWindClip; windAudioSource.Play(); }
+        }
+        else if (currentPhase == 2)
+        {
+            if (autumnLeavesParticle != null && !autumnLeavesParticle.isPlaying) autumnLeavesParticle.Play();
+            if (windAudioSource != null && autumnWindClip != null) { windAudioSource.clip = autumnWindClip; windAudioSource.Play(); }
+        }
+        else if (currentPhase == 3)
+        {
+            if (snowParticle != null && !snowParticle.isPlaying) snowParticle.Play();
+            if (windAudioSource != null && winterBlizzardClip != null) { windAudioSource.clip = winterBlizzardClip; windAudioSource.Play(); }
+        }
+    }
+
+    private void TriggerPhaseNotifications()
+    {
+        if (NotificationManager.Instance == null) return;
+
+        if (currentPhase == 2)
+            NotificationManager.Instance.Show("Havalar soğumaya başladı. Kış yaklaşıyor...", NotificationType.Warning);
+        else if (currentPhase == 3)
+            NotificationManager.Instance.Show("İlk kar düştü! Vaktimiz tükeniyor, hemen yola çıkmalıyız!", NotificationType.Error);
+    }
+
+    public void ForceCampLighting()
+    {
+        if (sunLight == null) return;
+        
+        StopAllCoroutines();
+        sunLight.shadows = LightShadows.Soft;
+
+        if (currentPhase == 1)
+        {
+            sunLight.color = summerColor;
+            sunLight.intensity = summerIntensity;
+            RenderSettings.fogDensity = 0.006f;
+            RenderSettings.fogColor = summerColor;
+        }
+        else if (currentPhase == 2)
+        {
+            sunLight.color = autumnColor;
+            sunLight.intensity = autumnIntensity;
+            RenderSettings.fogDensity = 0.01f;
+            RenderSettings.fogColor = autumnColor;
+        }
+        else if (currentPhase == 3)
+        {
+            sunLight.color = winterColor;
+            sunLight.intensity = winterIntensity;
+            RenderSettings.fogDensity = 0.02f;
+            RenderSettings.fogColor = winterColor;
+        }
+    }
+
+    public void SetWeatherPaused(bool paused)
+    {
+        if (paused)
+        {
+            if (snowParticle != null && snowParticle.isPlaying) snowParticle.Pause();
+            if (autumnLeavesParticle != null && autumnLeavesParticle.isPlaying) autumnLeavesParticle.Pause();
+            if (windAudioSource != null && windAudioSource.isPlaying) windAudioSource.Pause();
+        }
+        else
+        {
+            if (currentPhase == 3)
+            {
                 if (snowParticle != null && !snowParticle.isPlaying) snowParticle.Play();
-
-                if (windAudioSource != null && winterBlizzardClip != null)
-                {
-                    windAudioSource.clip = winterBlizzardClip;
-                    windAudioSource.Play();
-                }
-
-                RenderSettings.fogDensity = 0.02f; // Yoğun, kasvetli sis
-                RenderSettings.fogColor = winterColor;
-
-                if (NotificationManager.Instance != null)
-                    NotificationManager.Instance.Show("İlk kar düştü! Vaktimiz tükeniyor, hemen yola çıkmalıyız!", NotificationType.Error);
+                if (windAudioSource != null && !windAudioSource.isPlaying) windAudioSource.UnPause();
+            }
+            else if (currentPhase == 2)
+            {
+                if (autumnLeavesParticle != null && !autumnLeavesParticle.isPlaying) autumnLeavesParticle.Play();
             }
         }
     }
 
-    // Işığın rengini ve gücünü aniden değil, yavaşça (sinematik) değiştiren fonksiyon
+    // ── GERİ YÜKLENEN SİNEMATİK GEÇİŞ MOTORU ───────────────────────────────
+    // Işığın rengini ve gücünü yavaşça değiştiren, senin o efsanevi fonksiyonun.
     IEnumerator TransitionLight(Color targetColor, float targetIntensity, float duration)
     {
         Color startColor = sunLight.color;
@@ -146,70 +217,5 @@ public class SeasonManager : MonoBehaviour
         
         sunLight.color = targetColor;
         sunLight.intensity = targetIntensity;
-    }
-    
-    public void ForceCampLighting()
-    {
-        if (sunLight == null || DayManager.Instance == null) return;
-
-        int day = DayManager.Instance.currentDay;
-        
-        // Varsa yarım kalmış eski geçiş animasyonlarını durdur ki ışık bug'a girmesin
-        StopAllCoroutines();
-
-        // Gölgeleri kesinlikle aç (Mağara savaşında kapanmış olabilir)
-        sunLight.shadows = LightShadows.Soft;
-
-        if (day < 50)
-        {
-            sunLight.color = summerColor;
-            sunLight.intensity = summerIntensity;
-            RenderSettings.fogDensity = 0.005f;
-            RenderSettings.fogColor = summerColor;
-        }
-        else if (day >= 50 && day < 80)
-        {
-            sunLight.color = autumnColor;
-            sunLight.intensity = autumnIntensity;
-            RenderSettings.fogDensity = 0.01f;
-            RenderSettings.fogColor = autumnColor;
-        }
-        else
-        {
-            sunLight.color = winterColor;
-            sunLight.intensity = winterIntensity;
-            RenderSettings.fogDensity = 0.02f;
-            RenderSettings.fogColor = winterColor;
-        }
-    }
-
-    /// <summary>Harita açıkken hava efektlerini durdur, kapanınca devam ettir.</summary>
-    public void SetWeatherPaused(bool paused)
-    {
-        if (paused)
-        {
-            if (snowParticle != null && snowParticle.isPlaying)
-                snowParticle.Pause();
-            if (autumnLeavesParticle != null && autumnLeavesParticle.isPlaying)
-                autumnLeavesParticle.Pause();
-            if (windAudioSource != null && windAudioSource.isPlaying)
-                windAudioSource.Pause();
-        }
-        else
-        {
-            // Kış mevsimindeyse karı devam ettir
-            if (currentPhase == 3)
-            {
-                if (snowParticle != null && !snowParticle.isPlaying)
-                    snowParticle.Play();
-                if (windAudioSource != null && !windAudioSource.isPlaying)
-                    windAudioSource.UnPause();
-            }
-            else if (currentPhase == 2)
-            {
-                if (autumnLeavesParticle != null && !autumnLeavesParticle.isPlaying)
-                    autumnLeavesParticle.Play();
-            }
-        }
     }
 }

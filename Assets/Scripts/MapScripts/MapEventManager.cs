@@ -801,7 +801,7 @@ private void ResolveVillageBattle(int difficulty)
             int fee = Mathf.RoundToInt(currentLootGold * 0.1f);
             int safeGold = currentLootGold - fee;
             
-            descText.text += $"Çantandaki Altın: {currentLootGold}\nKesinti (%10): -{fee}\nKampa Ulaşacak: {safeGold}";
+           // descText.text += $"Çantandaki Altın: {currentLootGold}\nKesinti (%10): -{fee}\nKampa Ulaşacak: {safeGold}";
 
             CreateButton($"Ganimetleri Yolla (Komisyon: {fee} Akçe)", () => 
             {

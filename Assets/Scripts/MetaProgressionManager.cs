@@ -41,6 +41,7 @@ public enum RelicType
     EfsaneviHikaye,  // Her 5 encounter'da relic hakkı +1 (yani iki relic)
 }
 
+
 // ── KAYIT VERİSİ ────────────────────────────────────────────────────────────
 [System.Serializable]
 public class MetaSaveData
@@ -57,7 +58,18 @@ public class MetaProgressionManager : MonoBehaviour
     public MetaSaveData currentSaveData = new MetaSaveData();
     public RelicSelectionUI relicSelectionUI;
     public int pendingRelicPicks = 0;
+[Header("Tüm Relic ScriptableObject Veritabanı")]
+    [Tooltip("Oluşturduğunuz tüm RelicData ScriptableObject'lerini buraya sürükleyin.")]
+    public List<RelicData> allRelicDatabase = new List<RelicData>();
 
+    /// <summary>
+    /// Enum tipine göre veritabanından ilgili RelicData'yı bulur.
+    /// </summary>
+    public RelicData GetRelicData(RelicType type)
+    {
+        // RelicData içindeki relicID değeri ile Enum adının eşleştiğini varsayıyoruz (Örn: "ZenginAta")
+        return allRelicDatabase.Find(r => r != null && r.relicID == type.ToString());
+    }
     void Awake()
     {
         if (Instance == null) Instance = this;
@@ -139,6 +151,24 @@ public class MetaProgressionManager : MonoBehaviour
         currentSaveData.unlockedRelics.Add(chosen);
         SaveMetaProgress();
 
+        // ── YENİ: SEÇİLEN YADİGARI COMMANDER STORAGE'A EKLE ──
+        if (CommanderStorage.Instance != null)
+        {
+            RelicData rData = GetRelicData(chosen);
+            if (rData != null)
+            {
+                CommanderStorage.Instance.AddRelic(rData);
+                
+                // Üst bar ve Defter UI açık ise anlık olarak yenilensin
+                if (TopInfoBarUI.Instance != null) TopInfoBarUI.Instance.RefreshRelics();
+            }
+            else
+            {
+                Debug.LogWarning($"[Meta] Veritabanında {chosen} türüne ait eşleşen bir RelicData bulunamadı! 'relicID' kontrol edin.");
+            }
+        }
+        // ─────────────────────────────────────────────────────
+
         if (NotificationManager.Instance != null)
             NotificationManager.Instance.Show(
                 "Ata Yadigarı: " + GetRelicDisplayName(chosen),
@@ -155,7 +185,21 @@ public class MetaProgressionManager : MonoBehaviour
     /// </summary>
     public void ApplyStartingRelics()
     {
-        // ── ALTIN & KAYNAK ──────────────────────────────────────────────────
+       if (CommanderStorage.Instance != null)
+        {
+            foreach (RelicType unlocked in currentSaveData.unlockedRelics)
+            {
+                RelicData rData = GetRelicData(unlocked);
+                if (rData != null) 
+                    CommanderStorage.Instance.AddRelic(rData);
+            }
+            
+            // Üst barı tetikle
+            if (TopInfoBarUI.Instance != null) TopInfoBarUI.Instance.RefreshRelics();
+        }
+        // ────────────────────────────────────────────────────────────────
+
+        // ── ALTIN & KAYNAK (Mevcut kodların aynen devam ediyor...) ──
         if (HasRelic(RelicType.ZenginAta) && MoneyManager.Instance != null)
         {
             MoneyManager.Instance.Add(150);
@@ -177,8 +221,8 @@ public class MetaProgressionManager : MonoBehaviour
 
         if (HasRelic(RelicType.NasipliYolcu) && NasipManager.Instance != null)
         {
-            NasipManager.Instance.AddNasip(15);
-            Debug.Log("[Relic] NasipliYolcu: +15 nasip");
+            NasipManager.Instance.AddNasip(3);
+            Debug.Log("[Relic] NasipliYolcu: +3 nasip");
         }
 
         // ── ASKERİ GÜÇ — Mevcut tüm askerlere uygula ───────────────────────
@@ -305,25 +349,24 @@ public class MetaProgressionManager : MonoBehaviour
     // ── GÖRÜNEN İSİMLER ─────────────────────────────────────────────────────
     public string GetRelicDisplayName(RelicType type) => type switch
     {
-        RelicType.ZenginAta       => "Zengin Ata (+150 Altın)",
-        RelicType.BereketliYol    => "Bereketli Yol (Seferde +%25 Altın)",
-        RelicType.CimriDede       => "Cimri Dede (Eğitim -%20 Maliyet)",
-        RelicType.HazineNefesi    => "Hazine Nefesi (Kampa dönünce +%10 Altın)",
-        RelicType.KutluMide       => "Kutlu Mide (Erzak -%20)",
-        RelicType.AvciBaba        => "Avcı Baba (+30 Başlangıç Erzağı)",
-        RelicType.TuzluEt         => "Tuzlu Et (Kışta Erzak -%5 Ek)",
-        RelicType.GaziKani        => "Gazi Kanı (Askerler +15 Max Can)",
-        RelicType.DemirBilek      => "Demir Bilek (Askerler +3 Güç)",
+        RelicType.ZenginAta       => "Zengin Ata",
+        RelicType.BereketliYol    => "Bereketli Yol",
+        RelicType.CimriDede       => "Cimri Dede",
+        RelicType.HazineNefesi    => "Hazine Nefesi)",
+        RelicType.KutluMide       => "Kutlu Mide)",
+        RelicType.AvciBaba        => "Avcı Baba",
+        RelicType.TuzluEt         => "Tuzlu Et",
+        RelicType.GaziKani        => "Gazi Kanı",
+        RelicType.DemirBilek      => "Demir Bilek",
         RelicType.CelikZirh       => "Çelik Zırh (Askerler +3 Savunma)",
         RelicType.RuzgarAyak      => "Rüzgar Ayak (Askerler +2 Hız)",
         RelicType.DemirDovucu     => "Demircinin Mirası (Eğitim -1 Gün)",
         RelicType.UstalıkOcağı    => "Ustalık Ocağı (Eğitim +1 Stat Bonus)",
-        RelicType.OldurumUstası   => "Oldurum Ustası (İyileştirme -%30)",
+        RelicType.OldurumUstası   => "Lokman Hekim",
         RelicType.CesurYurek      => "Cesur Yürek (Savaş Kaybı Moral -%50)",
         RelicType.OnurluKan       => "Onurlu Kan (+10 Başlangıç İtibarı)",
-        RelicType.HalkınGözü      => "Halkın Gözü (Kervan Komisyon -%5)",
-        RelicType.KaderYolu       => "Kader Yolu (+1 Erişilebilir Node)",
-        RelicType.NasipliYolcu    => "Nasipli Yolcu (+15 Başlangıç Nasip)",
+        RelicType.HalkınGözü      => "Yol Arkadaşı",
+        RelicType.NasipliYolcu    => "Nasipli Yolcu",
         RelicType.EfsaneviHikaye  => "Efsanevi Hikaye (Her mirastanda 2 hak)",
         _                          => type.ToString()
     };
@@ -332,24 +375,24 @@ public class MetaProgressionManager : MonoBehaviour
     {
         RelicType.ZenginAta       => "Dedenden kalan altın kese, her seferin başında kesenin ağzını açar.",
         RelicType.BereketliYol    => "Atanın bastığı yerde altın biter derler. Boş söz değilmiş.",
-        RelicType.CimriDede       => "Dedenin parmağını kırmak için bile para almazdı — ama işini iyi bilirdi.",
+        RelicType.CimriDede       => "Dede akçesi olmasına rağmen paspal giyinir eksik ödeme yapardı.",
         RelicType.HazineNefesi    => "Ganimetlerin üstüne yatmadan önce bir nefes üfle. Bereketlenir.",
         RelicType.KutluMide       => "Atanın mirasından gelen mide — azla tok, çokla şükür.",
-        RelicType.AvciBaba        => "Babanın sadakası: yola çıkmadan önce ambarı dolu bırakmak.",
+        RelicType.AvciBaba        => "Babanın sadakası: yola çıkmadan önce ambarı dolu bırakmış.",
         RelicType.TuzluEt         => "Kışa hazırlık sırrı: tuzla, bekle, hayatta kal.",
         RelicType.GaziKani         => "Gazi soyundan gelenlerin kanı daha kolay dinmez.",
         RelicType.DemirBilek      => "Atanın örsü, neslinden gelenlerin kollarına işlemiş.",
-        RelicType.CelikZirh       => "Dövülen demir paslanmaz — bu miras da öyle.",
+        RelicType.CelikZirh       => "Askerlerine çelikten bir zırh verir",
         RelicType.RuzgarAyak      => "Rüzgarın hızı bacaklara geçer, soydan soya.",
         RelicType.DemirDovucu     => "Ustanın eli çabuk — şakirtleri de öyle olur.",
-        RelicType.UstalıkOcağı    => "Alevde pişen demir, ocaktan çıkınca daha sert.",
+        RelicType.UstalıkOcağı    => "Ateşte dövülen demir erimez, sertleşir.",
         RelicType.OldurumUstası   => "Şifacı babanın formülü: az ilaç, çok dua, doğru el.",
-        RelicType.CesurYurek      => "Yenilgi yüzü kızdırır, ama cesur kalp çabuk iyileşir.",
+        RelicType.CesurYurek      => "Yenilgi yüzü kızartır, ama cesur yürek çabuk iyileşir.",
         RelicType.OnurluKan       => "Soyunun adı söylendiğinde başlar dik tutulur.",
         RelicType.HalkınGözü      => "Ata tüccar değil, dosttu — kervanlar ona saygıyla baktı.",
         RelicType.KaderYolu       => "Kader yolları açar — sadece bakmayı bilenler için.",
-        RelicType.NasipliYolcu    => "Yola çıkmadan nasibini say. Atanınki seninle geliyor.",
-        RelicType.EfsaneviHikaye  => "Destanın satırları arasında iki miras saklıdır.",
+        RelicType.NasipliYolcu    => "Nasibin soyuna da bağlıdır. Atanınki seninle geliyor.",
+        RelicType.EfsaneviHikaye  => "Destanın yolları arasında iki miras saklıdır.",
         _                          => ""
     };
 
